@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java *)",
+      "Bash(gradle --version)",
+      "Bash(javac *)",
+      "Read(//c/Program Files/**)",
+      "Bash(where java *)",
+      "Bash(C:/Program Files/Common Files/Oracle/Java/javapath/java.exe *)",
+      "Bash(C:/Program Files/Common Files/Oracle/Java/javapath/javac.exe *)",
+      "Bash(cmd.exe *)",
+      "Bash(reg query *)",
+      "Read(//e/Java/jdk1.8.0_471/bin/**)",
+      "Bash(\"/e/Java/jdk1.8.0_471/bin/java.exe\" -version)",
+      "Bash(/e/Java/jdk1.8.0_471/bin/javac.exe *)",
+      "Bash(curl *)",
+      "WebSearch",
+      "Bash(sort -t: -k2 -n)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git clone *)",
+      "Bash(taskkill /F /IM git.exe)",
+      "Bash(mkdir -p \"/e/LinkStar/MinecraftMod_tmp\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(cp -r \"/e/LinkStar/MinecraftMod_tmp/\"* \"/e/LinkStar/MinecraftMod/\")",
+      "Bash(cp -r \"/e/LinkStar/MinecraftMod_tmp/\".[!.]* \"/e/LinkStar/MinecraftMod/\")",
+      "Bash(rm -rf \"/e/LinkStar/MinecraftMod_tmp\")",
+      "Bash(rm -rf \"/e/LinkStar/MinecraftMod/.git\")",
+      "Bash(./gradlew --version)",
+      "Bash(./gradlew build *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)"
+    ]
+  }
+}
