@@ -1,6 +1,6 @@
-// 
+//
 // Decompiled by Procyon v0.6.0
-// 
+//
 
 package com.greyhat.dark_grey.item;
 
@@ -55,7 +55,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
     private List<IOnHit> hitHandlers;
     public static final String NBT_TRACKER_TAG = "DarkGreyRPG_ExcelEnchants";
     public static final String NBT_VERSION_TAG = "DarkGreyRPG_DataVersion";
-    
+
     public ItemRPGArmor(final String id, final ItemArmor.ArmorMaterial material, final int renderIndex, final int armorType, final List<IRPGComponent> components) {
         super(material, renderIndex, armorType);
         this.rpgItemId = id;
@@ -69,7 +69,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         this.playerDeathHandlers = IRPGComponent.filterByCapability(components, IOnPlayerDeath.class);
         this.hitHandlers = IRPGComponent.filterByCapability(components, IOnHit.class);
     }
-    
+
     public String getItemStackDisplayName(final ItemStack stack) {
         final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(this.rpgItemId);
         if (config != null && config.displayName != null && !config.displayName.isEmpty()) {
@@ -77,11 +77,11 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         return super.getItemStackDisplayName(stack);
     }
-    
+
     public String getRpgItemId() {
         return this.rpgItemId;
     }
-    
+
     public void rebuildComponents() {
         final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(this.rpgItemId);
         if (config == null || config.componentsJson == null) {
@@ -109,19 +109,19 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         this.playerDeathHandlers = IRPGComponent.filterByCapability(newComponents, IOnPlayerDeath.class);
         this.hitHandlers = IRPGComponent.filterByCapability(newComponents, IOnHit.class);
     }
-    
+
     public void onArmorTick(final World world, final EntityPlayer player, final ItemStack armorStack) {
         if (world.isRemote) {
             return;
         }
-        if (world.getTotalWorldTime() % 20L != 0L) {
+    if (world.getTotalWorldTime() % 20L != 0L) {
             return;
         }
         for (final IOnWornTick handler : this.wornTickHandlers) {
             handler.onWornTick(world, player, armorStack);
         }
     }
-    
+
     @SideOnly(Side.CLIENT)
     public void addInformation(final ItemStack armorStack, final EntityPlayer player, final List tooltipLines, final boolean showAdvanced) {
         super.addInformation(armorStack, player, tooltipLines, showAdvanced);
@@ -129,7 +129,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
             handler.addTooltipLines(armorStack, player, tooltipLines, showAdvanced);
         }
     }
-    
+
     public Multimap getItemAttributeModifiers() {
         final Multimap<String, AttributeModifier> attributeMap = (Multimap<String, AttributeModifier>)super.getItemAttributeModifiers();
         for (final IAttributeModifier handler : this.attributeHandlers) {
@@ -137,7 +137,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         return attributeMap;
     }
-    
+
     public int getMaxDamage(final ItemStack stack) {
         final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(this.rpgItemId);
         if (config != null && config.durability > 0) {
@@ -145,7 +145,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         return super.getMaxDamage(stack);
     }
-    
+
     public void func_77663_a(final ItemStack stack, final World world, final Entity entity, final int itemSlot, final boolean isSelected) {
         if (world == null || world.isRemote) {
             return;
@@ -168,7 +168,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         this.syncEnchantments(stack, nbt, config);
         nbt.setInteger("DarkGreyRPG_DataVersion", currentDataVersion);
     }
-    
+
     private void syncEnchantments(final ItemStack stack, final NBTTagCompound nbt, final RPGItemDataManager.ItemConfig config) {
         final Map<Integer, Integer> excelEnchants = this.parseEnchantments(config.enchantments);
         final NBTTagCompound tracker = nbt.getCompoundTag("DarkGreyRPG_ExcelEnchants");
@@ -210,7 +210,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         nbt.setTag("DarkGreyRPG_ExcelEnchants", (NBTBase)newTracker);
     }
-    
+
     private Map<Integer, Integer> parseEnchantments(final String enchantmentsStr) {
         final Map<Integer, Integer> map = new HashMap<Integer, Integer>();
         if (enchantmentsStr == null || enchantmentsStr.trim().isEmpty()) {
@@ -246,7 +246,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         return map;
     }
-    
+
     @SideOnly(Side.CLIENT)
     public void func_150895_a(final Item item, final CreativeTabs tab, final List list) {
         final ItemStack stack = new ItemStack(item, 1, 0);
@@ -259,31 +259,31 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer
         }
         list.add(stack);
     }
-    
+
     public List<IRPGComponent> getAllComponents() {
         return this.allComponents;
     }
-    
+
     public List<IOnHurt> getHurtHandlers() {
         return this.hurtHandlers;
     }
-    
+
     public List<IOnEquip> getEquipHandlers() {
         return this.equipHandlers;
     }
-    
+
     public List<IOnUnequip> getUnequipHandlers() {
         return this.unequipHandlers;
     }
-    
+
     public List<IOnPlayerDeath> getPlayerDeathHandlers() {
         return this.playerDeathHandlers;
     }
-    
+
     public List<IOnHit> getHitHandlers() {
         return this.hitHandlers;
     }
-    
+
     public String getArmorTexture(final ItemStack stack, final Entity entity, final int slot, final String type) {
         final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(this.rpgItemId);
         if (config != null && config.texture != null && !config.texture.isEmpty()) {

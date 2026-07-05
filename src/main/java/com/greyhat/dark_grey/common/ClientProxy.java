@@ -22,7 +22,7 @@ public class ClientProxy extends CommonProxy {
     }
     
     public void registerScytheRenderer(Item item, String equippedTextureName) {
-        // Scythes use standard RPGItemRenderer in first person/third person, and EntityScythe for the spinning effect.
-        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RPGItemRenderer(equippedTextureName));
+        // Scythes use custom RenderScytheWeapon in first person/third person for scaled sword grip.
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderScytheWeapon(equippedTextureName));
     }
 }
