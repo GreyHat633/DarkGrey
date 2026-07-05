@@ -1,107 +1,133 @@
-# Example Forge Mod for Minecraft 1.7.10
+# DarkGrey Minecraft RPG 模组
 
-[![](https://jitpack.io/v/GTNewHorizons/ExampleMod1.7.10.svg)](https://jitpack.io/#GTNewHorizons/ExampleMod1.7.10)
-[![](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml)
+DarkGrey 是一款基于 Minecraft 1.7.10 和 Forge 构建的高自由度 RPG 道具与装备模组。项目基于 GTNH (GregTech New Horizons) 1.7.10 稳定版模组开发骨架（ExampleMod）构建，专为拓展高客制化的 RPG 武器、装备、饰品及机制而设计。
 
-An example mod for Minecraft 1.7.10 with Forge focussed on a stable, updatable setup.
+整体而言，DarkGrey几乎专为灰之黑开发，代码和素材全部由AI操刀完成，内部代码稳定性如何十分可疑，使用前务必仔细审查相关代码。
 
-<!-- omit in toc -->
-### Table of Contents
+---
 
-* [Example Forge Mod for Minecraft 1.7.10](#example-forge-mod-for-minecraft-1710)
-    * [Motivation](#motivation)
-    * [Help! I'm stuck!](#help-im-stuck)
-    * [Getting started](#getting-started)
-    * [Features](#features)
-    * [Files](#files)
-    * [Forge's Access Transformers](#forges-access-transformers)
-    * [Mixins](#mixins)
-    * [Advanced](#advanced)
-    * [Feedback wanted](#feedback-wanted)
+## 目录
 
+* [核心特色](#核心特色)
+* [项目架构与文件结构](#项目架构与文件结构)
+* [已注册的 RPG 组件 (Components)](#已注册的-rpg-组件-components)
+* [动态 JSON 道具加载与配置说明](#动态-json-道具加载与配置说明)
+* [指令列表](#指令列表)
+* [开发与编译指南](#开发与编译指南)
 
-### Motivation
+---
 
-We had our fair share in struggles with build scripts for Minecraft Forge. There are quite a few pitfalls from non-obvious error messages. This Example Project provides you a build system you can adapt to over 90% of Minecraft Forge mods and can easily be updated if need be.
+## 核心特色
 
-### Help! I'm stuck!
+- **JSON 数据驱动**：无需编写 Java 代码，即可通过修改 `.minecraft/config/dark_grey/rpg_items.json` 配置文件，动态注册及修改 RPG 剑、弓、盔甲、法杖、工具等。
+- **模块化组件设计**：支持通过灵活组合“生命偷取”、“群体切割”、“蓄力法阵”、“全屏扫击”、“DoT伤害流”等多种 RPG 行为组件来拼装一把独特的武器。
+- **自定义套装效果 (Set Bonus)**：内置套装检测与属性激活系统，支持类似“超新星套装”二件套生命百分比伤害、四件套生命恢复及增益的效果。
+- **自定义动画与渲染**：对部分经典 RPG 武器进行特效级渲染，如“圆环之理”拉弓蓄力特效与箭雨射击动画，以及“灵气洪流”蓄力排斥尘雾圈。
 
-We all have been there! Check out our [FAQ](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/docs/FAQ.md). If that doesn't help, please open an issue.
+---
 
-### Getting started
+## 项目架构与文件结构
 
-Creating mod from scratch:
-1. Unzip [project starter](https://github.com/GTNewHorizons/ExampleMod1.7.10/releases/download/master-packages/starter.zip) into project directory.
-2. Replace placeholders in LICENSE-template and rename it to LICENSE, or remove LICENSE-template and put any other license you like on your code. This is an permissive OSS project and we encourage you participate in OSS movement by having permissive license like one in template. You can find out pros and cons of OSS software in [this article](https://www.freecodecamp.org/news/what-is-great-about-developing-open-source-and-what-is-not/)
-3. Ensure your project is under VCS. For example initialise git repository by running `git init; git commit --message "initialized repository"`.
-4. Replace placeholders (edit values in gradle.properties, change example package and class names, etc.)
-5. Run `./gradlew setupDecompWorkspace`
-6. Run `./gradlew build`
-6. Make sure to check out the rest sections of this file.
-7. You are good to go!
+本项目将 RPG 的逻辑与表现分离开：
+- **`com.greyhat.dark_grey.api`**: 提供 RPG 属性和组件规范的通用接口（如 `IRPGComponent`、套装判定 `SetBonusManager`、加载解析 `RPGItemDataManager`）。
+- **`com.greyhat.dark_grey.component` / `api.impl`**: 各类 RPG 特效组件的具体逻辑实现。
+- **`com.greyhat.dark_grey.item`**: 继承自 Vanilla Minecraft 物品（如 `ItemBow`、`ItemSword` 等），重构其事件响应逻辑，挂载并触发 RPG 组件钩子（如 `onUsingTick`、`onPlayerStoppedUsing` 等）。
+- **`com.greyhat.dark_grey.entity`**: 自定义弹射物（如光之矢 `EntityMadokaArrow`）与持续效能区域实体（如法杖脱手后的 `EntityAuraTorrent`）。
 
-We also have described guidelines for existing mod [migration](docs/migration.md) and [porting](docs/porting.md)
+---
 
-### Features
+## 已注册的 RPG 组件 (Components)
 
- - Updatable: Replace [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle) with a newer version
- - Optional API artifact (.jar)
- - Optional version replacement in Java files
- - Optional shadowing of dependencies
- - Simplified setup of Mixin and example
- - Scala support (add sources under `src/main/scala/` instead of `src/main/java/`)
- - Optional named developer account for consistent player progression during testing
- - Boilerplate forge mod as starting point
- - Improved warnings for pitfalls
- - Git Tags integration for versioning
- - [Jitpack](https://jitpack.io) CI
- - GitHub CI:
-   - Releasing your artifacts on new tags pushed. Push git tag named after version (e.g. 1.0.0) which will trigger a release of artifacts with according names.
-   - Running smoke test for server startup. On any server crash occurring workflow will fail and print the crash log.
+目前模组中已内置注册以下 RPG 组件。在 JSON 中直接使用对应的**中文组件 ID** 即可为武器挂载：
 
-### Files
- - [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle): This is the core script of the build process. You should not need to tamper with it, unless you are trying to accomplish something out of the ordinary. __Do not touch this file! You will make a future update near impossible if you do so!__
- - [`gradle.properties`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/gradle.properties): The core configuration file. It includes
- - [`dependencies.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/dependencies.gradle): Add your mod's dependencies in this file. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - [`repositories.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/repositories.gradle): Add your dependencies' repositories. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - `addon.gradle[.kts]`: Any additional build logic. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available. See [Advanced](#advanced) for more details.
- - [`jitpack.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/jitpack.yml): Ensures that your mod is available as import over [Jitpack](https://jitpack.io).
- - [`.github/workflows/gradle.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/.github/workflows/gradle.yml): A simple CI script that will build your mod any time it is pushed to `master` or `main` and publish the result as release in your repository. This feature is free with GitHub if your repository is public.
+| 中文 ID | 内部类名 | 说明 | 可配置参数 |
+| :--- | :--- | :--- | :--- |
+| **切割** | `CleaveComponent` | 普攻时对目标周围敌人造成溅射伤害（横扫攻击）。 | `percent`（溅射百分比） |
+| **吸血** | `LifestealComponent` | 普攻命中敌人时，按造成伤害的百分比恢复使用者生命。 | `percent`（吸血比例） |
+| **超新星** | `ComponentSupernovaSet` | 护甲套装组件。检测玩家装备件数以激活特定增益（2件套按目标最大生命值造成额外真实伤害；4件套击杀瞬间回满生命并获得力量II）。 | `damagePercent`、`buffDuration` 等 |
+| **虹之愿** | `ComponentLawOfCycles` | 多段蓄力魔导弓箭组件（虹之弓）。支持3段蓄力，每段蓄力完成有音效和粒子提示，射出多段伤害箭矢。 | `damage1`, `damage2`, `damage3` |
+| **圆环之理** | `ComponentTrueLawOfCycles` | 终极弓箭组件（圆环之理）。仅可在滞空时蓄力释放，需消耗“光之矢”，蓄力完成后射出大范围的真实伤害箭雨。 | `damage`, `charge`, `arrowCount` |
+| **血祭** | `ComponentBloodSacrifice` | 每次攻击时消耗使用者的一定生命，将其转化为极高额的伤害输出。 | / |
+| **劫难** | `ComponentCalamity` | 武器主动技能（厄劫镰刀）。右键释放 360° 毁灭横扫攻击，击退并重伤周围怪物。有独立冷却机制。 | / |
+| **灵气洪流** | `ComponentAuraTorrent` | 枯火法杖的主动技能。右键长按蓄力，在腰部产生一圈不断扩大的黑暗压迫感烟环，造成魔法 DoT 伤害与动量压制。松手后在原地留下一个持续10秒的降雨法阵。 | `duration`, `damage`, `cooldown` |
+| **炬火残光** | `ComponentTorchAfterglow` | 枯火法杖的被动技能。持有该武器时，每 0.5 秒批量清除玩家身上所有负面药水效果。 | / |
 
-### Forge's Access Transformers
+---
 
-You may activate Forge's Access Transformers by defining a configuration file in `gradle.properties`.
+## 动态 JSON 道具加载与配置说明
 
-Check out the [`example-access-transformers`](https://github.com/GTNewHorizons/ExampleMod1.7.10/tree/example-access-transformers) branch for a working example!
+配置文件路径：`run/config/dark_grey/rpg_items.json`
+模组会在游戏初始化（Pre-Init）时读取该文件，并自动在游戏中注册对应的物品，赋予其独特的 RPG Lore。
 
-> [!WARNING]
-> Access Transformers are bugged and will deny you any sources for the decompiled Minecraft! Your development environment will still work, but you might face some inconveniences. For example, IntelliJ will not permit searches in dependencies without attached sources.
+### 示例配置
 
-### Mixins
+```json
+{
+  "items": [
+    {
+      "id": "charred_fire_staff",
+      "type": "法杖",
+      "displayName": {
+        "zh_CN": "枯火杖",
+        "en_US": "Charred Fire Staff"
+      },
+      "texture": "dark_grey:charred_fire_staff",
+      "durability": 1024,
+      "damage": 7,
+      "components": [
+        {
+          "name": "炬火残光",
+          "params": {}
+        },
+        {
+          "name": "灵气洪流",
+          "params": {
+            "duration": 200,
+            "damage": 20.0,
+            "cooldown": 30
+          }
+        }
+      ],
+      "enchantments": ""
+    }
+  ]
+}
+```
 
-[Mixins](https://github.com/SpongePowered/Mixin) are used to modify vanilla or mod/library code during runtime without having to edit, recompile, and redistribute the original code. For example, mixins can change a hardcoded value, redirect a method call, inject additional code, access private fields/methods, make a class implement your interface, and more. Mixins are an advanced feature which most normal mods will not require.
+### 属性详解
+- **`id`**: 物品唯一标识。
+- **`type`**: 物品类别，支持 `"剑"`、`"弓"`、`"头盔"`、`"胸甲"`、`"护腿"`、`"靴子"`、`"法杖"`、`"工具"`、`"箭"` 等。
+- **`displayName`**: 多语言显示名。
+- **`texture`**: 纹理资源路径（位于 `assets/dark_grey/textures/items/`）。
+- **`durability`**: 武器/护甲耐久度。
+- **`damage`**: 基础面板物理攻击力。
+- **`components`**: 挂载的 RPG 组件列表，在 `name` 传入组件中文 ID，在 `params` 传入对应的配置参数。
+- **`enchantments`**: 默认附带的魔咒。格式为 `id:等级,id:等级`（例如 `"16:5,21:2"` 即锋利V与抢夺II）。
 
-Documentation about Mixin features can be found here: [Mixin Wiki](https://github.com/SpongePowered/Mixin/wiki) and [MixinExtras Wiki](https://github.com/LlamaLad7/MixinExtras/wiki)
+---
 
-There are many examples of mixins in these mods: [Hodgepodge](https://github.com/GTNewHorizons/Hodgepodge) and [Angelica](https://github.com/GTNewHorizons/Angelica)
+## 指令列表
 
-To enable Mixins in your project, follow one of the example commits:
-- use [normal mixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/beba55615fa8337b7639f0d5b18db6cc8d4826be) for basic and quick registration
-- use [GTNH IMixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/055cd4f18765a421a86c706f53b62116988297e3) (recommended) for the same thing as below, but in a less verbose and more unified manner using the IMixins api
-- use [GTNH Early/Late mixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/c4df59d92164775b69451f3e690239e93d1fc979) to have full control over the registration logic and check for presence of other mods during runtime to load your mixins
+模组在服务端提供了一套便捷的指令系统：
 
-The extra required dependencies are handled automatically after mixins are enabled.
+- **`/rpg reload`**：重新加载 `rpg_items.json` 配置文件。可在不停机的情况下实时刷新武器属性、耐久度及组件参数。
+- **`/rpg help`**：查看当前模组可用的 RPG 指令与帮助。
 
-### Advanced
+---
 
-If your project requires custom gradle commands you may add a `addon.gradle[.kts]` to your project. It will be added automatically to the build script. Although we recommend against it, it is sometimes required. When in doubt, feel free to ask us about it. You may break future updates of this build system!
-If you need access to properties modified later in the buildscript, you can also use a `addon.late.gradle[.kts]`.
-For local tweaks that you don't want to commit to Git, like adding extra JVM arguments for testing, use `addon[.late].local.gradle[.kts]`.
+## 开发与编译指南
 
-### Feedback wanted
+### 1. 配置工作空间
+解压项目到本地后，在根目录使用控制台运行以下命令：
+```bash
+# 构建 Forge 反混淆环境
+./gradlew setupDecompWorkspace
+```
+如果使用 IntelliJ IDEA，可在运行完上述命令后直接导入 `build.gradle.kts`。
 
-If you tried out this build script we would love to head your opinion! Is there any feature missing for you? Did something not work? Please open an issue and we will try to resolve it asap!
-
-Happy modding,\
-[SinTh0r4s](https://github.com/SinTh0r4s), [TheElan](https://github.com/TheElan) and [basdxz](https://github.com/basdxz)
-# DarkGrey
+### 2. 编译项目
+使用 Gradle 编译打包模组：
+```bash
+./gradlew build -x spotlessJava
+```
+编译生成的 `jar` 档案位于 `build/libs/` 下。
