@@ -1,4 +1,4 @@
-package com.greyhat.dark_grey;
+package com.greyhat.dark_grey.common;
 
 import java.io.File;
 
