@@ -136,7 +136,7 @@ public class ComponentLawOfCycles implements IOnBowShoot, IHasTooltip, IOnBowUsi
     private void spawnChargeParticles(final World world, final EntityPlayer player, final int level) {
         if (!world.isRemote) {
             final String color = (level == 1) ? "\u00A7e" : ((level == 2) ? "\u00A76" : "\u00A7c");
-            player.addChatMessage((IChatComponent)new ChatComponentText(color + "l\u8679\u4e4b\u5f13: \u84c4\u529b\u9636\u5c42 " + level + " !"));
+            player.addChatMessage((IChatComponent)new ChatComponentText(color + "\u8679\u4e4b\u5f13: \u84c4\u529b\u9636\u5c42 " + level + " !"));
         }
         else {
             final Vec3 lookVec = player.getLookVec();

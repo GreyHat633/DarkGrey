@@ -35,4 +35,9 @@
  */
 dependencies {
     //runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
+    runtimeOnlyNonPublishable(rfg.deobf(project.files("E:/Java/VibeCoding/modlist/[NEI[GTNH]CodeChickenCore-1.4.10.jar")))
+    runtimeOnlyNonPublishable(rfg.deobf(project.files("E:/Java/VibeCoding/modlist/[NEI[GTNH]NotEnoughItems-2.8.48-GTNH.jar")))
+    runtimeOnlyNonPublishable(rfg.deobf(project.files("E:/Java/VibeCoding/modlist/[采掘信息]WailaHarvestability.jar")))
+    runtimeOnlyNonPublishable(rfg.deobf(project.files("E:/Java/VibeCoding/modlist/[高亮拓展]Wawla-1.3.3-1.7.10.jar")))
+    runtimeOnlyNonPublishable(rfg.deobf(project.files("E:/Java/VibeCoding/modlist/[高亮显示]Waila-1.5.10_1.7.10.jar")))
 }
