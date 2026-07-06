@@ -1,16 +1,20 @@
 package com.greyhat.dark_grey.client.render;
 
-import com.greyhat.dark_grey.entity.EntityScythe;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
+
 import org.lwjgl.opengl.GL11;
+
+import com.greyhat.dark_grey.entity.EntityScythe;
 
 public class RenderScythe extends Render {
 
     // Same texture as the held item texture generated for Calamity
-    private static final ResourceLocation SCYTHE_TEXTURE = new ResourceLocation("dark_grey", "textures/items/calamity_scythe_equipped.png");
+    private static final ResourceLocation SCYTHE_TEXTURE = new ResourceLocation(
+        "dark_grey",
+        "textures/items/calamity_scythe_equipped.png");
 
     @Override
     public void doRender(Entity entity, double x, double y, double z, float entityYaw, float partialTicks) {
@@ -33,7 +37,7 @@ public class RenderScythe extends Render {
 
         // Rotate around Y axis for the sweep
         GL11.glRotatef(current_rotation_angle, 0.0F, 1.0F, 0.0F);
-        
+
         // Tilt it slightly so it looks like it's sweeping horizontally but angled
         GL11.glRotatef(15.0F, 1.0F, 0.0F, 0.0F);
 
@@ -45,14 +49,14 @@ public class RenderScythe extends Render {
         float size = 3.0F; // 3 blocks radius sweep
 
         GL11.glDisable(GL11.GL_CULL_FACE);
-        
+
         tessellator.startDrawingQuads();
         tessellator.addVertexWithUV(-size, 0, -size, 0, 0);
         tessellator.addVertexWithUV(-size, 0, size, 0, 1);
         tessellator.addVertexWithUV(size, 0, size, 1, 1);
         tessellator.addVertexWithUV(size, 0, -size, 1, 0);
         tessellator.draw();
-        
+
         GL11.glEnable(GL11.GL_CULL_FACE);
 
         // Reset blending and color state

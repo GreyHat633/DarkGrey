@@ -5,9 +5,11 @@ package com.greyhat.dark_grey.api;
  * ({@code ItemRPGWeapon}, {@code ItemRPGTool}, {@code ItemRPGHoe},
  * {@code ItemRPGArmor}, {@code ItemRPGAccessory}, {@code ItemRPGBow}).
  *
- * <p>Purpose: enables the {@link RPGItemDataManager} to hot-reload
+ * <p>
+ * Purpose: enables the {@link RPGItemDataManager} to hot-reload
  * all registered RPG items via a single {@code instanceof} check
- * instead of an ever-growing chain of type checks.</p>
+ * instead of an ever-growing chain of type checks.
+ * </p>
  */
 public interface IRPGItemContainer {
 
@@ -20,4 +22,9 @@ public interface IRPGItemContainer {
      * Called automatically by the hot-reload system when the JSON config changes.
      */
     void rebuildComponents();
+
+    /**
+     * Returns the cached list of player death event handlers.
+     */
+    java.util.List<com.greyhat.dark_grey.api.capability.IOnPlayerDeath> getPlayerDeathHandlers();
 }

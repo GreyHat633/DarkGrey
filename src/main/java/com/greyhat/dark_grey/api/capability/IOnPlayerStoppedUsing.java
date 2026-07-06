@@ -9,6 +9,7 @@ import net.minecraft.world.World;
  * using (charging) an item.
  */
 public interface IOnPlayerStoppedUsing {
+
     /**
      * Called when the player releases right-click after charging.
      *

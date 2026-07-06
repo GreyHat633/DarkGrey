@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
  * while the player is holding right-click to "use" or "charge" a weapon.
  */
 public interface IOnWeaponUsingTick {
+
     /**
      * Called every tick while the item is in use.
      *

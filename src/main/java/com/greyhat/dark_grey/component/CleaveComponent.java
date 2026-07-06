@@ -1,15 +1,16 @@
-package com.greyhat.dark_grey.api.impl;
+package com.greyhat.dark_grey.component;
 
-import com.google.gson.JsonObject;
-import com.greyhat.dark_grey.api.IRPGComponent;
-import com.greyhat.dark_grey.api.capability.IHasTooltip;
-import com.greyhat.dark_grey.api.capability.IOnHit;
+import java.util.List;
+
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 
-import java.util.List;
+import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.api.IRPGComponent;
+import com.greyhat.dark_grey.api.capability.IHasTooltip;
+import com.greyhat.dark_grey.api.capability.IOnHit;
 
 /**
  * "切割" (Cleave) Component
@@ -28,7 +29,8 @@ public class CleaveComponent implements IRPGComponent, IOnHit, IHasTooltip {
     @Override
     public void configure(JsonObject params) {
         if (params.has("percent")) {
-            this.maxHpPercent = params.get("percent").getAsFloat();
+            this.maxHpPercent = params.get("percent")
+                .getAsFloat();
         }
     }
 
@@ -40,7 +42,7 @@ public class CleaveComponent implements IRPGComponent, IOnHit, IHasTooltip {
 
         // Calculate bonus damage based on target's max health
         float bonusDamage = target.getMaxHealth() * maxHpPercent;
-        
+
         // Ensure bonus damage is at least 1, just in case
         if (bonusDamage < 1.0F) {
             bonusDamage = 1.0F;
@@ -49,9 +51,11 @@ public class CleaveComponent implements IRPGComponent, IOnHit, IHasTooltip {
         // Create a damage source. If attacker is player, use player damage source.
         DamageSource source = null;
         if (attacker instanceof EntityPlayer) {
-            source = new net.minecraft.util.EntityDamageSource("player", attacker).setDamageBypassesArmor().setDamageIsAbsolute();
+            source = new net.minecraft.util.EntityDamageSource("player", attacker).setDamageBypassesArmor()
+                .setDamageIsAbsolute();
         } else {
-            source = new net.minecraft.util.EntityDamageSource("mob", attacker).setDamageBypassesArmor().setDamageIsAbsolute();
+            source = new net.minecraft.util.EntityDamageSource("mob", attacker).setDamageBypassesArmor()
+                .setDamageIsAbsolute();
         }
 
         // Bypass attackEntityFrom completely to avoid extreme lag caused by third-party mod loops.
@@ -68,7 +72,9 @@ public class CleaveComponent implements IRPGComponent, IOnHit, IHasTooltip {
     public void addTooltipLines(ItemStack itemStack, EntityPlayer player, List tooltipLines, boolean showAdvanced) {
         int displayPercent = Math.round(maxHpPercent * 100);
         // \u00A7c is red color (§c), \u00A77 is gray (§7)
-        tooltipLines.add("\u00A74\u2694 \u5207\u5272 \u00A77| \u00A7c\u9644\u5E26\u76EE\u6807\u6700\u5927\u751F\u547D\u503C " + displayPercent + "% \u7684\u4F24\u5BB3");
-        // Output: §4⚔ 切割 §7| §c附带目标最大生命值 X% 的伤害
+        tooltipLines.add(
+            "\u00A74\u2694 \u5207\u5272 \u00A77| \u00A7c\u9644\u5E26\u76EE\u6807\u6700\u5927\u751F\u547D\u503C "
+                + displayPercent
+                + "% \u7684\u4F24\u5BB3");
     }
 }

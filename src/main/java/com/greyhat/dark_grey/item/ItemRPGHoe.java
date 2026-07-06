@@ -1,5 +1,25 @@
 package com.greyhat.dark_grey.item;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemHoe;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.ComponentRegistry;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
@@ -10,54 +30,36 @@ import com.greyhat.dark_grey.api.capability.IOnHit;
 import com.greyhat.dark_grey.api.capability.IOnPlayerDeath;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemHoe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * RPG hoe container — extends {@link ItemHoe}.
  *
- * <p>This container exists separately because {@link ItemHoe} extends {@code Item}
+ * <p>
+ * This container exists separately because {@link ItemHoe} extends {@code Item}
  * directly (not {@code ItemTool}), so it cannot be merged into {@link ItemRPGTool}.
  * In Java's single-inheritance model, one class cannot extend both
- * {@code ItemTool} and {@code ItemHoe}.</p>
+ * {@code ItemTool} and {@code ItemHoe}.
+ * </p>
  *
- * <p>The hoe's tilling behavior (right-click on dirt/grass to create farmland)
+ * <p>
+ * The hoe's tilling behavior (right-click on dirt/grass to create farmland)
  * is inherited from {@link ItemHoe#onItemUse}. Components here handle additional
  * behaviors like right-click effects in air, tooltips, attribute modifiers,
- * hit effects, and player death reactions.</p>
+ * hit effects, and player death reactions.
+ * </p>
  *
- * <p>Implements {@link IRPGItemContainer} for hot-reload support via
- * {@link RPGItemDataManager}.</p>
+ * <p>
+ * Implements {@link IRPGItemContainer} for hot-reload support via
+ * {@link RPGItemDataManager}.
+ * </p>
  */
 public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  NBT Constants
+    // NBT Constants
     // ─────────────────────────────────────────────────────────────────────────
 
     /** NBT key used to track system-applied enchantments for non-destructive sync. */
@@ -67,7 +69,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     public static final String NBT_VERSION_TAG = "DarkGreyRPG_DataVersion";
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Component Lists (non-final for hot-reload support)
+    // Component Lists (non-final for hot-reload support)
     // ─────────────────────────────────────────────────────────────────────────
 
     /** All components attached to this hoe. */
@@ -111,7 +113,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  IRPGItemContainer Implementation
+    // IRPGItemContainer Implementation
     // ─────────────────────────────────────────────────────────────────────────
 
     @Override
@@ -125,19 +127,24 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      */
     @Override
     public void rebuildComponents() {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(rpgItemId);
+        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
+            .getConfig(rpgItemId);
         if (config == null || config.componentsJson == null) return;
 
         List<IRPGComponent> newComponents = new ArrayList<>();
         for (JsonElement compElem : config.componentsJson) {
             JsonObject compObj = compElem.getAsJsonObject();
-            String compName = compObj.get("name").getAsString();
+            String compName = compObj.get("name")
+                .getAsString();
             JsonObject params = compObj.has("params") ? compObj.getAsJsonObject("params") : new JsonObject();
             try {
                 newComponents.add(ComponentRegistry.create(compName, params));
             } catch (Exception e) {
-                FMLLog.warning("[DarkGrey-Hoe] Failed to create component '%s' for hoe '%s': %s",
-                    compName, rpgItemId, e.getMessage());
+                FMLLog.warning(
+                    "[DarkGrey-Hoe] Failed to create component '%s' for hoe '%s': %s",
+                    compName,
+                    rpgItemId,
+                    e.getMessage());
             }
         }
 
@@ -150,7 +157,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Dynamic Attributes & Durability from RPGItemDataManager
+    // Dynamic Attributes & Durability from RPGItemDataManager
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -163,7 +170,8 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
         Multimap attributeMap = HashMultimap.create();
 
         // Dynamically fetch damage from the global manager
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(rpgItemId);
+        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
+            .getConfig(rpgItemId);
         float damage = 0.0f;
         if (config != null) {
             damage = config.damage;
@@ -171,7 +179,8 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
 
         // Must use exactly this vanilla UUID so the engine recognizes it as base weapon damage
         UUID damageOverrideUUID = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
-        attributeMap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(),
+        attributeMap.put(
+            SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(),
             new AttributeModifier(damageOverrideUUID, "Hoe modifier", (double) damage, 0));
 
         // Apply any component modifiers
@@ -186,7 +195,8 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      */
     @Override
     public int getMaxDamage(ItemStack stack) {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(rpgItemId);
+        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
+            .getConfig(rpgItemId);
         if (config != null && config.durability > 0) {
             return config.durability;
         }
@@ -194,7 +204,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Enchantment Sync via onUpdate()
+    // Enchantment Sync via onUpdate()
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -204,130 +214,11 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      */
     @Override
     public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
-        if (world == null || world.isRemote) return; // Only process on server side
-
-        RPGItemDataManager dataManager = RPGItemDataManager.getInstance();
-        RPGItemDataManager.ItemConfig config = dataManager.getConfig(rpgItemId);
-        if (config == null) return;
-
-        NBTTagCompound nbt = stack.getTagCompound();
-        if (nbt == null) {
-            nbt = new NBTTagCompound();
-            stack.setTagCompound(nbt);
-        }
-
-        int currentDataVersion = dataManager.getDataVersion();
-        int itemDataVersion = nbt.getInteger(NBT_VERSION_TAG);
-
-        // Skip NBT heavy operations if versions match
-        if (itemDataVersion == currentDataVersion) {
-            return;
-        }
-
-        // Version mismatch detected — perform non-destructive sync
-        syncEnchantments(stack, nbt, config);
-
-        // Update version to prevent running again until next reload
-        nbt.setInteger(NBT_VERSION_TAG, currentDataVersion);
-    }
-
-    /**
-     * Non-destructive enchantment synchronization.
-     * Strips previously system-applied enchantments, then re-applies current
-     * config enchantments without overwriting player-applied enchantments.
-     */
-    private void syncEnchantments(ItemStack stack, NBTTagCompound nbt, RPGItemDataManager.ItemConfig config) {
-        Map<Integer, Integer> excelEnchants = parseEnchantments(config.enchantments);
-
-        NBTTagCompound tracker = nbt.getCompoundTag(NBT_TRACKER_TAG);
-
-        NBTTagList enchList = nbt.getTagList("ench", 10);
-        NBTTagList newEnchList = new NBTTagList();
-
-        // Step 1: Filter out old system-applied enchants, keep player enchants
-        for (int i = 0; i < enchList.tagCount(); i++) {
-            NBTTagCompound enchTag = enchList.getCompoundTagAt(i);
-            int id = enchTag.getShort("id");
-            int lvl = enchTag.getShort("lvl");
-
-            boolean wasAppliedBySystem = tracker.hasKey(String.valueOf(id))
-                && tracker.getInteger(String.valueOf(id)) == lvl;
-
-            if (!wasAppliedBySystem) {
-                newEnchList.appendTag(enchTag.copy());
-            }
-        }
-
-        // Step 2: Apply new config enchants (only if player hasn't overridden)
-        NBTTagCompound newTracker = new NBTTagCompound();
-        for (Map.Entry<Integer, Integer> entry : excelEnchants.entrySet()) {
-            int newId = entry.getKey();
-            int newLvl = entry.getValue();
-
-            boolean playerHasOverride = false;
-            for (int i = 0; i < newEnchList.tagCount(); i++) {
-                if (newEnchList.getCompoundTagAt(i).getShort("id") == newId) {
-                    playerHasOverride = true;
-                    break;
-                }
-            }
-
-            if (!playerHasOverride) {
-                NBTTagCompound newEnchTag = new NBTTagCompound();
-                newEnchTag.setShort("id", (short) newId);
-                newEnchTag.setShort("lvl", (short) newLvl);
-                newEnchList.appendTag(newEnchTag);
-                newTracker.setInteger(String.valueOf(newId), newLvl);
-            }
-        }
-
-        // Step 3: Save lists
-        if (newEnchList.tagCount() > 0) {
-            nbt.setTag("ench", newEnchList);
-        } else {
-            nbt.removeTag("ench");
-        }
-        nbt.setTag(NBT_TRACKER_TAG, newTracker);
-    }
-
-    /**
-     * Parses the comma-separated enchantment string from JSON config.
-     * Format: "id:level,id:level,..." — tolerates non-numeric name segments.
-     */
-    private Map<Integer, Integer> parseEnchantments(String enchantmentsStr) {
-        Map<Integer, Integer> map = new HashMap<>();
-        if (enchantmentsStr == null || enchantmentsStr.trim().isEmpty()) return map;
-
-        String[] parts = enchantmentsStr.split(",");
-        for (String part : parts) {
-            String[] ench = part.trim().split(":");
-            if (ench.length >= 1) {
-                try {
-                    int id = Integer.parseInt(ench[0].trim());
-                    int lvl = 1;
-
-                    if (ench.length >= 2) {
-                        try {
-                            lvl = Integer.parseInt(ench[1].trim());
-                        } catch (NumberFormatException e) {
-                            if (ench.length >= 3) {
-                                try { lvl = Integer.parseInt(ench[2].trim()); }
-                                catch (NumberFormatException ignored) {}
-                            }
-                        }
-                    }
-
-                    if (id >= 0 && id < Enchantment.enchantmentsList.length && Enchantment.enchantmentsList[id] != null) {
-                        map.put(id, lvl);
-                    }
-                } catch (NumberFormatException ignored) {}
-            }
-        }
-        return map;
+        com.greyhat.dark_grey.api.RPGItemStackSync.syncIfVersionChanged(stack, rpgItemId, world);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Creative Tab — Pre-synced Enchantments
+    // Creative Tab — Pre-synced Enchantments
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -339,18 +230,12 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     @SuppressWarnings("unchecked")
     public void getSubItems(Item item, CreativeTabs tab, List list) {
         ItemStack stack = new ItemStack(item, 1, 0);
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig(rpgItemId);
-        if (config != null) {
-            NBTTagCompound nbt = new NBTTagCompound();
-            nbt.setInteger(NBT_VERSION_TAG, RPGItemDataManager.getInstance().getDataVersion());
-            syncEnchantments(stack, nbt, config);
-            stack.setTagCompound(nbt);
-        }
+        com.greyhat.dark_grey.api.RPGItemStackSync.forceSync(stack, rpgItemId);
         list.add(stack);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Item Method Overrides — Delegate to Components
+    // Item Method Overrides — Delegate to Components
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -359,14 +244,14 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      * instead of unreliable health snapshotting.
      */
     @Override
-    public boolean hitEntity(ItemStack hoeStack, EntityLivingBase target,
-                             EntityLivingBase attacker) {
+    public boolean hitEntity(ItemStack hoeStack, EntityLivingBase target, EntityLivingBase attacker) {
         boolean result = super.hitEntity(hoeStack, target, attacker);
 
         if (!attacker.worldObj.isRemote) {
             float rawDamage = 1.0F;
             if (attacker.getEntityAttribute(SharedMonsterAttributes.attackDamage) != null) {
-                rawDamage = (float) attacker.getEntityAttribute(SharedMonsterAttributes.attackDamage).getAttributeValue();
+                rawDamage = (float) attacker.getEntityAttribute(SharedMonsterAttributes.attackDamage)
+                    .getAttributeValue();
             }
 
             for (IOnHit handler : hitHandlers) {
@@ -396,8 +281,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     @Override
     @SideOnly(Side.CLIENT)
     @SuppressWarnings("unchecked")
-    public void addInformation(ItemStack hoeStack, EntityPlayer player,
-                               List tooltipLines, boolean showAdvanced) {
+    public void addInformation(ItemStack hoeStack, EntityPlayer player, List tooltipLines, boolean showAdvanced) {
         super.addInformation(hoeStack, player, tooltipLines, showAdvanced);
         for (IHasTooltip handler : tooltipHandlers) {
             handler.addTooltipLines(hoeStack, player, tooltipLines, showAdvanced);
@@ -405,13 +289,14 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Public Accessors
+    // Public Accessors
     // ─────────────────────────────────────────────────────────────────────────
 
     public List<IRPGComponent> getAllComponents() {
         return allComponents;
     }
 
+    @Override
     public List<IOnPlayerDeath> getPlayerDeathHandlers() {
         return playerDeathHandlers;
     }

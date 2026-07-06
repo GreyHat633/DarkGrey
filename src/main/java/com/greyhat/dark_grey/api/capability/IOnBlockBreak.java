@@ -8,11 +8,15 @@ import net.minecraft.world.World;
 /**
  * Capability interface for components that react when a block is broken with this tool.
  *
- * <p>Triggered by {@code ItemTool.onBlockDestroyed()} inside the container's override.
- * Useful for effects like auto-smelting, area mining, or fortune bonuses.</p>
+ * <p>
+ * Triggered by {@code ItemTool.onBlockDestroyed()} inside the container's override.
+ * Useful for effects like auto-smelting, area mining, or fortune bonuses.
+ * </p>
  *
- * <p>Note: The coordinate parameters use {@code x, y, z} names because they directly
- * correspond to Minecraft's block coordinate system (similar to Godot's Vector3i).</p>
+ * <p>
+ * Note: The coordinate parameters use {@code x, y, z} names because they directly
+ * correspond to Minecraft's block coordinate system (similar to Godot's Vector3i).
+ * </p>
  */
 public interface IOnBlockBreak {
 
@@ -28,6 +32,6 @@ public interface IOnBlockBreak {
      * @param brokenBlock   the Block that was broken
      * @param blockMetadata the metadata of the broken block
      */
-    void onBlockBreak(ItemStack toolStack, EntityPlayer player, World world,
-                      int x, int y, int z, Block brokenBlock, int blockMetadata);
+    void onBlockBreak(ItemStack toolStack, EntityPlayer player, World world, int x, int y, int z, Block brokenBlock,
+        int blockMetadata);
 }

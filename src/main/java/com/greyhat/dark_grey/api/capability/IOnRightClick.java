@@ -7,11 +7,15 @@ import net.minecraft.world.World;
 /**
  * Capability interface for components that react to a right-click (use in air).
  *
- * <p>Triggered by {@code Item.onItemRightClick()}. Multiple components are chained:
- * the returned {@code ItemStack} from one component becomes the input for the next.</p>
+ * <p>
+ * Triggered by {@code Item.onItemRightClick()}. Multiple components are chained:
+ * the returned {@code ItemStack} from one component becomes the input for the next.
+ * </p>
  *
- * <p>In Godot terms, this is like a chain of {@code _unhandled_input()} handlers
- * where each handler can transform the event before passing it along.</p>
+ * <p>
+ * In Godot terms, this is like a chain of {@code _unhandled_input()} handlers
+ * where each handler can transform the event before passing it along.
+ * </p>
  */
 public interface IOnRightClick {
 

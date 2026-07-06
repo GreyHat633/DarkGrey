@@ -1,22 +1,28 @@
 package com.greyhat.dark_grey.api.capability;
 
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import java.util.List;
 
 /**
  * Capability interface for components that contribute information lines to the
  * item's tooltip (hover text in inventory).
  *
- * <p>Called from the container's {@code addInformation()} override, which runs
- * client-side only. Each component appends its own description lines to the list.</p>
+ * <p>
+ * Called from the container's {@code addInformation()} override, which runs
+ * client-side only. Each component appends its own description lines to the list.
+ * </p>
  *
- * <p>In Godot terms, this is like each component providing its own
+ * <p>
+ * In Godot terms, this is like each component providing its own
  * {@code get_tooltip_text()} method, and the item node aggregates them all
- * into a single RichTextLabel for the UI.</p>
+ * into a single RichTextLabel for the UI.
+ * </p>
  *
- * <p>Example tooltip line: {@code "§4◆ Lifesteal §7| §c+15% damage healed"}</p>
+ * <p>
+ * Example tooltip line: {@code "§4◆ Lifesteal §7| §c+15% damage healed"}
+ * </p>
  */
 public interface IHasTooltip {
 
@@ -28,6 +34,5 @@ public interface IHasTooltip {
      * @param tooltipLines the mutable list of tooltip strings to append to
      * @param showAdvanced true if advanced tooltips are enabled (F3+H)
      */
-    void addTooltipLines(ItemStack itemStack, EntityPlayer player,
-                         List<String> tooltipLines, boolean showAdvanced);
+    void addTooltipLines(ItemStack itemStack, EntityPlayer player, List<String> tooltipLines, boolean showAdvanced);
 }

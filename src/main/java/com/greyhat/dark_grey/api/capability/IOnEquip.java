@@ -7,13 +7,17 @@ import net.minecraft.world.World;
 /**
  * Capability interface for components that react when armor is equipped.
  *
- * <p>Since 1.7.10's {@code ItemArmor} has no {@code onEquip()} callback,
+ * <p>
+ * Since 1.7.10's {@code ItemArmor} has no {@code onEquip()} callback,
  * this event is detected by {@code RPGCoreEventHandler} via {@code PlayerTickEvent}.
  * The handler compares each armor slot against the previous tick's snapshot to
- * detect changes.</p>
+ * detect changes.
+ * </p>
  *
- * <p>In Godot terms, this is like connecting to the {@code tree_entered} signal —
- * it fires once when the node (armor piece) joins the scene tree (player's armor slot).</p>
+ * <p>
+ * In Godot terms, this is like connecting to the {@code tree_entered} signal —
+ * it fires once when the node (armor piece) joins the scene tree (player's armor slot).
+ * </p>
  */
 public interface IOnEquip {
 

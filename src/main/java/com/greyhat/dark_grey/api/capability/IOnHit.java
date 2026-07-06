@@ -6,12 +6,16 @@ import net.minecraft.item.ItemStack;
 /**
  * Capability interface for components that react to a weapon hitting an entity.
  *
- * <p>Triggered inside {@code ItemSword.hitEntity()} for weapons, and
- * {@code ItemTool.hitEntity()} for tools used as weapons (e.g. axes).</p>
+ * <p>
+ * Triggered inside {@code ItemSword.hitEntity()} for weapons, and
+ * {@code ItemTool.hitEntity()} for tools used as weapons (e.g. axes).
+ * </p>
  *
- * <p>The {@code actualDamage} parameter is obtained from {@code target.lastDamage},
+ * <p>
+ * The {@code actualDamage} parameter is obtained from {@code target.lastDamage},
  * giving the real post-armor, post-enchantment damage that the target received.
- * This fixes the critical design flaw identified in the framework review.</p>
+ * This fixes the critical design flaw identified in the framework review.
+ * </p>
  */
 public interface IOnHit {
 
@@ -23,6 +27,5 @@ public interface IOnHit {
      * @param target       the entity that was hit
      * @param actualDamage the actual damage dealt after armor and resistance calculations
      */
-    void onHit(ItemStack weaponStack, EntityLivingBase attacker,
-               EntityLivingBase target, float actualDamage);
+    void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float actualDamage);
 }

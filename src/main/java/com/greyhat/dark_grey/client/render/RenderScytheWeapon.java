@@ -6,15 +6,18 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 public class RenderScytheWeapon implements IItemRenderer {
 
     private final String equippedTextureName;
+    private final ResourceLocation equippedTex;
 
     public RenderScytheWeapon(String equippedTextureName) {
         this.equippedTextureName = equippedTextureName;
+        this.equippedTex = new ResourceLocation("dark_grey", "textures/items/" + this.equippedTextureName + ".png");
     }
 
     @Override
@@ -60,8 +63,9 @@ public class RenderScytheWeapon implements IItemRenderer {
             GL11.glTranslatef(-0.5F, -0.3F, 0.0F);
         }
 
-        ResourceLocation equippedTex = new ResourceLocation("dark_grey", "textures/items/" + this.equippedTextureName + ".png");
-        Minecraft.getMinecraft().getTextureManager().bindTexture(equippedTex);
+        Minecraft.getMinecraft()
+            .getTextureManager()
+            .bindTexture(this.equippedTex);
 
         Tessellator tessellator = Tessellator.instance;
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);

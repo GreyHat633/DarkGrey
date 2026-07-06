@@ -1,19 +1,8 @@
 package com.greyhat.dark_grey.event;
 
-import com.greyhat.dark_grey.api.IRPGComponent;
-import com.greyhat.dark_grey.api.capability.IOnEquip;
-import com.greyhat.dark_grey.api.capability.IOnHit;
-import com.greyhat.dark_grey.api.capability.IOnHurt;
-import com.greyhat.dark_grey.api.capability.IOnPlayerDeath;
-import com.greyhat.dark_grey.api.capability.IOnUnequip;
-import com.greyhat.dark_grey.api.IRPGItemContainer;
-import com.greyhat.dark_grey.api.SetBonusManager;
-import com.greyhat.dark_grey.item.ItemRPGArmor;
-import com.greyhat.dark_grey.item.ItemRPGBow;
-import com.greyhat.dark_grey.item.ItemRPGWeapon;
+import java.util.List;
+import java.util.WeakHashMap;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,22 +13,36 @@ import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
-import java.util.List;
-import java.util.WeakHashMap;
+import com.greyhat.dark_grey.api.IRPGItemContainer;
+import com.greyhat.dark_grey.api.SetBonusManager;
+import com.greyhat.dark_grey.api.capability.IOnEquip;
+import com.greyhat.dark_grey.api.capability.IOnHit;
+import com.greyhat.dark_grey.api.capability.IOnHurt;
+import com.greyhat.dark_grey.api.capability.IOnPlayerDeath;
+import com.greyhat.dark_grey.api.capability.IOnUnequip;
+import com.greyhat.dark_grey.item.ItemRPGArmor;
+import com.greyhat.dark_grey.item.ItemRPGBow;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 /**
  * Centralized Forge EventBus handler for all cross-cutting RPG component triggers.
  *
- * <p>Handles three categories of events:</p>
+ * <p>
+ * Handles three categories of events:
+ * </p>
  * <ul>
- *   <li>{@code LivingHurtEvent} → armor {@link IOnHurt} pipeline, armor IOnHit dispatch
- *       (when wearer attacks), bow IOnHit dispatch (when arrow hits)</li>
- *   <li>{@code PlayerTickEvent} → {@link IOnEquip} / {@link IOnUnequip} detection</li>
- *   <li>{@code LivingDeathEvent} → {@link IOnPlayerDeath} on all equipped RPG items</li>
+ * <li>{@code LivingHurtEvent} → armor {@link IOnHurt} pipeline, armor IOnHit dispatch
+ * (when wearer attacks), bow IOnHit dispatch (when arrow hits)</li>
+ * <li>{@code PlayerTickEvent} → {@link IOnEquip} / {@link IOnUnequip} detection</li>
+ * <li>{@code LivingDeathEvent} → {@link IOnPlayerDeath} on all equipped RPG items</li>
  * </ul>
  *
- * <p>Performance: All checks use fast {@code instanceof} guards. Non-RPG entities
- * and items are skipped in O(1). The handler never iterates the full entity list.</p>
+ * <p>
+ * Performance: All checks use fast {@code instanceof} guards. Non-RPG entities
+ * and items are skipped in O(1). The handler never iterates the full entity list.
+ * </p>
  */
 public class RPGCoreEventHandler {
 
@@ -50,8 +53,8 @@ public class RPGCoreEventHandler {
     private static final WeakHashMap<EntityPlayer, Item[]> PREVIOUS_ARMOR_ITEMS = new WeakHashMap<>();
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  LivingHurtEvent → IOnHurt (Armor Damage Pipeline)
-    //                   + IOnHit (Armor attack components + Bow arrow components)
+    // LivingHurtEvent → IOnHurt (Armor Damage Pipeline)
+    // + IOnHit (Armor attack components + Bow arrow components)
     // ─────────────────────────────────────────────────────────────────────────
 
     @SubscribeEvent
@@ -61,37 +64,57 @@ public class RPGCoreEventHandler {
         }
 
         EntityLivingBase hurtEntity = event.entityLiving;
-        
+
         // Scorched Mark Explosion Logic
-        if (hurtEntity.getEntityData().getInteger("ScorchedMarkTimer") > 0) {
-            if (event.source.getEntity() instanceof EntityPlayer && !event.source.isMagicDamage() && !event.source.isExplosion()) {
+        if (ScorchedMarkTracker.getTimer(hurtEntity) > 0) {
+            if (event.source.getEntity() instanceof EntityPlayer && !event.source.isMagicDamage()
+                && !event.source.isExplosion()) {
                 EntityPlayer player = (EntityPlayer) event.source.getEntity();
-                hurtEntity.getEntityData().setInteger("ScorchedMarkTimer", 0);
-                
+                ScorchedMarkTracker.clear(hurtEntity);
+
                 float baseDmg = 1.0f;
                 if (player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage) != null) {
-                    baseDmg = (float) player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage).getAttributeValue();
+                    baseDmg = (float) player
+                        .getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage)
+                        .getAttributeValue();
                 }
                 float explosionDmg = baseDmg * 1.25f;
-                
-                hurtEntity.worldObj.playSoundEffect(hurtEntity.posX, hurtEntity.posY, hurtEntity.posZ, "random.explode", 1.0F, (1.0F + (hurtEntity.worldObj.rand.nextFloat() - hurtEntity.worldObj.rand.nextFloat()) * 0.2F) * 0.7F);
-                
+
+                hurtEntity.worldObj.playSoundEffect(
+                    hurtEntity.posX,
+                    hurtEntity.posY,
+                    hurtEntity.posZ,
+                    "random.explode",
+                    1.0F,
+                    (1.0F + (hurtEntity.worldObj.rand.nextFloat() - hurtEntity.worldObj.rand.nextFloat()) * 0.2F)
+                        * 0.7F);
+
                 if (hurtEntity.worldObj instanceof net.minecraft.world.WorldServer) {
-                    ((net.minecraft.world.WorldServer)hurtEntity.worldObj).func_147487_a("largeexplode", hurtEntity.posX, hurtEntity.posY + hurtEntity.height/2.0f, hurtEntity.posZ, 5, 0.0, 0.0, 0.0, 0.0);
+                    ((net.minecraft.world.WorldServer) hurtEntity.worldObj).func_147487_a(
+                        "largeexplode",
+                        hurtEntity.posX,
+                        hurtEntity.posY + hurtEntity.height / 2.0f,
+                        hurtEntity.posZ,
+                        5,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0);
                 }
-                
+
                 net.minecraft.util.AxisAlignedBB aabb = hurtEntity.boundingBox.expand(3.0, 3.0, 3.0);
                 @SuppressWarnings("unchecked")
                 List<Entity> list = hurtEntity.worldObj.getEntitiesWithinAABBExcludingEntity(player, aabb);
                 for (Entity e : list) {
                     if (e instanceof EntityLivingBase) {
-                        DamageSource explosionSource = DamageSource.causePlayerDamage(player).setExplosion();
+                        DamageSource explosionSource = DamageSource.causePlayerDamage(player)
+                            .setExplosion();
                         e.attackEntityFrom(explosionSource, explosionDmg);
                     }
                 }
             }
         }
-        
+
         float modifiedDamage = event.ammount;
 
         // ── Part 1: Armor damage pipeline (IOnHurt on the TARGET's armor) ──
@@ -135,8 +158,11 @@ public class RPGCoreEventHandler {
             // Check if the damage came from an arrow and the shooter is holding an RPG bow
             Entity directSource = event.source.getSourceOfDamage();
             if (directSource instanceof EntityArrow && directSource != sourceEntity) {
-                // This is projectile damage — check if the shooter is holding an RPG bow
-                ItemStack heldItem = attacker.getCurrentEquippedItem();
+                EntityArrow arrow = (EntityArrow) directSource;
+                ItemStack heldItem = ArrowTracker.getBow(arrow);
+                if (heldItem == null) {
+                    heldItem = attacker.getCurrentEquippedItem();
+                }
                 if (heldItem != null && heldItem.getItem() instanceof ItemRPGBow) {
                     ItemRPGBow rpgBow = (ItemRPGBow) heldItem.getItem();
                     List<IOnHit> bowHitHandlers = rpgBow.getHitHandlers();
@@ -152,7 +178,7 @@ public class RPGCoreEventHandler {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  PlayerTickEvent → IOnEquip / IOnUnequip (Armor Change Detection)
+    // PlayerTickEvent → IOnEquip / IOnUnequip (Armor Change Detection)
     // ─────────────────────────────────────────────────────────────────────────
 
     @SubscribeEvent
@@ -223,7 +249,7 @@ public class RPGCoreEventHandler {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  LivingDeathEvent → IOnPlayerDeath (All RPG item types)
+    // LivingDeathEvent → IOnPlayerDeath (All RPG item types)
     // ─────────────────────────────────────────────────────────────────────────
 
     @SubscribeEvent
@@ -265,57 +291,42 @@ public class RPGCoreEventHandler {
      * Fires {@link IOnPlayerDeath} on all death-capable components of a given ItemStack.
      * Uses the unified {@link IRPGItemContainer} interface to support all item types.
      */
-    private void firePlayerDeathOnStack(EntityPlayer player, ItemStack itemStack,
-                                        DamageSource deathCause) {
+    private void firePlayerDeathOnStack(EntityPlayer player, ItemStack itemStack, DamageSource deathCause) {
         Item item = itemStack.getItem();
-
-        // Use specific type checks to access playerDeathHandlers
-        // (IRPGItemContainer doesn't expose component accessors to keep it minimal)
-        List<IOnPlayerDeath> deathHandlers = null;
-
-        if (item instanceof ItemRPGWeapon) {
-            deathHandlers = ((ItemRPGWeapon) item).getPlayerDeathHandlers();
-        } else if (item instanceof ItemRPGArmor) {
-            deathHandlers = ((ItemRPGArmor) item).getPlayerDeathHandlers();
-        } else if (item instanceof ItemRPGBow) {
-            deathHandlers = ((ItemRPGBow) item).getPlayerDeathHandlers();
-        }
-        // ItemRPGTool, ItemRPGHoe, ItemRPGAccessory will be checked via their
-        // getPlayerDeathHandlers() once their refactored versions are compiled.
-        // For now, use a generic approach:
-        if (deathHandlers == null) {
-            try {
-                java.lang.reflect.Method method = item.getClass().getMethod("getPlayerDeathHandlers");
-                Object result = method.invoke(item);
-                if (result instanceof List) {
-                    @SuppressWarnings("unchecked")
-                    List<IOnPlayerDeath> handlers = (List<IOnPlayerDeath>) result;
-                    deathHandlers = handlers;
+        if (item instanceof IRPGItemContainer) {
+            List<IOnPlayerDeath> deathHandlers = ((IRPGItemContainer) item).getPlayerDeathHandlers();
+            if (deathHandlers != null) {
+                for (IOnPlayerDeath deathHandler : deathHandlers) {
+                    deathHandler.onPlayerDeath(itemStack, player, deathCause);
                 }
-            } catch (Exception ignored) {
-                // Not an RPG item or doesn't have death handlers
-            }
-        }
-
-        if (deathHandlers != null) {
-            for (IOnPlayerDeath deathHandler : deathHandlers) {
-                deathHandler.onPlayerDeath(itemStack, player, deathCause);
             }
         }
     }
-    
+
     // ─────────────────────────────────────────────────────────────────────────
-    //  LivingUpdateEvent → Scorched Mark Timer
+    // ServerTickEvent → Scorched Mark & Watcher Reload Checks
     // ─────────────────────────────────────────────────────────────────────────
     @SubscribeEvent
-    public void onLivingUpdate(net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent event) {
-        EntityLivingBase entity = event.entityLiving;
-        if (!entity.worldObj.isRemote && entity.getEntityData().hasKey("ScorchedMarkTimer")) {
-            int timer = entity.getEntityData().getInteger("ScorchedMarkTimer");
-            if (timer > 0) {
-                entity.getEntityData().setInteger("ScorchedMarkTimer", timer - 1);
-                if (timer % 5 == 0 && entity.worldObj instanceof net.minecraft.world.WorldServer) {
-                    ((net.minecraft.world.WorldServer)entity.worldObj).func_147487_a("lava", entity.posX, entity.posY + entity.height / 2.0, entity.posZ, 1, 0.5, 0.5, 0.5, 0.0);
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            if (com.greyhat.dark_grey.api.RPGItemDataManager.getInstance()
+                .isReloadPending()) {
+                com.greyhat.dark_grey.api.RPGItemDataManager.getInstance()
+                    .reload(true);
+            }
+            ScorchedMarkTracker.tick();
+        }
+    }
+
+    @SubscribeEvent
+    public void onEntityJoinWorld(net.minecraftforge.event.entity.EntityJoinWorldEvent event) {
+        if (event.entity instanceof EntityArrow) {
+            EntityArrow arrow = (EntityArrow) event.entity;
+            if (arrow.shootingEntity instanceof EntityPlayer) {
+                EntityPlayer player = (EntityPlayer) arrow.shootingEntity;
+                ItemStack held = player.getCurrentEquippedItem();
+                if (held != null && held.getItem() instanceof ItemRPGBow) {
+                    ArrowTracker.registerArrow(arrow, held);
                 }
             }
         }

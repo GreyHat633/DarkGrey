@@ -1,39 +1,43 @@
 package com.greyhat.dark_grey.api;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.greyhat.dark_grey.DarkGrey;
-import com.greyhat.dark_grey.item.ItemRPGAccessory;
-import com.greyhat.dark_grey.item.ItemRPGArmor;
-import com.greyhat.dark_grey.item.ItemRPGBow;
-import com.greyhat.dark_grey.item.ItemRPGHoe;
-import com.greyhat.dark_grey.item.ItemRPGTool;
-import com.greyhat.dark_grey.item.ItemRPGWeapon;
-import com.greyhat.dark_grey.item.ItemRPGScythe;
-import com.greyhat.dark_grey.item.ItemRPGLance;
-import com.greyhat.dark_grey.item.ItemRPGAmmo;
-import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor.ArmorMaterial;
-import net.minecraftforge.common.util.EnumHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor.ArmorMaterial;
+import net.minecraftforge.common.util.EnumHelper;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.DarkGrey;
+import com.greyhat.dark_grey.item.ItemRPGAccessory;
+import com.greyhat.dark_grey.item.ItemRPGAmmo;
+import com.greyhat.dark_grey.item.ItemRPGArmor;
+import com.greyhat.dark_grey.item.ItemRPGBow;
+import com.greyhat.dark_grey.item.ItemRPGHoe;
+import com.greyhat.dark_grey.item.ItemRPGLance;
+import com.greyhat.dark_grey.item.ItemRPGScythe;
+import com.greyhat.dark_grey.item.ItemRPGTool;
+import com.greyhat.dark_grey.item.ItemRPGWeapon;
+
+import cpw.mods.fml.common.registry.GameRegistry;
+
 /**
  * Loads RPG items from the global data manager and registers them in the game.
  *
- * <p>Supports 11 item types mapped from Chinese Excel dropdown values to their
+ * <p>
+ * Supports 11 item types mapped from Chinese Excel dropdown values to their
  * corresponding Minecraft item base classes. Each type inherits the vanilla
- * behavior of its base class (e.g. hoe tills, bow shoots arrows).</p>
+ * behavior of its base class (e.g. hoe tills, bow shoots arrows).
+ * </p>
  */
 public class RPGItemLoader {
 
     public static void loadItemsFromData() {
         try {
-            Map<String, RPGItemDataManager.ItemConfig> configs = RPGItemDataManager.getInstance().getAllConfigs();
+            Map<String, RPGItemDataManager.ItemConfig> configs = RPGItemDataManager.getInstance()
+                .getAllConfigs();
             if (configs.isEmpty()) {
                 DarkGrey.LOG.warn("No RPG items found in data manager during initialization.");
                 return;
@@ -47,11 +51,10 @@ public class RPGItemLoader {
                 String texture = config.texture;
                 String unlocalizedName = "dark_grey:" + id;
 
-                
-                Item.ToolMaterial toolMaterial = EnumHelper.addToolMaterial(
-                    "CUSTOM_" + id.toUpperCase(), 0, 100, 2.0F, 0.0F, 15);
-                ArmorMaterial armorMaterial = EnumHelper.addArmorMaterial(
-                    "CUSTOM_" + id.toUpperCase(), 10, new int[]{0, 0, 0, 0}, 15);
+                Item.ToolMaterial toolMaterial = EnumHelper
+                    .addToolMaterial("CUSTOM_" + id.toUpperCase(), 0, 100, 2.0F, 0.0F, 15);
+                ArmorMaterial armorMaterial = EnumHelper
+                    .addArmorMaterial("CUSTOM_" + id.toUpperCase(), 10, new int[] { 0, 0, 0, 0 }, 15);
 
                 // Build components from JSON
                 List<IRPGComponent> components = buildComponents(id, config);
@@ -60,8 +63,11 @@ public class RPGItemLoader {
                 Item rpgItem = createItemForType(type, id, toolMaterial, armorMaterial, components);
 
                 if (rpgItem == null) {
-                    DarkGrey.LOG.warn("Unknown item type: '" + type + "' for item " + id
-                        + ". Valid types: 剑, 斧, 镐, 铲, 锄, 弓, 头盔, 胸甲, 护腿, 靴子, 饰品");
+                    DarkGrey.LOG.warn(
+                        "Unknown item type: '" + type
+                            + "' for item "
+                            + id
+                            + ". Valid types: 剑, 斧, 镐, 铲, 锄, 弓, 头盔, 胸甲, 护腿, 靴子, 饰品");
                     continue;
                 }
 
@@ -76,8 +82,8 @@ public class RPGItemLoader {
                 // Auto-detect equipped texture for 3D rendering
                 registerEquippedRenderer(rpgItem, id, texture);
 
-                DarkGrey.LOG.info("Registered RPG Item: " + id + " (type=" + type + ") with "
-                    + components.size() + " components.");
+                DarkGrey.LOG.info(
+                    "Registered RPG Item: " + id + " (type=" + type + ") with " + components.size() + " components.");
             }
         } catch (Exception e) {
             DarkGrey.LOG.error("Failed to load RPG items from Data Manager", e);
@@ -87,17 +93,15 @@ public class RPGItemLoader {
     /**
      * Creates the correct Item subclass based on the type string from Excel.
      */
-    private static Item createItemForType(String type, String id,
-                                           Item.ToolMaterial toolMaterial,
-                                           ArmorMaterial armorMaterial,
-                                           List<IRPGComponent> components) {
+    private static Item createItemForType(String type, String id, Item.ToolMaterial toolMaterial,
+        ArmorMaterial armorMaterial, List<IRPGComponent> components) {
         if (type == null) return null;
 
         switch (type) {
             // —— Weapons ——
             case "剑":
             case "sword":
-            case "Weapon":  // backward compat
+            case "Weapon": // backward compat
             case "weapon":
                 return new ItemRPGWeapon(id, toolMaterial, components);
 
@@ -145,7 +149,7 @@ public class RPGItemLoader {
             // —— Armor —— (renderIndex: helmet/boots=0, chest/legs=1)
             case "\u5934\u76D4": // 头盔
             case "helmet":
-            case "Armor":   // backward compat (defaults to helmet)
+            case "Armor": // backward compat (defaults to helmet)
             case "armor":
                 return new ItemRPGArmor(id, armorMaterial, 0, 0, components);
             case "\u80F8\u7532": // 胸甲
@@ -161,7 +165,7 @@ public class RPGItemLoader {
             // —— Accessory ——
             case "\u9970\u54C1": // 饰品
             case "accessory":
-            case "Accessory":  // backward compat
+            case "Accessory": // backward compat
                 return new ItemRPGAccessory(id, components);
 
             default:
@@ -178,7 +182,8 @@ public class RPGItemLoader {
 
         for (JsonElement compElem : config.componentsJson) {
             JsonObject compObj = compElem.getAsJsonObject();
-            String compName = compObj.get("name").getAsString();
+            String compName = compObj.get("name")
+                .getAsString();
             JsonObject params = compObj.has("params") ? compObj.getAsJsonObject("params") : new JsonObject();
 
             try {
@@ -201,8 +206,7 @@ public class RPGItemLoader {
             return; // Don't use normal RPGItemRenderer for bows!
         }
 
-        if (!(rpgItem instanceof ItemRPGWeapon || rpgItem instanceof ItemRPGTool
-              || rpgItem instanceof ItemRPGHoe)) {
+        if (!(rpgItem instanceof ItemRPGWeapon || rpgItem instanceof ItemRPGTool || rpgItem instanceof ItemRPGHoe)) {
             return;
         }
 
@@ -218,7 +222,7 @@ public class RPGItemLoader {
 
         String equippedName = prefix + "_equipped";
         String resourcePath = "/assets/dark_grey/textures/items/" + equippedName + ".png";
-        
+
         boolean textureExists = RPGItemLoader.class.getResource(resourcePath) != null;
         if (!textureExists) {
             // Fallback for IDE environments where resources aren't synced to classpath yet
@@ -240,4 +244,5 @@ public class RPGItemLoader {
                 DarkGrey.LOG.info("Bound custom 3D renderer for " + id + " using " + equippedName);
             }
         }
-    }}
+    }
+}

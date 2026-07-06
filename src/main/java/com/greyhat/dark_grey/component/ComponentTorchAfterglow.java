@@ -1,18 +1,19 @@
-package com.greyhat.dark_grey.api.impl;
+package com.greyhat.dark_grey.component;
 
-import com.google.gson.JsonObject;
-import com.greyhat.dark_grey.api.IRPGComponent;
-import com.greyhat.dark_grey.api.capability.IHasTooltip;
-import com.greyhat.dark_grey.api.capability.IOnHeldTick;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.api.IRPGComponent;
+import com.greyhat.dark_grey.api.capability.IHasTooltip;
+import com.greyhat.dark_grey.api.capability.IOnHeldTick;
 
 public class ComponentTorchAfterglow implements IRPGComponent, IOnHeldTick, IHasTooltip {
 
@@ -22,12 +23,12 @@ public class ComponentTorchAfterglow implements IRPGComponent, IOnHeldTick, IHas
     }
 
     @Override
-    public void configure(JsonObject params) {
-    }
+    public void configure(JsonObject params) {}
 
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List tooltip, boolean advanced) {
-        tooltip.add("\u00A76\u263C \u70AC\u706B\u6B8B\u5149 \u00A77| \u00A7e\u6301\u6709\u65F6\u514D\u75AB\u4E00\u5207\u8D1F\u9762\u72B6\u6001");
+        tooltip.add(
+            "\u00A76\u263C \u70AC\u706B\u6B8B\u5149 \u00A77| \u00A7e\u6301\u6709\u65F6\u514D\u75AB\u4E00\u5207\u8D1F\u9762\u72B6\u6001");
     }
 
     @Override

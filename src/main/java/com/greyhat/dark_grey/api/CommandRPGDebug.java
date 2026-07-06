@@ -19,11 +19,13 @@ public class CommandRPGDebug extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-            RPGItemDataManager.getInstance().reload();
+            RPGItemDataManager.getInstance()
+                .reload();
             sender.addChatMessage(new ChatComponentText("§aForce reloaded RPG items from JSON!"));
         }
-        
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance().getConfig("vampire_blade");
+
+        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
+            .getConfig("vampire_blade");
         if (config == null) {
             sender.addChatMessage(new ChatComponentText("§cvampire_blade config is null!"));
             return;
@@ -33,7 +35,7 @@ public class CommandRPGDebug extends CommandBase {
         sender.addChatMessage(new ChatComponentText("§e- Durability: " + config.durability));
         sender.addChatMessage(new ChatComponentText("§e- Enchants: " + config.enchantments));
     }
-    
+
     @Override
     public boolean canCommandSenderUseCommand(ICommandSender sender) {
         return true;

@@ -1,11 +1,14 @@
 package com.greyhat.dark_grey.item;
 
-import com.greyhat.dark_grey.api.IRPGComponent;
 import java.util.List;
+
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 
+import com.greyhat.dark_grey.api.IRPGComponent;
+
 public class ItemRPGLance extends ItemRPGWeapon {
+
     public ItemRPGLance(String name, ToolMaterial material, List<IRPGComponent> components) {
         super(name, material, components);
     }

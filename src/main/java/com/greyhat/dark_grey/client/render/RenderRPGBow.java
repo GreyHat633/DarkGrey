@@ -1,30 +1,33 @@
-// 
+//
 // Decompiled by Procyon v0.6.0
-// 
+//
 
 package com.greyhat.dark_grey.client.render;
 
-import net.minecraft.util.IIcon;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL11;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.client.IItemRenderer;
 
-public class RenderRPGBow implements IItemRenderer
-{
+import org.lwjgl.opengl.GL11;
+
+public class RenderRPGBow implements IItemRenderer {
+
     public boolean handleRenderType(final ItemStack item, final IItemRenderer.ItemRenderType type) {
-        return type == IItemRenderer.ItemRenderType.EQUIPPED || type == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON;
+        return type == IItemRenderer.ItemRenderType.EQUIPPED
+            || type == IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON;
     }
-    
-    public boolean shouldUseRenderHelper(final IItemRenderer.ItemRenderType type, final ItemStack item, final IItemRenderer.ItemRendererHelper helper) {
+
+    public boolean shouldUseRenderHelper(final IItemRenderer.ItemRenderType type, final ItemStack item,
+        final IItemRenderer.ItemRendererHelper helper) {
         return false;
     }
-    
+
     public void renderItem(final IItemRenderer.ItemRenderType type, final ItemStack item, final Object... data) {
-        final EntityLivingBase entity = (EntityLivingBase)data[1];
+        final EntityLivingBase entity = (EntityLivingBase) data[1];
         GL11.glPopMatrix();
         GL11.glPushMatrix();
         if (type == IItemRenderer.ItemRenderType.EQUIPPED) {
@@ -47,9 +50,18 @@ public class RenderRPGBow implements IItemRenderer
         GL11.glTranslatef(-0.9375f, -0.0625f, 0.0f);
         final IIcon icon = entity.getItemIcon(item, 0);
         if (icon != null) {
-            Minecraft.getMinecraft().renderEngine.bindTexture(Minecraft.getMinecraft().renderEngine.getResourceLocation(item.getItemSpriteNumber()));
+            Minecraft.getMinecraft().renderEngine
+                .bindTexture(Minecraft.getMinecraft().renderEngine.getResourceLocation(item.getItemSpriteNumber()));
             final Tessellator tessellator = Tessellator.instance;
-            ItemRenderer.renderItemIn2D(tessellator, icon.getMaxU(), icon.getMinV(), icon.getMinU(), icon.getMaxV(), icon.getIconWidth(), icon.getIconHeight(), 0.0625f);
+            ItemRenderer.renderItemIn2D(
+                tessellator,
+                icon.getMaxU(),
+                icon.getMinV(),
+                icon.getMinU(),
+                icon.getMaxV(),
+                icon.getIconWidth(),
+                icon.getIconHeight(),
+                0.0625f);
         }
         GL11.glPopMatrix();
         GL11.glPushMatrix();

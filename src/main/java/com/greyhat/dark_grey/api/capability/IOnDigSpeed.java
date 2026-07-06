@@ -6,12 +6,16 @@ import net.minecraft.item.ItemStack;
 /**
  * Capability interface for components that modify a tool's dig (mining) speed.
  *
- * <p>Triggered by the Forge method {@code Item.getDigSpeed(ItemStack, Block, int)}.
+ * <p>
+ * Triggered by the Forge method {@code Item.getDigSpeed(ItemStack, Block, int)}.
  * Multiple components are chained in a pipeline: each receives the current speed
- * (possibly already modified by previous components) and returns the new speed.</p>
+ * (possibly already modified by previous components) and returns the new speed.
+ * </p>
  *
- * <p>In Godot terms, this is like a series of {@code AnimationTree} blend nodes,
- * where each node modifies the animation parameter before passing it downstream.</p>
+ * <p>
+ * In Godot terms, this is like a series of {@code AnimationTree} blend nodes,
+ * where each node modifies the animation parameter before passing it downstream.
+ * </p>
  */
 public interface IOnDigSpeed {
 
@@ -24,6 +28,5 @@ public interface IOnDigSpeed {
      * @param currentSpeed  the current dig speed (from material or previous components)
      * @return the modified dig speed
      */
-    float modifyDigSpeed(ItemStack toolStack, Block targetBlock,
-                         int blockMetadata, float currentSpeed);
+    float modifyDigSpeed(ItemStack toolStack, Block targetBlock, int blockMetadata, float currentSpeed);
 }

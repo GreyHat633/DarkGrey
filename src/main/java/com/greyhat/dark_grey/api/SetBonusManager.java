@@ -1,24 +1,25 @@
-// 
+//
 // Decompiled by Procyon v0.6.0
-// 
+//
 
 package com.greyhat.dark_grey.api;
 
-import net.minecraft.entity.EntityLivingBase;
-import java.util.Iterator;
-import java.util.List;
-import net.minecraft.item.ItemStack;
-import com.greyhat.dark_grey.item.ItemRPGArmor;
-import com.greyhat.dark_grey.api.capability.ISetComponent;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import net.minecraft.entity.player.EntityPlayer;
 import java.util.WeakHashMap;
 
-public class SetBonusManager
-{
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+
+import com.greyhat.dark_grey.api.capability.ISetComponent;
+import com.greyhat.dark_grey.item.ItemRPGArmor;
+
+public class SetBonusManager {
+
     private static final WeakHashMap<EntityPlayer, Map<String, SetInfo>> ACTIVE_SETS;
-    
+
     public static void recalculateSets(final EntityPlayer player) {
         if (player.worldObj.isRemote) {
             return;
@@ -29,11 +30,11 @@ public class SetBonusManager
             final ItemStack stack = player.inventory.armorInventory[slot];
             if (stack != null) {
                 if (stack.getItem() instanceof ItemRPGArmor) {
-                    final ItemRPGArmor armor = (ItemRPGArmor)stack.getItem();
+                    final ItemRPGArmor armor = (ItemRPGArmor) stack.getItem();
                     final List<IRPGComponent> components = armor.getAllComponents();
                     for (final IRPGComponent comp : components) {
                         if (comp instanceof ISetComponent) {
-                            final ISetComponent setComp = (ISetComponent)comp;
+                            final ISetComponent setComp = (ISetComponent) comp;
                             final String setId = setComp.getSetId();
                             counts.put(setId, counts.getOrDefault(setId, 0) + 1);
                             if (representativeInstances.containsKey(setId)) {
@@ -47,8 +48,7 @@ public class SetBonusManager
         }
         if (counts.isEmpty()) {
             SetBonusManager.ACTIVE_SETS.remove(player);
-        }
-        else {
+        } else {
             final Map<String, SetInfo> playerSets = new HashMap<String, SetInfo>();
             for (final Map.Entry<String, Integer> entry : counts.entrySet()) {
                 final String setId2 = entry.getKey();
@@ -57,16 +57,17 @@ public class SetBonusManager
             SetBonusManager.ACTIVE_SETS.put(player, playerSets);
         }
     }
-    
+
     public static int getActiveSetCount(final EntityPlayer player, final String setId) {
         if (player.worldObj.isRemote) {
             int count = 0;
             for (int i = 0; i < 4; ++i) {
                 final ItemStack stack = player.inventory.armorInventory[i];
                 if (stack != null && stack.getItem() instanceof ItemRPGArmor) {
-                    final ItemRPGArmor armor = (ItemRPGArmor)stack.getItem();
+                    final ItemRPGArmor armor = (ItemRPGArmor) stack.getItem();
                     for (final IRPGComponent comp : armor.getAllComponents()) {
-                        if (comp instanceof ISetComponent && ((ISetComponent)comp).getSetId().equals(setId)) {
+                        if (comp instanceof ISetComponent && ((ISetComponent) comp).getSetId()
+                            .equals(setId)) {
                             ++count;
                             break;
                         }
@@ -81,7 +82,7 @@ public class SetBonusManager
         }
         return 0;
     }
-    
+
     public static float fireOnHit(final EntityPlayer attacker, final EntityLivingBase target, final float damage) {
         final Map<String, SetInfo> playerSets = SetBonusManager.ACTIVE_SETS.get(attacker);
         if (playerSets == null || playerSets.isEmpty()) {
@@ -93,7 +94,7 @@ public class SetBonusManager
         }
         return currentDamage;
     }
-    
+
     public static void fireOnKill(final EntityPlayer killer, final EntityLivingBase victim) {
         final Map<String, SetInfo> playerSets = SetBonusManager.ACTIVE_SETS.get(killer);
         if (playerSets == null || playerSets.isEmpty()) {
@@ -103,16 +104,16 @@ public class SetBonusManager
             info.instance.onSetKill(killer, victim, info.pieceCount);
         }
     }
-    
+
     static {
         ACTIVE_SETS = new WeakHashMap<EntityPlayer, Map<String, SetInfo>>();
     }
-    
-    public static class SetInfo
-    {
+
+    public static class SetInfo {
+
         public final int pieceCount;
         public final ISetComponent instance;
-        
+
         public SetInfo(final int pieceCount, final ISetComponent instance) {
             this.pieceCount = pieceCount;
             this.instance = instance;

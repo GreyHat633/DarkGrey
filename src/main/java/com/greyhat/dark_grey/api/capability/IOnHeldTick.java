@@ -9,6 +9,7 @@ import net.minecraft.world.World;
  * while the player is actively holding the weapon.
  */
 public interface IOnHeldTick {
+
     /**
      * Called every tick while the item is held by the player.
      *
