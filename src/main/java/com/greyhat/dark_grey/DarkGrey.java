@@ -41,6 +41,8 @@ import java.util.function.Supplier;
 import com.greyhat.dark_grey.api.ComponentRegistry;
 import com.greyhat.dark_grey.api.impl.CleaveComponent;
 import com.greyhat.dark_grey.common.DarkGreyTab;
+import com.greyhat.dark_grey.component.ComponentSolarFlare;
+import com.greyhat.dark_grey.entity.EntityPhantomStrike;
 import cpw.mods.fml.common.registry.GameRegistry;
 import com.greyhat.dark_grey.common.ItemTabIcon;
 import com.greyhat.dark_grey.api.RPGItemDataManager;
@@ -83,6 +85,7 @@ public class DarkGrey
         ComponentRegistry.register("\u7075\u6c14\u6d2a\u6d41", (Supplier<IRPGComponent>)com.greyhat.dark_grey.component.ComponentAuraTorrent::new);
         ComponentRegistry.register("\u70AC\u706B\u7684\u6B8B\u5149", (Supplier<IRPGComponent>)com.greyhat.dark_grey.api.impl.ComponentTorchAfterglow::new);
         ComponentRegistry.register("\u70AC\u706B\u6B8B\u5149", (Supplier<IRPGComponent>)com.greyhat.dark_grey.api.impl.ComponentTorchAfterglow::new);
+        ComponentRegistry.register("\u8000\u6591", (Supplier<IRPGComponent>)ComponentSolarFlare::new);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG \u7ec4\u4ef6\u5df2\u6ce8\u518c ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG \u7269\u54c1\u5df2\u52a0\u8f7d ========");
@@ -92,6 +95,7 @@ public class DarkGrey
         EntityRegistry.registerModEntity((Class)EntityMadokaRing.class, "madoka_ring", randomEntityId + 2, (Object)DarkGrey.instance, 64, 20, true);
         EntityRegistry.registerModEntity((Class)EntityScythe.class, "calamity_scythe", randomEntityId + 3, (Object)DarkGrey.instance, 64, 20, true);
         EntityRegistry.registerModEntity((Class)com.greyhat.dark_grey.entity.EntityAuraTorrent.class, "aura_torrent", randomEntityId + 4, (Object)DarkGrey.instance, 64, 20, true);
+        EntityRegistry.registerModEntity((Class)EntityPhantomStrike.class, "phantom_strike", randomEntityId + 5, (Object)DarkGrey.instance, 64, 20, true);
         DarkGrey.LOG.info("======== DarkGrey Mod: \u5438\u8840\u9b3c\u5b9e\u4f53\u5df2\u6ce8\u518c ========");
     }
     

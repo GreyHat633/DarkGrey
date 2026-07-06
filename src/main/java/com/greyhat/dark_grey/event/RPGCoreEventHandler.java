@@ -61,6 +61,37 @@ public class RPGCoreEventHandler {
         }
 
         EntityLivingBase hurtEntity = event.entityLiving;
+        
+        // Scorched Mark Explosion Logic
+        if (hurtEntity.getEntityData().getInteger("ScorchedMarkTimer") > 0) {
+            if (event.source.getEntity() instanceof EntityPlayer && !event.source.isMagicDamage() && !event.source.isExplosion()) {
+                EntityPlayer player = (EntityPlayer) event.source.getEntity();
+                hurtEntity.getEntityData().setInteger("ScorchedMarkTimer", 0);
+                
+                float baseDmg = 1.0f;
+                if (player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage) != null) {
+                    baseDmg = (float) player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage).getAttributeValue();
+                }
+                float explosionDmg = baseDmg * 1.25f;
+                
+                hurtEntity.worldObj.playSoundEffect(hurtEntity.posX, hurtEntity.posY, hurtEntity.posZ, "random.explode", 1.0F, (1.0F + (hurtEntity.worldObj.rand.nextFloat() - hurtEntity.worldObj.rand.nextFloat()) * 0.2F) * 0.7F);
+                
+                if (hurtEntity.worldObj instanceof net.minecraft.world.WorldServer) {
+                    ((net.minecraft.world.WorldServer)hurtEntity.worldObj).func_147487_a("largeexplode", hurtEntity.posX, hurtEntity.posY + hurtEntity.height/2.0f, hurtEntity.posZ, 5, 0.0, 0.0, 0.0, 0.0);
+                }
+                
+                net.minecraft.util.AxisAlignedBB aabb = hurtEntity.boundingBox.expand(3.0, 3.0, 3.0);
+                @SuppressWarnings("unchecked")
+                List<Entity> list = hurtEntity.worldObj.getEntitiesWithinAABBExcludingEntity(player, aabb);
+                for (Entity e : list) {
+                    if (e instanceof EntityLivingBase) {
+                        DamageSource explosionSource = DamageSource.causePlayerDamage(player).setExplosion();
+                        e.attackEntityFrom(explosionSource, explosionDmg);
+                    }
+                }
+            }
+        }
+        
         float modifiedDamage = event.ammount;
 
         // ── Part 1: Armor damage pipeline (IOnHurt on the TARGET's armor) ──
@@ -269,6 +300,23 @@ public class RPGCoreEventHandler {
         if (deathHandlers != null) {
             for (IOnPlayerDeath deathHandler : deathHandlers) {
                 deathHandler.onPlayerDeath(itemStack, player, deathCause);
+            }
+        }
+    }
+    
+    // ─────────────────────────────────────────────────────────────────────────
+    //  LivingUpdateEvent → Scorched Mark Timer
+    // ─────────────────────────────────────────────────────────────────────────
+    @SubscribeEvent
+    public void onLivingUpdate(net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent event) {
+        EntityLivingBase entity = event.entityLiving;
+        if (!entity.worldObj.isRemote && entity.getEntityData().hasKey("ScorchedMarkTimer")) {
+            int timer = entity.getEntityData().getInteger("ScorchedMarkTimer");
+            if (timer > 0) {
+                entity.getEntityData().setInteger("ScorchedMarkTimer", timer - 1);
+                if (timer % 5 == 0 && entity.worldObj instanceof net.minecraft.world.WorldServer) {
+                    ((net.minecraft.world.WorldServer)entity.worldObj).func_147487_a("lava", entity.posX, entity.posY + entity.height / 2.0, entity.posZ, 1, 0.5, 0.5, 0.5, 0.0);
+                }
             }
         }
     }

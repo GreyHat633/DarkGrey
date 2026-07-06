@@ -9,17 +9,16 @@ import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-public class RPGItemRenderer implements IItemRenderer {
+public class RenderRPGLance implements IItemRenderer {
 
     private final String equippedTextureName;
 
-    public RPGItemRenderer(String equippedTextureName) {
+    public RenderRPGLance(String equippedTextureName) {
         this.equippedTextureName = equippedTextureName;
     }
 
     @Override
     public boolean handleRenderType(ItemStack item, ItemRenderType type) {
-        // Handle third-person and first-person equipped rendering
         return type == ItemRenderType.EQUIPPED || type == ItemRenderType.EQUIPPED_FIRST_PERSON;
     }
 
@@ -32,26 +31,28 @@ public class RPGItemRenderer implements IItemRenderer {
     public void renderItem(ItemRenderType type, ItemStack item, Object... data) {
         GL11.glPushMatrix();
 
-        // Use the explicitly provided equipped texture name
         ResourceLocation equippedTex = new ResourceLocation("dark_grey", "textures/items/" + this.equippedTextureName + ".png");
         Minecraft.getMinecraft().getTextureManager().bindTexture(equippedTex);
 
         Tessellator tessellator = Tessellator.instance;
-        
-        // Setup state for ItemRenderer.renderItemIn2D
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-        
-        // UV coordinates for a full, non-atlased texture
+
+        if (type == ItemRenderType.EQUIPPED) {
+            // Scale up 1.5x in third person
+            GL11.glScalef(1.5F, 1.5F, 1.5F);
+            // Translate slightly to make it fit in hand nicely after scaling
+            GL11.glTranslatef(-0.1F, -0.15F, 0.0F); 
+        }
+
         float maxU = 1.0F;
         float minU = 0.0F;
         float maxV = 1.0F;
         float minV = 0.0F;
         
-        // The texture width/height (assuming 256x256 for the high-res equipped textures)
+        // Use 256x256 to fix jagged/pixelated edges when extruding the 3D model!
         int texW = 256;
         int texH = 256;
         
-        // Thickness of the item
         float thickness = 0.0625F;
         
         ItemRenderer.renderItemIn2D(tessellator, maxU, minV, minU, maxV, texW, texH, thickness);

@@ -11,6 +11,7 @@ import com.greyhat.dark_grey.item.ItemRPGHoe;
 import com.greyhat.dark_grey.item.ItemRPGTool;
 import com.greyhat.dark_grey.item.ItemRPGWeapon;
 import com.greyhat.dark_grey.item.ItemRPGScythe;
+import com.greyhat.dark_grey.item.ItemRPGLance;
 import com.greyhat.dark_grey.item.ItemRPGAmmo;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.item.Item;
@@ -99,6 +100,11 @@ public class RPGItemLoader {
             case "Weapon":  // backward compat
             case "weapon":
                 return new ItemRPGWeapon(id, toolMaterial, components);
+
+            // —— Lance ——
+            case "\u957F\u67AA": // 长枪
+            case "lance":
+                return new ItemRPGLance(id, toolMaterial, components);
 
             // —— Wand ——
             case "\u6cd5\u6756": // 法杖
@@ -201,6 +207,7 @@ public class RPGItemLoader {
         }
 
         boolean isScythe = rpgItem instanceof ItemRPGScythe;
+        boolean isLance = rpgItem instanceof ItemRPGLance;
 
         String prefix = id;
         if (texture != null && !texture.isEmpty() && texture.contains(":")) {
@@ -225,6 +232,9 @@ public class RPGItemLoader {
             if (isScythe) {
                 DarkGrey.proxy.registerScytheRenderer(rpgItem, equippedName);
                 DarkGrey.LOG.info("Bound custom scythe renderer for " + id + " using " + equippedName);
+            } else if (isLance) {
+                DarkGrey.proxy.registerLanceRenderer(rpgItem, equippedName);
+                DarkGrey.LOG.info("Bound custom lance renderer for " + id + " using " + equippedName);
             } else {
                 DarkGrey.proxy.registerItemRenderer(rpgItem, equippedName);
                 DarkGrey.LOG.info("Bound custom 3D renderer for " + id + " using " + equippedName);

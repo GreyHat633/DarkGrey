@@ -18,6 +18,7 @@ public class CommonProxy {
     public void postInit(FMLPostInitializationEvent event) {}
     public void serverStarting(FMLServerStartingEvent event) {}
     public void registerItemRenderer(Item item, String equippedTextureName) {}
+    public void registerLanceRenderer(Item item, String equippedTextureName) {}
     public void registerRenderers() {}
     public void registerBowRenderer(Item item) {}
     public void registerScytheRenderer(Item item, String equippedTextureName) {}

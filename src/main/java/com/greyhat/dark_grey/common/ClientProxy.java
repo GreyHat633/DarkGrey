@@ -10,6 +10,7 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(com.greyhat.dark_grey.entity.EntityMadokaRing.class, new com.greyhat.dark_grey.client.render.RenderMadokaRing());
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(com.greyhat.dark_grey.entity.EntityScythe.class, new com.greyhat.dark_grey.client.render.RenderScythe());
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(com.greyhat.dark_grey.entity.EntityAuraTorrent.class, new com.greyhat.dark_grey.client.render.RenderInvisible());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(com.greyhat.dark_grey.entity.EntityPhantomStrike.class, new com.greyhat.dark_grey.client.render.RenderInvisible());
     }
     
     @Override
@@ -24,5 +25,9 @@ public class ClientProxy extends CommonProxy {
     public void registerScytheRenderer(Item item, String equippedTextureName) {
         // Scythes use custom RenderScytheWeapon in first person/third person for scaled sword grip.
         net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderScytheWeapon(equippedTextureName));
+    }
+    
+    public void registerLanceRenderer(Item item, String equippedTextureName) {
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderRPGLance(equippedTextureName));
     }
 }
