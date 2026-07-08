@@ -20,7 +20,7 @@ public class ClientProxy extends CommonProxy {
             new com.greyhat.dark_grey.client.render.RenderInvisible());
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityPhantomStrike.class,
-            new com.greyhat.dark_grey.client.render.RenderInvisible());
+            new com.greyhat.dark_grey.client.render.RenderPhantomStrike());
     }
 
     @Override

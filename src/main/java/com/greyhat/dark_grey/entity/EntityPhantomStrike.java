@@ -13,7 +13,10 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-public class EntityPhantomStrike extends Entity {
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
+
+public class EntityPhantomStrike extends Entity implements IEntityAdditionalSpawnData {
 
     private int ticksAlive = 0;
     private EntityLivingBase thrower;
@@ -21,13 +24,14 @@ public class EntityPhantomStrike extends Entity {
 
     // P1 #9: 去重 Set，防止每 tick 重复对同一敌人施加高额伤害
     private final Set<Integer> hitEntityIds = new HashSet<>();
+    public double startX, startY, startZ;
 
     public EntityPhantomStrike(World world) {
         super(world);
         this.setSize(1.5F, 1.5F);
     }
 
-    public EntityPhantomStrike(World world, EntityLivingBase thrower, float damage) {
+    public EntityPhantomStrike(World world, EntityLivingBase thrower, float damage, Vec3 dashDir) {
         super(world);
         this.thrower = thrower;
         this.damage = damage;
@@ -40,11 +44,40 @@ public class EntityPhantomStrike extends Entity {
             thrower.rotationYaw,
             thrower.rotationPitch);
 
-        Vec3 look = thrower.getLookVec();
+        this.startX = this.posX;
+        this.startY = this.posY;
+        this.startZ = this.posZ;
+
         double speed = 2.0;
-        this.motionX = look.xCoord * speed;
-        this.motionY = look.yCoord * speed;
-        this.motionZ = look.zCoord * speed;
+        this.motionX = dashDir.xCoord * speed;
+        this.motionY = dashDir.yCoord * speed;
+        this.motionZ = dashDir.zCoord * speed;
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        buffer.writeFloat(this.rotationYaw);
+        buffer.writeFloat(this.rotationPitch);
+        buffer.writeDouble(this.motionX);
+        buffer.writeDouble(this.motionY);
+        buffer.writeDouble(this.motionZ);
+        buffer.writeDouble(this.startX);
+        buffer.writeDouble(this.startY);
+        buffer.writeDouble(this.startZ);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf additionalData) {
+        this.rotationYaw = additionalData.readFloat();
+        this.prevRotationYaw = this.rotationYaw;
+        this.rotationPitch = additionalData.readFloat();
+        this.prevRotationPitch = this.rotationPitch;
+        this.motionX = additionalData.readDouble();
+        this.motionY = additionalData.readDouble();
+        this.motionZ = additionalData.readDouble();
+        this.startX = additionalData.readDouble();
+        this.startY = additionalData.readDouble();
+        this.startZ = additionalData.readDouble();
     }
 
     @Override
@@ -55,21 +88,51 @@ public class EntityPhantomStrike extends Entity {
         super.onUpdate();
         this.ticksAlive++;
 
-        // P0 #3: 去除 !isRemote 限制，使客户端也同步销毁，避免幽灵实体和粒子残留
-        if (this.ticksAlive > 50) {
+        // Linger duration: 15 ticks total, thrust for first 5 ticks
+        if (this.ticksAlive > 15) {
             this.setDead();
             return;
         }
 
-        // Use moveEntity to handle block collisions automatically
-        this.moveEntity(this.motionX, this.motionY, this.motionZ);
-
-        if (this.isCollidedHorizontally) {
-            this.setDead();
-            return;
+        if (this.ticksAlive <= 5) {
+            // Use moveEntity to handle block collisions automatically
+            this.moveEntity(this.motionX, this.motionY, this.motionZ);
         }
 
-        if (!this.worldObj.isRemote) {
+        // --- Client Side Particle Explosion ---
+        if (this.worldObj.isRemote && this.ticksAlive == 1) {
+            // Generate a burst of particles thrusting forward in a cone shape
+            Vec3 dir = Vec3.createVectorHelper(this.motionX, this.motionY, this.motionZ)
+                .normalize();
+            for (int i = 0; i < 150; i++) {
+                double spread = 0.8;
+                double vx = dir.xCoord * 1.8 + (this.rand.nextDouble() - 0.5) * spread;
+                double vy = dir.yCoord * 1.8 + (this.rand.nextDouble() - 0.5) * spread;
+                double vz = dir.zCoord * 1.8 + (this.rand.nextDouble() - 0.5) * spread;
+
+                this.worldObj.spawnParticle("flame", this.startX, this.startY, this.startZ, vx, vy, vz);
+
+                // Add some critical hit sparks and lava pops
+                if (this.rand.nextInt(3) == 0) {
+                    this.worldObj
+                        .spawnParticle("crit", this.startX, this.startY, this.startZ, vx * 1.2, vy * 1.2, vz * 1.2);
+                }
+                if (this.rand.nextInt(5) == 0) {
+                    this.worldObj
+                        .spawnParticle("lava", this.startX, this.startY, this.startZ, vx * 0.5, vy * 0.5, vz * 0.5);
+                }
+
+                // Add reddust (red/orange)
+                if (this.rand.nextInt(2) == 0) {
+                    this.worldObj.spawnParticle("reddust", this.startX, this.startY, this.startZ, 0.0, 0.0, 0.0);
+                }
+            }
+        }
+        // --------------------------------------
+
+        // P3: Remove isCollidedHorizontally check so it pierces through walls!
+
+        if (!this.worldObj.isRemote && this.ticksAlive <= 5) {
             // Apply damage and mark to entities in a wide AABB (cone simulation)
             AxisAlignedBB aabb = this.boundingBox.expand(1.5, 1.5, 1.5);
             @SuppressWarnings("unchecked")
@@ -98,16 +161,6 @@ public class EntityPhantomStrike extends Entity {
                     // Apply Scorched Mark to tracking system
                     com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);
                 }
-            }
-        } else {
-            // Client-side particles to simulate massive cone
-            for (int i = 0; i < 15; i++) {
-                double rx = this.posX + (this.rand.nextDouble() - 0.5) * 3.0;
-                double ry = this.posY + (this.rand.nextDouble() - 0.5) * 3.0;
-                double rz = this.posZ + (this.rand.nextDouble() - 0.5) * 3.0;
-                this.worldObj
-                    .spawnParticle("flame", rx, ry, rz, this.motionX * 0.1, this.motionY * 0.1, this.motionZ * 0.1);
-                this.worldObj.spawnParticle("reddust", rx, ry, rz, 0, 0, 0);
             }
         }
     }

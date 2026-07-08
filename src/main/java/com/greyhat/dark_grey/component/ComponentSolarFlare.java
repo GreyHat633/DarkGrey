@@ -109,6 +109,10 @@ public class ComponentSolarFlare
             player.getEntityData()
                 .setBoolean("SolarDashHasHit", true);
 
+            // Capture exact movement direction BEFORE recoil
+            Vec3 dashDir = Vec3.createVectorHelper(player.motionX, player.motionY, player.motionZ)
+                .normalize();
+
             // High speed wall crash: Recoil, Sound, and Phantom
             player.motionX = -look.xCoord * 0.8;
             player.motionY = 0.4;
@@ -124,7 +128,7 @@ public class ComponentSolarFlare
                         .getAttributeValue();
                 }
                 float totalDamage = rawDamage * 6.0F;
-                EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage);
+                EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage, dashDir);
                 world.spawnEntityInWorld(phantom);
             }
             return;
@@ -148,6 +152,10 @@ public class ComponentSolarFlare
                 // We hit something!
                 player.getEntityData()
                     .setBoolean("SolarDashHasHit", true);
+
+                // Capture exact movement direction BEFORE recoil
+                Vec3 dashDir = Vec3.createVectorHelper(player.motionX, player.motionY, player.motionZ)
+                    .normalize();
 
                 // Recoil (bounce back)
                 player.motionX = -look.xCoord * 0.8;
@@ -180,7 +188,7 @@ public class ComponentSolarFlare
                     target.addVelocity(look.xCoord * 1.5, 0.5, look.zCoord * 1.5);
 
                     // Spawn Phantom Strike on server to actually deal damage
-                    EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage);
+                    EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage, dashDir);
                     world.spawnEntityInWorld(phantom);
                 }
             }
