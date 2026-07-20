@@ -57,6 +57,11 @@ public class ComponentLawOfCycles implements IOnBowShoot, IHasTooltip, IOnBowUsi
     @Override
     public boolean onBowShoot(final ItemStack bowStack, final World world, final EntityPlayer player,
         final int charge) {
+        // The first visual/damage stage starts at 20 ticks. Reject tap-release packets so
+        // creative/Infinity players cannot flood the server with zero-charge projectiles.
+        if (charge < 20) {
+            return true;
+        }
         boolean hasAmmo = EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, bowStack) > 0;
         if (player.capabilities.isCreativeMode) {
             hasAmmo = true;
@@ -108,7 +113,7 @@ public class ComponentLawOfCycles implements IOnBowShoot, IHasTooltip, IOnBowUsi
                 1.0f,
                 1.0f / (world.rand.nextFloat() * 0.4f + 1.2f) + velocity * 0.5f);
         }
-        if (!player.capabilities.isCreativeMode
+        if (!world.isRemote && !player.capabilities.isCreativeMode
             && EnchantmentHelper.getEnchantmentLevel(Enchantment.infinity.effectId, bowStack) == 0) {
             for (int j = 0; j < player.inventory.mainInventory.length; ++j) {
                 if (player.inventory.mainInventory[j] != null

@@ -10,6 +10,7 @@ import net.minecraft.util.DamageSource;
 
 import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.IRPGComponent;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnHit;
 
@@ -20,6 +21,13 @@ public class ComponentBloodSacrifice implements IRPGComponent, IOnHit, IHasToolt
     private float minCritMultiplier = 3.0f;
     private float maxCritMultiplier = 6.0f;
     private float backlashHealthPercentage = 0.05f;
+    private static final ThreadLocal<Boolean> APPLYING_BLOOD_SACRIFICE = new ThreadLocal<Boolean>() {
+
+        @Override
+        protected Boolean initialValue() {
+            return Boolean.FALSE;
+        }
+    };
 
     // P0 #1: 修复 DamageSource.magic 全局单例被永久修改的问题，改用组件局部定义的自定义伤害源
     private static final DamageSource BLOOD_SACRIFICE_DAMAGE = new DamageSource("darkgrey.bloodsacrifice")
@@ -67,7 +75,9 @@ public class ComponentBloodSacrifice implements IRPGComponent, IOnHit, IHasToolt
 
     @Override
     public void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float baseDamage) {
-        if (attacker.worldObj.isRemote) {
+        if (attacker.worldObj.isRemote || target.isDead
+            || target.getHealth() <= 0.0F
+            || APPLYING_BLOOD_SACRIFICE.get()) {
             return;
         }
 
@@ -80,16 +90,21 @@ public class ComponentBloodSacrifice implements IRPGComponent, IOnHit, IHasToolt
             // Calculate max health backlash
             float backlash = attacker.getMaxHealth() * backlashHealthPercentage;
 
-            // Apply bonus damage as physical damage
-            target.attackEntityFrom(DamageSource.causeMobDamage(attacker), totalDamage - baseDamage);
+            APPLYING_BLOOD_SACRIFICE.set(Boolean.TRUE);
+            try {
+                // Apply bonus damage as physical damage through the normal event pipeline.
+                DamageSource source = RPGDamageSources.causeCasterDamage(attacker);
+                if (source != null) {
+                    target.attackEntityFrom(source, totalDamage - baseDamage);
+                }
 
-            // Check for death
-            if (attacker.getHealth() <= backlash) {
-                // Execute attacker cleanly
-                attacker.attackEntityFrom(BLOOD_SACRIFICE_DAMAGE, attacker.getMaxHealth() * 1000f);
-            } else {
-                // Normal damage
-                attacker.attackEntityFrom(BLOOD_SACRIFICE_DAMAGE, backlash);
+                if (attacker.getHealth() <= backlash) {
+                    attacker.attackEntityFrom(BLOOD_SACRIFICE_DAMAGE, attacker.getMaxHealth() * 1000f);
+                } else {
+                    attacker.attackEntityFrom(BLOOD_SACRIFICE_DAMAGE, backlash);
+                }
+            } finally {
+                APPLYING_BLOOD_SACRIFICE.set(Boolean.FALSE);
             }
 
             // spawn particles

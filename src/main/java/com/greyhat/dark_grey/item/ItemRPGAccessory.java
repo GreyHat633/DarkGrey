@@ -107,7 +107,10 @@ public class ItemRPGAccessory extends Item implements IRPGItemContainer {
                 : new com.google.gson.JsonObject();
             try {
                 newComponents.add(com.greyhat.dark_grey.api.ComponentRegistry.create(compName, params));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                com.greyhat.dark_grey.DarkGrey.LOG
+                    .error("Failed to rebuild component " + compName + " for item " + rpgItemId, e);
+            }
         }
 
         this.allComponents = Collections.unmodifiableList(newComponents);

@@ -9,6 +9,7 @@ import java.util.List;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.PotionEffect;
 
 import com.google.gson.JsonObject;
@@ -18,13 +19,18 @@ import com.greyhat.dark_grey.api.capability.ISetComponent;
 
 public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
 
-    private float damagePercent;
+    private static final String LAST_TRIGGER_TICK = "darkgrey_supernova_heavy_strike_last_tick";
+    private static final String READY_NOTIFIED = "darkgrey_supernova_heavy_strike_ready_notified";
+
+    private float intervalSeconds;
+    private float multiplier;
     private int buffDuration;
     private int buffId;
     private int buffAmplifier;
 
     public ComponentSupernovaSet() {
-        this.damagePercent = 0.1f;
+        this.intervalSeconds = 5.0f;
+        this.multiplier = 4.0f;
         this.buffDuration = 200;
         this.buffId = 5;
         this.buffAmplifier = 1;
@@ -32,9 +38,21 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
 
     @Override
     public void configure(final JsonObject params) {
-        if (params.has("damagePercent")) {
-            this.damagePercent = params.get("damagePercent")
-                .getAsFloat();
+        if (params.has("intervalSeconds")) {
+            this.intervalSeconds = HeavyStrikeComponent.clampFinite(
+                params.get("intervalSeconds")
+                    .getAsFloat(),
+                0.0F,
+                3600.0F,
+                5.0F);
+        }
+        if (params.has("multiplier")) {
+            this.multiplier = HeavyStrikeComponent.clampFinite(
+                params.get("multiplier")
+                    .getAsFloat(),
+                0.0F,
+                1000000.0F,
+                4.0F);
         }
         if (params.has("buffDuration")) {
             this.buffDuration = params.get("buffDuration")
@@ -59,10 +77,38 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
     public float onSetHit(final EntityPlayer attacker, final EntityLivingBase target, final float rawDamage,
         final int pieceCount) {
         if (pieceCount >= 2) {
-            final float bonusDamage = target.getMaxHealth() * this.damagePercent;
-            return rawDamage + bonusDamage;
+            ItemStack heldStack = attacker.getCurrentEquippedItem();
+            float weaponAttackDamage = HeavyStrikeComponent.resolveWeaponAttackDamage(heldStack);
+            if (weaponAttackDamage <= 0.0F || this.multiplier <= 0.0F) {
+                return rawDamage;
+            }
+            NBTTagCompound state = attacker.getEntityData();
+            return HeavyStrikeComponent.applyScaledBonus(
+                state,
+                LAST_TRIGGER_TICK,
+                READY_NOTIFIED,
+                attacker.worldObj.getTotalWorldTime(),
+                this.intervalSeconds,
+                weaponAttackDamage,
+                this.multiplier,
+                rawDamage);
         }
         return rawDamage;
+    }
+
+    @Override
+    public void onSetTick(final EntityPlayer player, final int pieceCount) {
+        if (pieceCount < 2 || player.worldObj == null || player.worldObj.isRemote) {
+            return;
+        }
+        HeavyStrikeComponent.notifyWhenReady(
+            player.getEntityData(),
+            LAST_TRIGGER_TICK,
+            READY_NOTIFIED,
+            player.worldObj.getTotalWorldTime(),
+            this.intervalSeconds,
+            player,
+            "\u8D85\u65B0\u661F\u91CD\u51FB");
     }
 
     @Override
@@ -87,9 +133,11 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
         final String prefix2 = (activeCount >= 2) ? "\u00A7a\u2714 " : "\u00A78\u2716 ";
         tooltipLines.add(
             prefix2 + color2
-                + "\u4e24\u4ef6\u5957: \u00A77\u653b\u51fb\u65f6\u989d\u5916\u9020\u6210 \u00A7c\u76ee\u6807\u6700\u5927\u751f\u547d\u503c "
-                + (int) (this.damagePercent * 100.0f)
-                + "% \u00A77\u7684\u771f\u5b9e\u4f24\u5bb3");
+                + "\u4e24\u4ef6\u5957: \u00A77\u6bcf "
+                + String.format("%.1f", this.intervalSeconds)
+                + " \u79d2\uff0c\u4e0b\u4e00\u6b21\u8fd1\u6218\u547d\u4e2d\u989d\u5916\u9020\u6210\u5f53\u524d\u624b\u6301\u6b66\u5668\u653b\u51fb\u529b\u7684 \u00A7c"
+                + String.format("%.1f", this.multiplier)
+                + " \u00A77\u500d\u4f24\u5bb3");
         final String color3 = (activeCount >= 4) ? "\u00A7a" : "\u00A78";
         final String prefix3 = (activeCount >= 4) ? "\u00A7a\u2714 " : "\u00A78\u2716 ";
         tooltipLines.add(

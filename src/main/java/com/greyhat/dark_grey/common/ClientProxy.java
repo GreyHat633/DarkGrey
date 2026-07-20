@@ -5,6 +5,41 @@ import net.minecraft.item.Item;
 public class ClientProxy extends CommonProxy {
 
     @Override
+    public void scheduleSolarFlareImpact(final double motionX, final double motionY, final double motionZ) {
+        net.minecraft.client.Minecraft.getMinecraft()
+            .func_152344_a(new Runnable() {
+
+                @Override
+                public void run() {
+                    net.minecraft.entity.player.EntityPlayer player = net.minecraft.client.Minecraft
+                        .getMinecraft().thePlayer;
+                    if (player == null) {
+                        return;
+                    }
+                    player.getEntityData()
+                        .setBoolean("SolarDashHasHit", true);
+                    player.motionX = motionX;
+                    player.motionY = motionY;
+                    player.motionZ = motionZ;
+                    player.stepHeight = 0.5F;
+                }
+            });
+    }
+
+    @Override
+    public void scheduleConfigApply(final String json) {
+        net.minecraft.client.Minecraft.getMinecraft()
+            .func_152344_a(new Runnable() {
+
+                @Override
+                public void run() {
+                    com.greyhat.dark_grey.api.RPGItemDataManager.getInstance()
+                        .applyRemoteConfig(json);
+                }
+            });
+    }
+
+    @Override
     public void registerRenderers() {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityMadokaArrow.class,

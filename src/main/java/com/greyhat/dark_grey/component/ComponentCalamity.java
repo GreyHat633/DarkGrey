@@ -15,7 +15,7 @@ import com.greyhat.dark_grey.entity.EntityScythe;
 
 public class ComponentCalamity implements IRPGComponent, IOnRightClick, IHasTooltip {
 
-    private static final int COOLDOWN_TICKS = 140; // 7 seconds
+    private static final int COOLDOWN_TICKS = 60; // 3 seconds
 
     @Override
     public String getComponentId() {
@@ -25,7 +25,7 @@ public class ComponentCalamity implements IRPGComponent, IOnRightClick, IHasTool
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
         tooltip.add(
-            "\u00A75\u2726 \u52AB\u96BE \u00A77| \u00A7d\u53F3\u952E\u91CA\u653E360\u5EA6\u6BC1\u706D\u6A2A\u626B (\u51B7\u53747\u79D2)");
+            "\u00A75\u2726 \u52AB\u96BE \u00A77| \u00A7d\u53F3\u952E\u91CA\u653E\u534A\u5F845\u683C\u7684360\u5EA6\u6BC1\u706D\u6A2A\u626B (\u51B7\u53743\u79D2)");
     }
 
     @Override

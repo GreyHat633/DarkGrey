@@ -23,6 +23,8 @@ import com.greyhat.dark_grey.entity.EntityPhantomStrike;
 public class ComponentSolarFlare
     implements IRPGComponent, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IOnRightClick, IHasTooltip {
 
+    private static final double CONTACT_OVERLAP = 0.002D;
+
     @Override
     public String getComponentId() {
         return "耀斑";
@@ -100,98 +102,223 @@ public class ComponentSolarFlare
             }
         }
 
-        // Wall collision check.
-        // 必须同时要求真实冲刺速度达标：isCollidedHorizontally 在服务端只随移动包更新，
-        // 玩家静止/贴墙起手时是陈旧的 true——若低速就置命中标志，服务端会在第 1 tick
-        // 被顶部的早退锁死，整场冲锋无伤害（客户端照常反弹+音效）。低速碰撞直接忽略。
-        if (player.isCollidedHorizontally && actualHorizontalSpeed >= speedThreshold) {
-            player.stepHeight = 0.5F;
-            player.getEntityData()
-                .setBoolean("SolarDashHasHit", true);
+        // Only actual body contact may trigger the impact. A wider swept box is used
+        // only to clamp this tick's travel so high dash speed cannot tunnel through
+        // the target; it must never fire damage, recoil or sounds by itself.
+        if (actualHorizontalSpeed >= speedThreshold && !player.getEntityData()
+            .getBoolean("SolarDashHasHit")) {
+            AxisAlignedBB contactBox = player.boundingBox.expand(1.0E-4, 0.01, 1.0E-4);
+            EntityLivingBase target = findNearestDashTarget(world, player, contactBox, look);
 
-            // Capture exact movement direction BEFORE recoil
-            Vec3 dashDir = Vec3.createVectorHelper(player.motionX, player.motionY, player.motionZ)
-                .normalize();
+            if (target != null) {
+                if (world.isRemote) {
+                    // The previous implementation cleared horizontal velocity
+                    // here until the server packet arrived. On a real network
+                    // that created a visible pause between touching the target
+                    // and the impact. Keep the dash visually continuous, while
+                    // still leaving recoil, sounds and damage server-authoritative
+                    // so protected targets cannot produce a client-only fake hit.
+                    return;
+                }
 
-            // High speed wall crash: Recoil, Sound, and Phantom
-            player.motionX = -look.xCoord * 0.8;
-            player.motionY = 0.4;
-            player.motionZ = -look.zCoord * 0.8;
+                // Capture exact movement direction BEFORE recoil
+                Vec3 dashDir = Vec3.createVectorHelper(player.motionX, player.motionY, player.motionZ)
+                    .normalize();
 
-            player.playSound("random.anvil_land", 1.0F, 0.8F);
-            player.playSound("mob.wither.shoot", 1.0F, 0.5F);
-
-            if (!world.isRemote) {
+                // Get raw damage
                 float rawDamage = 1.0F;
                 if (player.getEntityAttribute(SharedMonsterAttributes.attackDamage) != null) {
                     rawDamage = (float) player.getEntityAttribute(SharedMonsterAttributes.attackDamage)
                         .getAttributeValue();
                 }
+
+                // Deal 600% damage
                 float totalDamage = rawDamage * 6.0F;
-                EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage, dashDir);
-                world.spawnEntityInWorld(phantom);
-            }
-            return;
-        }
-
-        // Entity collision check
-        if (actualHorizontalSpeed >= speedThreshold && !player.getEntityData()
-            .getBoolean("SolarDashHasHit")) {
-            AxisAlignedBB aabb = player.boundingBox.expand(1.0, 1.0, 1.0);
-            List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(player, aabb);
-
-            EntityLivingBase target = null;
-            for (Entity e : list) {
-                if (e instanceof EntityLivingBase) {
-                    target = (EntityLivingBase) e;
-                    break; // Just hit the first one
+                DamageSource source = DamageSource.causePlayerDamage(player)
+                    .setMagicDamage();
+                if (!target.attackEntityFrom(source, totalDamage)) {
+                    // A protection rule or invulnerability rejected the hit.
+                    // Keep moving and do not fabricate recoil, sounds or marks.
+                    return;
                 }
-            }
 
-            if (target != null) {
-                // We hit something!
                 player.getEntityData()
                     .setBoolean("SolarDashHasHit", true);
-
-                // Capture exact movement direction BEFORE recoil
-                Vec3 dashDir = Vec3.createVectorHelper(player.motionX, player.motionY, player.motionZ)
-                    .normalize();
 
                 // Recoil (bounce back)
                 player.motionX = -look.xCoord * 0.8;
                 player.motionY = 0.4;
                 player.motionZ = -look.zCoord * 0.8;
                 player.stepHeight = 0.5F;
+                player.velocityChanged = true;
 
-                // Audio and Visuals on Client as well for immediate feedback
-                player.playSound("random.explode", 1.0F, 1.0F);
-                player.playSound("mob.wither.shoot", 1.0F, 0.5F);
+                // Broadcast from the stationary impact target. Binding the sound to
+                // the recoiling player made the source jump away before clients
+                // received it, which could make a valid entity hit sound silent.
+                world.playSoundAtEntity(target, "random.explode", 1.2F, 0.9F);
+                world.playSoundAtEntity(target, "mob.wither.shoot", 1.0F, 0.5F);
 
-                if (!world.isRemote) {
-                    // Get raw damage
-                    float rawDamage = 1.0F;
-                    if (player.getEntityAttribute(SharedMonsterAttributes.attackDamage) != null) {
-                        rawDamage = (float) player.getEntityAttribute(SharedMonsterAttributes.attackDamage)
-                            .getAttributeValue();
-                    }
-
-                    // Apply Scorched Mark
-                    com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);
-
-                    // Deal 600% damage
-                    float totalDamage = rawDamage * 6.0F;
-                    DamageSource source = DamageSource.causePlayerDamage(player)
-                        .setMagicDamage();
-                    target.attackEntityFrom(source, totalDamage);
-
-                    // Knockback target
-                    target.addVelocity(look.xCoord * 1.5, 0.5, look.zCoord * 1.5);
-
-                    // Spawn Phantom Strike on server to actually deal damage
-                    EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage, dashDir);
-                    world.spawnEntityInWorld(phantom);
+                if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                    com.greyhat.dark_grey.DarkGrey.NETWORK.sendTo(
+                        new com.greyhat.dark_grey.network.SolarFlareImpactMessage(
+                            player.motionX,
+                            player.motionY,
+                            player.motionZ),
+                        (net.minecraft.entity.player.EntityPlayerMP) player);
                 }
+
+                // Apply Scorched Mark only after the hit was accepted.
+                com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);
+
+                // Knockback target
+                target.addVelocity(look.xCoord * 1.5, 0.5, look.zCoord * 1.5);
+
+                // Spawn Phantom Strike on server to actually deal damage
+                EntityPhantomStrike phantom = new EntityPhantomStrike(world, player, totalDamage, dashDir);
+                // The collision target already received the immediate 600% impact above.
+                // Keep the phantom's piercing damage for enemies behind it without double-hitting this target.
+                phantom.excludeInitialTarget(target);
+                world.spawnEntityInWorld(phantom);
+                return;
             }
+
+            AxisAlignedBB sweptBox = player.boundingBox.addCoord(player.motionX, 0.0, player.motionZ)
+                .expand(0.05, 0.10, 0.05);
+            clampTravelToNearestContact(world, player, sweptBox);
+        }
+
+        // isCollidedHorizontally can remain true from a previous movement packet,
+        // or be set by a side/step collision. Require a short dash grace period and
+        // confirm that the player's body box is actually blocked in the current
+        // forward direction before consuming the skill and playing rebound effects.
+        if (dashTick >= 3 && player.isCollidedHorizontally
+            && actualHorizontalSpeed >= speedThreshold
+            && hasUnsteppableForwardObstacle(world, player, look)) {
+            player.stepHeight = 0.5F;
+            player.getEntityData()
+                .setBoolean("SolarDashHasHit", true);
+
+            player.motionX = -look.xCoord * 0.8;
+            player.motionY = 0.4;
+            player.motionZ = -look.zCoord * 0.8;
+
+            player.playSound("random.anvil_land", 1.0F, 0.8F);
+            player.playSound("mob.wither.shoot", 1.0F, 0.5F);
+        }
+    }
+
+    private boolean hasUnsteppableForwardObstacle(World world, EntityPlayer player, Vec3 look) {
+        double horizontalLength = Math.sqrt(look.xCoord * look.xCoord + look.zCoord * look.zCoord);
+        if (horizontalLength < 1.0E-4) {
+            return false;
+        }
+
+        double probeDistance = 0.45;
+        double probeX = look.xCoord / horizontalLength * probeDistance;
+        double probeZ = look.zCoord / horizontalLength * probeDistance;
+        AxisAlignedBB probeBox = player.boundingBox.addCoord(probeX, 0.0, probeZ)
+            .contract(0.05, 0.05, 0.05);
+        if (world.func_147461_a(probeBox)
+            .isEmpty()) {
+            return false;
+        }
+
+        // A one-block obstacle is intentionally traversable during the dash. Only
+        // treat it as a wall when the same forward body box is still blocked after
+        // lifting it by the configured one-block step height. Blocks without a
+        // collision box (vanilla tall grass, flowers, etc.) fail the first check.
+        double stepClearance = Math.max(1.0D, player.stepHeight) + 0.05D;
+        AxisAlignedBB steppedProbeBox = AxisAlignedBB.getBoundingBox(
+            probeBox.minX,
+            probeBox.minY + stepClearance,
+            probeBox.minZ,
+            probeBox.maxX,
+            probeBox.maxY + stepClearance,
+            probeBox.maxZ);
+        return !world.func_147461_a(steppedProbeBox)
+            .isEmpty();
+    }
+
+    private EntityLivingBase findNearestDashTarget(World world, EntityPlayer player, AxisAlignedBB searchBox,
+        Vec3 look) {
+        double horizontalLength = Math.sqrt(look.xCoord * look.xCoord + look.zCoord * look.zCoord);
+        if (horizontalLength < 1.0E-4) {
+            return null;
+        }
+        double directionX = look.xCoord / horizontalLength;
+        double directionZ = look.zCoord / horizontalLength;
+
+        @SuppressWarnings("unchecked")
+        List<Entity> entities = world.getEntitiesWithinAABBExcludingEntity(player, searchBox);
+        EntityLivingBase nearestTarget = null;
+        double nearestProjection = Double.MAX_VALUE;
+        for (Entity entity : entities) {
+            if (!(entity instanceof EntityLivingBase) || !player.canEntityBeSeen(entity)) {
+                continue;
+            }
+            EntityLivingBase candidate = (EntityLivingBase) entity;
+            if (!com.greyhat.dark_grey.api.CombatTargeting.canDamage(player, candidate, false)) {
+                continue;
+            }
+
+            double targetCenterX = (candidate.boundingBox.minX + candidate.boundingBox.maxX) * 0.5;
+            double targetCenterZ = (candidate.boundingBox.minZ + candidate.boundingBox.maxZ) * 0.5;
+            double projection = (targetCenterX - player.posX) * directionX + (targetCenterZ - player.posZ) * directionZ;
+            if (projection < -0.10 || projection >= nearestProjection) {
+                continue;
+            }
+            nearestTarget = candidate;
+            nearestProjection = projection;
+        }
+        return nearestTarget;
+    }
+
+    private void clampTravelToNearestContact(World world, EntityPlayer player, AxisAlignedBB searchBox) {
+        double horizontalSpeed = Math.sqrt(player.motionX * player.motionX + player.motionZ * player.motionZ);
+        if (horizontalSpeed < 1.0E-4) {
+            return;
+        }
+
+        double playerCenterX = (player.boundingBox.minX + player.boundingBox.maxX) * 0.5;
+        double playerCenterY = (player.boundingBox.minY + player.boundingBox.maxY) * 0.5;
+        double playerCenterZ = (player.boundingBox.minZ + player.boundingBox.maxZ) * 0.5;
+        double playerHalfX = (player.boundingBox.maxX - player.boundingBox.minX) * 0.5;
+        double playerHalfY = (player.boundingBox.maxY - player.boundingBox.minY) * 0.5;
+        double playerHalfZ = (player.boundingBox.maxZ - player.boundingBox.minZ) * 0.5;
+        Vec3 start = Vec3.createVectorHelper(playerCenterX, playerCenterY, playerCenterZ);
+        Vec3 end = Vec3
+            .createVectorHelper(playerCenterX + player.motionX, playerCenterY, playerCenterZ + player.motionZ);
+
+        @SuppressWarnings("unchecked")
+        List<Entity> entities = world.getEntitiesWithinAABBExcludingEntity(player, searchBox);
+        double nearestTravel = horizontalSpeed;
+        for (Entity entity : entities) {
+            if (!(entity instanceof EntityLivingBase) || !player.canEntityBeSeen(entity)) {
+                continue;
+            }
+            EntityLivingBase candidate = (EntityLivingBase) entity;
+            if (!com.greyhat.dark_grey.api.CombatTargeting.canDamage(player, candidate, false)) {
+                continue;
+            }
+
+            AxisAlignedBB expandedTarget = candidate.boundingBox.expand(playerHalfX, playerHalfY, playerHalfZ);
+            net.minecraft.util.MovingObjectPosition intercept = expandedTarget.calculateIntercept(start, end);
+            if (intercept == null || intercept.hitVec == null) {
+                continue;
+            }
+            double travel = start.distanceTo(intercept.hitVec);
+            if (travel >= 0.0 && travel < nearestTravel) {
+                nearestTravel = travel;
+            }
+        }
+
+        if (nearestTravel < horizontalSpeed) {
+            // Move a couple of millimetres into the contact plane. The next
+            // tick then observes a real AABB overlap instead of faking a hit
+            // from the wider swept search box.
+            double scale = Math.min(1.0D, (nearestTravel + CONTACT_OVERLAP) / horizontalSpeed);
+            player.motionX *= scale;
+            player.motionZ *= scale;
         }
     }
 

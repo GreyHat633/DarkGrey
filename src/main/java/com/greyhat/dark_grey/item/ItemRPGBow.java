@@ -86,7 +86,10 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
                 : new com.google.gson.JsonObject();
             try {
                 newComponents.add(ComponentRegistry.create(compName, params));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                com.greyhat.dark_grey.DarkGrey.LOG
+                    .error("Failed to rebuild component " + compName + " for item " + rpgItemId, e);
+            }
         }
 
         this.allComponents = Collections.unmodifiableList(newComponents);
@@ -106,15 +109,13 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
     @Override
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int timeLeft) {
         int charge = this.getMaxItemUseDuration(stack) - timeLeft;
-        boolean handled = false;
-        for (com.greyhat.dark_grey.api.capability.IOnBowShoot handler : bowShootHandlers) {
-            if (handler.onBowShoot(stack, world, player, charge)) {
-                handled = true;
+        if (!bowShootHandlers.isEmpty()) {
+            for (com.greyhat.dark_grey.api.capability.IOnBowShoot handler : bowShootHandlers) {
+                handler.onBowShoot(stack, world, player, charge);
             }
+            return;
         }
-        if (!handled) {
-            super.onPlayerStoppedUsing(stack, world, player, timeLeft);
-        }
+        super.onPlayerStoppedUsing(stack, world, player, timeLeft);
     }
 
     @Override
@@ -147,7 +148,9 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
     @Override
     public void onUpdate(ItemStack stack, World world, net.minecraft.entity.Entity entity, int itemSlot,
         boolean isSelected) {
-        if (isSelected && entity instanceof EntityPlayer) {
+        // Server-side held capabilities are dispatched from PlayerTickEvent so they
+        // do not depend on ItemStack's selected flag. Keep this path for client visuals.
+        if (world.isRemote && isSelected && entity instanceof EntityPlayer) {
             if (heldTickHandlers != null) {
                 for (com.greyhat.dark_grey.api.capability.IOnHeldTick handler : heldTickHandlers) {
                     handler.onHeldTick(stack, world, (EntityPlayer) entity);
@@ -159,7 +162,13 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
 
     @Override
     public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
-        ItemStack result = super.onItemRightClick(stack, world, player);
+        ItemStack result;
+        if (bowShootHandlers.isEmpty()) {
+            result = super.onItemRightClick(stack, world, player);
+        } else {
+            player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
+            result = stack;
+        }
         if (rightClickHandlers != null) {
             for (IOnRightClick handler : rightClickHandlers) {
                 result = handler.onRightClick(result, world, player);
@@ -236,6 +245,11 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
     @Override
     public List<IOnPlayerDeath> getPlayerDeathHandlers() {
         return playerDeathHandlers;
+    }
+
+    @Override
+    public List<IRPGComponent> getAllComponents() {
+        return allComponents;
     }
 
     public List<IOnHit> getHitHandlers() {

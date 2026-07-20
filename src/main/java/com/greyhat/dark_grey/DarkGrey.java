@@ -35,13 +35,13 @@ import com.greyhat.dark_grey.common.CommonProxy;
 import com.greyhat.dark_grey.common.DarkGreyTab;
 import com.greyhat.dark_grey.common.EntityVampire;
 import com.greyhat.dark_grey.common.ItemTabIcon;
-import com.greyhat.dark_grey.component.CleaveComponent;
 import com.greyhat.dark_grey.component.ComponentBloodSacrifice;
 import com.greyhat.dark_grey.component.ComponentCalamity;
 import com.greyhat.dark_grey.component.ComponentLawOfCycles;
 import com.greyhat.dark_grey.component.ComponentSolarFlare;
 import com.greyhat.dark_grey.component.ComponentSupernovaSet;
 import com.greyhat.dark_grey.component.ComponentTrueLawOfCycles;
+import com.greyhat.dark_grey.component.HeavyStrikeComponent;
 import com.greyhat.dark_grey.component.LifestealComponent;
 import com.greyhat.dark_grey.entity.EntityMadokaArrow;
 import com.greyhat.dark_grey.entity.EntityMadokaRing;
@@ -55,21 +55,24 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 
-@Mod(modid = "dark_grey", version = "1.0", name = "DarkGrey", acceptedMinecraftVersions = "[1.7.10]")
+@Mod(modid = "dark_grey", version = Tags.VERSION, name = "DarkGrey", acceptedMinecraftVersions = "[1.7.10]")
 public class DarkGrey {
 
     public static final String MODID = "dark_grey";
     public static final String NAME = "DarkGrey";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = Tags.VERSION;
     @Mod.Instance("dark_grey")
     public static DarkGrey instance;
     public static Item tabIcon;
     public static Item arrowOfLight;
     public static CreativeTabs creativeTab;
     public static final Logger LOG;
+    public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel("darkgrey");
     @SidedProxy(
         clientSide = "com.greyhat.dark_grey.common.ClientProxy",
         serverSide = "com.greyhat.dark_grey.common.CommonProxy")
@@ -78,11 +81,12 @@ public class DarkGrey {
     @Mod.EventHandler
     public void preInit(final FMLPreInitializationEvent event) {
         DarkGrey.proxy.preInit(event);
+        DarkGrey.proxy.registerNetworkHandlers();
         RPGItemDataManager.getInstance()
             .initialize(event.getModConfigurationDirectory());
         GameRegistry.registerItem(DarkGrey.tabIcon = new ItemTabIcon(), "tab_icon");
         DarkGrey.creativeTab = new DarkGreyTab("DarkGrey");
-        ComponentRegistry.register("切割", (Supplier<IRPGComponent>) CleaveComponent::new);
+        ComponentRegistry.register("重击", (Supplier<IRPGComponent>) HeavyStrikeComponent::new);
         ComponentRegistry.register("吸血", (Supplier<IRPGComponent>) LifestealComponent::new);
         ComponentRegistry.register("超新星", (Supplier<IRPGComponent>) ComponentSupernovaSet::new);
         ComponentRegistry.register("虹之愿", (Supplier<IRPGComponent>) ComponentLawOfCycles::new);
@@ -96,30 +100,25 @@ public class DarkGrey {
         ComponentRegistry
             .register("炬火残光", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentTorchAfterglow::new);
         ComponentRegistry.register("耀斑", (Supplier<IRPGComponent>) ComponentSolarFlare::new);
+        ComponentRegistry
+            .register("倒悬", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentSuspendedClockhand::new);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
-        final int randomEntityId = EntityRegistry.findGlobalUniqueEntityId();
-        EntityRegistry.registerModEntity(
-            (Class) EntityVampire.class,
-            "vampire",
-            randomEntityId,
-            (Object) DarkGrey.instance,
-            64,
-            3,
-            true);
+        EntityRegistry
+            .registerModEntity((Class) EntityVampire.class, "vampire", 0, (Object) DarkGrey.instance, 64, 3, true);
         EntityRegistry.registerModEntity(
             (Class) EntityMadokaArrow.class,
             "madoka_arrow",
-            randomEntityId + 1,
+            1,
             (Object) DarkGrey.instance,
             64,
-            20,
+            2,
             true);
         EntityRegistry.registerModEntity(
             (Class) EntityMadokaRing.class,
             "madoka_ring",
-            randomEntityId + 2,
+            2,
             (Object) DarkGrey.instance,
             64,
             20,
@@ -127,7 +126,7 @@ public class DarkGrey {
         EntityRegistry.registerModEntity(
             (Class) EntityScythe.class,
             "calamity_scythe",
-            randomEntityId + 3,
+            3,
             (Object) DarkGrey.instance,
             64,
             20,
@@ -135,7 +134,7 @@ public class DarkGrey {
         EntityRegistry.registerModEntity(
             (Class) com.greyhat.dark_grey.entity.EntityAuraTorrent.class,
             "aura_torrent",
-            randomEntityId + 4,
+            4,
             (Object) DarkGrey.instance,
             64,
             20,
@@ -143,7 +142,7 @@ public class DarkGrey {
         EntityRegistry.registerModEntity(
             (Class) EntityPhantomStrike.class,
             "phantom_strike",
-            randomEntityId + 5,
+            5,
             (Object) DarkGrey.instance,
             64,
             20,
@@ -204,6 +203,7 @@ public class DarkGrey {
         DarkGrey.proxy.serverStarting(event);
         event.registerServerCommand((ICommand) new CommandRPGReload());
         event.registerServerCommand((ICommand) new CommandRPGHelp());
+        event.registerServerCommand((ICommand) new com.greyhat.dark_grey.command.CommandDarkGrey());
     }
 
     static {

@@ -105,6 +105,16 @@ public class SetBonusManager {
         }
     }
 
+    public static void fireTick(final EntityPlayer player) {
+        final Map<String, SetInfo> playerSets = SetBonusManager.ACTIVE_SETS.get(player);
+        if (playerSets == null || playerSets.isEmpty()) {
+            return;
+        }
+        for (final SetInfo info : playerSets.values()) {
+            info.instance.onSetTick(player, info.pieceCount);
+        }
+    }
+
     static {
         ACTIVE_SETS = new WeakHashMap<EntityPlayer, Map<String, SetInfo>>();
     }

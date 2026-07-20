@@ -13,9 +13,14 @@ import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
+import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
+import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
 import com.greyhat.dark_grey.api.SetBonusManager;
+import com.greyhat.dark_grey.api.capability.IModifyMeleeDamage;
 import com.greyhat.dark_grey.api.capability.IOnEquip;
+import com.greyhat.dark_grey.api.capability.IOnHeldTick;
 import com.greyhat.dark_grey.api.capability.IOnHit;
 import com.greyhat.dark_grey.api.capability.IOnHurt;
 import com.greyhat.dark_grey.api.capability.IOnPlayerDeath;
@@ -23,6 +28,7 @@ import com.greyhat.dark_grey.api.capability.IOnUnequip;
 import com.greyhat.dark_grey.item.ItemRPGArmor;
 import com.greyhat.dark_grey.item.ItemRPGBow;
 
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
@@ -106,7 +112,8 @@ public class RPGCoreEventHandler {
                 @SuppressWarnings("unchecked")
                 List<Entity> list = hurtEntity.worldObj.getEntitiesWithinAABBExcludingEntity(player, aabb);
                 for (Entity e : list) {
-                    if (e instanceof EntityLivingBase) {
+                    if (e instanceof EntityLivingBase
+                        && CombatTargeting.canDamage(player, (EntityLivingBase) e, false)) {
                         DamageSource explosionSource = DamageSource.causePlayerDamage(player)
                             .setExplosion();
                         e.attackEntityFrom(explosionSource, explosionDmg);
@@ -116,6 +123,24 @@ public class RPGCoreEventHandler {
         }
 
         float modifiedDamage = event.ammount;
+
+        // Custom Weapon: Suspended Clockhand Damage Scaling
+        if (event.source.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.source.getEntity();
+            ItemStack heldItem = player.getCurrentEquippedItem();
+            if (heldItem != null && heldItem.hasTagCompound()
+                && heldItem.getTagCompound()
+                    .hasKey("SoulValue")) {
+                // Ensure we only apply this for the specific clockhand item
+                if (heldItem.getUnlocalizedName()
+                    .endsWith("suspended_clockhand")) {
+                    int soulValue = heldItem.getTagCompound()
+                        .getInteger("SoulValue");
+                    // 叠加在原有伤害之上 (event.ammount 已经包含了力量buff和暴击等加成)
+                    modifiedDamage = event.ammount + (soulValue / 4.0F);
+                }
+            }
+        }
 
         // ── Part 1: Armor damage pipeline (IOnHurt on the TARGET's armor) ──
         for (int equipmentSlot = 1; equipmentSlot <= 4; equipmentSlot++) {
@@ -171,10 +196,73 @@ public class RPGCoreEventHandler {
                     }
                 }
             }
-
-            // ── Part 4: Armor Set Bonuses ──
-            event.ammount = SetBonusManager.fireOnHit(attacker, hurtEntity, event.ammount);
         }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onMeleeDamageModify(LivingHurtEvent event) {
+        if (event.entity.worldObj.isRemote || event.isCanceled()) {
+            return;
+        }
+        EntityPlayer attacker = resolveDirectMeleeAttacker(event.source, event.entityLiving);
+        if (attacker == null) {
+            return;
+        }
+        float modifiedDamage = applyHeldMeleeDamageModifiers(attacker, event.source, event.entityLiving, event.ammount);
+        event.ammount = SetBonusManager.fireOnHit(attacker, event.entityLiving, modifiedDamage);
+    }
+
+    /**
+     * Folds scaled-burst and other melee modifiers into the original damage
+     * event. Re-entering {@code attackEntityFrom} here would cause Forge,
+     * KCauldron and every protection/combat plugin to process a second nested hit.
+     */
+    private EntityPlayer resolveDirectMeleeAttacker(DamageSource source, EntityLivingBase target) {
+        Entity sourceEntity = source.getEntity();
+        Entity directSource = source.getSourceOfDamage();
+        EntityPlayer attacker = sourceEntity instanceof EntityPlayer ? (EntityPlayer) sourceEntity
+            : directSource instanceof EntityPlayer ? (EntityPlayer) directSource : null;
+        if (attacker == null || target == attacker
+            || source.isProjectile()
+            || source.isMagicDamage()
+            || source.isExplosion()) {
+            return null;
+        }
+
+        // A non-player direct entity means this is an indirect/modded projectile even
+        // when its DamageSource forgot to set the projectile flag.
+        if (directSource != null && directSource != attacker && !(directSource instanceof EntityPlayer)) {
+            return null;
+        }
+        return attacker;
+    }
+
+    private float applyHeldMeleeDamageModifiers(EntityPlayer attacker, DamageSource source, EntityLivingBase target,
+        float currentDamage) {
+        ItemStack heldStack = attacker.getCurrentEquippedItem();
+        if (heldStack == null || !(heldStack.getItem() instanceof IRPGItemContainer)) {
+            return currentDamage;
+        }
+
+        List<IRPGComponent> components = ((IRPGItemContainer) heldStack.getItem()).getAllComponents();
+        if (components == null || components.isEmpty()) {
+            return currentDamage;
+        }
+
+        float modifiedDamage = currentDamage;
+        for (IRPGComponent component : components) {
+            if (component instanceof IModifyMeleeDamage) {
+                IModifyMeleeDamage modifier = (IModifyMeleeDamage) component;
+                modifiedDamage = modifier.modifyMeleeDamage(heldStack, attacker, target, source, modifiedDamage);
+                if (modifier.bypassesArmor()) {
+                    source.setDamageBypassesArmor();
+                }
+                if (modifier.isAbsoluteDamage()) {
+                    source.setDamageIsAbsolute();
+                }
+            }
+        }
+        return modifiedDamage;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -191,6 +279,7 @@ public class RPGCoreEventHandler {
         }
 
         EntityPlayer player = event.player;
+        fireServerHeldTick(player);
         Item[] previousItems = PREVIOUS_ARMOR_ITEMS.get(player);
 
         if (previousItems == null) {
@@ -205,6 +294,7 @@ public class RPGCoreEventHandler {
             }
             PREVIOUS_ARMOR_ITEMS.put(player, previousItems);
             SetBonusManager.recalculateSets(player);
+            SetBonusManager.fireTick(player);
             return;
         }
 
@@ -228,6 +318,24 @@ public class RPGCoreEventHandler {
 
         if (changed) {
             SetBonusManager.recalculateSets(player);
+        }
+        SetBonusManager.fireTick(player);
+    }
+
+    private void fireServerHeldTick(EntityPlayer player) {
+        ItemStack heldStack = player.getCurrentEquippedItem();
+        if (heldStack == null || !(heldStack.getItem() instanceof IRPGItemContainer)) {
+            return;
+        }
+
+        List<IRPGComponent> components = ((IRPGItemContainer) heldStack.getItem()).getAllComponents();
+        if (components == null || components.isEmpty()) {
+            return;
+        }
+        for (IRPGComponent component : components) {
+            if (component instanceof IOnHeldTick) {
+                ((IOnHeldTick) component).onHeldTick(heldStack, player.worldObj, player);
+            }
         }
     }
 
@@ -315,6 +423,8 @@ public class RPGCoreEventHandler {
                     .reload(true);
             }
             ScorchedMarkTracker.tick();
+        } else {
+            MadokaVolleyDamageManager.flushExpired();
         }
     }
 
@@ -329,6 +439,14 @@ public class RPGCoreEventHandler {
                     ArrowTracker.registerArrow(arrow, held);
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            com.greyhat.dark_grey.api.RPGItemDataManager.getInstance()
+                .syncToPlayer((net.minecraft.entity.player.EntityPlayerMP) event.player);
         }
     }
 }

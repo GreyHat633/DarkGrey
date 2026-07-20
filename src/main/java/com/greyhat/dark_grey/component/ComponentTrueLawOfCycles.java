@@ -18,6 +18,7 @@ import net.minecraft.world.World;
 import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
+import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnBowShoot;
 import com.greyhat.dark_grey.api.capability.IOnBowUsingTick;
@@ -32,7 +33,7 @@ public class ComponentTrueLawOfCycles
     private int arrowCount;
 
     public ComponentTrueLawOfCycles() {
-        this.baseDamage = 15.0f;
+        this.baseDamage = 150.0f;
         this.requiredCharge = 100;
         this.arrowCount = 30;
     }
@@ -45,16 +46,28 @@ public class ComponentTrueLawOfCycles
     @Override
     public void configure(final JsonObject params) {
         if (params.has("damage")) {
-            this.baseDamage = params.get("damage")
-                .getAsFloat();
+            this.baseDamage = Math.max(
+                0.0f,
+                Math.min(
+                    10000.0f,
+                    params.get("damage")
+                        .getAsFloat()));
         }
         if (params.has("charge")) {
-            this.requiredCharge = params.get("charge")
-                .getAsInt();
+            this.requiredCharge = Math.max(
+                20,
+                Math.min(
+                    1200,
+                    params.get("charge")
+                        .getAsInt()));
         }
         if (params.has("arrowCount")) {
-            this.arrowCount = params.get("arrowCount")
-                .getAsInt();
+            this.arrowCount = Math.max(
+                1,
+                Math.min(
+                    60,
+                    params.get("arrowCount")
+                        .getAsInt()));
         }
     }
 
@@ -122,8 +135,8 @@ public class ComponentTrueLawOfCycles
         final double cy = player.posY + player.getEyeHeight() + look.yCoord * 3.0 + 0.5;
         final double cz = player.posZ + look.zCoord * 3.0;
 
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-        if (mc.thePlayer == null || mc.thePlayer.getDistanceSq(cx, cy, cz) >= 4096.0D) {
+        EntityPlayer viewer = world.getClosestPlayer(cx, cy, cz, 64.0D);
+        if (viewer == null) {
             return;
         }
 
@@ -213,11 +226,6 @@ public class ComponentTrueLawOfCycles
     @Override
     public boolean onBowShoot(final ItemStack stack, final World world, final EntityPlayer player, final int charge) {
         if (charge < this.requiredCharge) {
-            if (!world.isRemote && charge >= 20) {
-                player.addChatMessage(
-                    (IChatComponent) new ChatComponentText(
-                        "\u00A7c\u84c4\u529b\u672a\u6ee1\uff0c\u795e\u529b\u6d88\u6563\u4e86..."));
-            }
             return true;
         }
         boolean hasLightArrow = player.capabilities.isCreativeMode;
@@ -228,7 +236,9 @@ public class ComponentTrueLawOfCycles
                     final String itemId = ((IRPGItemContainer) invStack.getItem()).getRpgItemId();
                     if ("arrow_of_light".equals(itemId)) {
                         hasLightArrow = true;
-                        player.inventory.decrStackSize(i, 1);
+                        if (!world.isRemote) {
+                            player.inventory.decrStackSize(i, 1);
+                        }
                         break;
                     }
                 }
@@ -248,18 +258,70 @@ public class ComponentTrueLawOfCycles
                 "random.bow",
                 1.0f,
                 1.0f / (world.rand.nextFloat() * 0.4f + 1.2f) + 0.5f);
+
+            final Vec3 look = player.getLookVec()
+                .normalize();
+            final Vec3 worldUp = Vec3.createVectorHelper(0.0, 1.0, 0.0);
+            Vec3 right = look.crossProduct(worldUp);
+            if (right.lengthVector() < 0.1) {
+                right = look.crossProduct(Vec3.createVectorHelper(1.0, 0.0, 0.0));
+            }
+            right = right.normalize();
+            final Vec3 formationUp = right.crossProduct(look)
+                .normalize();
+            final Vec3 eye = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+            final int columns = Math.min(8, Math.max(1, (int) Math.round(Math.sqrt(this.arrowCount * 1.2))));
+            final int rows = (this.arrowCount + columns - 1) / columns;
+            final double sideSpacing = 0.75;
+            final double verticalSpacing = 0.65;
+            final int volleyId = MadokaVolleyDamageManager.nextVolleyId();
+
             for (int i = 0; i < this.arrowCount; ++i) {
-                final EntityMadokaArrow entityMadokaArrow;
-                final EntityMadokaArrow arrow = entityMadokaArrow = new EntityMadokaArrow(
+                final int row = i / columns;
+                final int column = i % columns;
+                final int rowArrowCount = Math.min(columns, this.arrowCount - row * columns);
+                final double sideOffset = (column - (rowArrowCount - 1) * 0.5) * sideSpacing;
+                final double verticalOffset = (row - (rows - 1) * 0.5) * verticalSpacing + 0.25;
+                final double depthOffset = 3.8 + ((row + column) % 3) * 0.16;
+
+                // Build a wide wall of light arrows in the plane perpendicular to the player's
+                // aim. Every arrow then flies almost parallel to that aim, producing the horizontal
+                // divine barrage from Madoka's apotheosis rather than an MMO-style rain from above.
+                final double spawnX = eye.xCoord + look.xCoord * depthOffset
+                    + right.xCoord * sideOffset
+                    + formationUp.xCoord * verticalOffset;
+                final double spawnY = eye.yCoord + look.yCoord * depthOffset
+                    + right.yCoord * sideOffset
+                    + formationUp.yCoord * verticalOffset;
+                final double spawnZ = eye.zCoord + look.zCoord * depthOffset
+                    + right.zCoord * sideOffset
+                    + formationUp.zCoord * verticalOffset;
+
+                final Vec3 flightDirection = Vec3
+                    .createVectorHelper(
+                        look.xCoord + right.xCoord * sideOffset * 0.008
+                            + formationUp.xCoord * (verticalOffset - 0.25) * 0.003,
+                        look.yCoord + right.yCoord * sideOffset * 0.008
+                            + formationUp.yCoord * (verticalOffset - 0.25) * 0.003,
+                        look.zCoord + right.zCoord * sideOffset * 0.008
+                            + formationUp.zCoord * (verticalOffset - 0.25) * 0.003)
+                    .normalize();
+
+                final EntityMadokaArrow arrow = new EntityMadokaArrow(
                     world,
                     (EntityLivingBase) player,
                     3,
                     this.baseDamage);
-                entityMadokaArrow.motionX += world.rand.nextGaussian() * 0.4;
-                final EntityMadokaArrow entityMadokaArrow2 = arrow;
-                entityMadokaArrow2.motionY += world.rand.nextGaussian() * 0.4;
-                final EntityMadokaArrow entityMadokaArrow3 = arrow;
-                entityMadokaArrow3.motionZ += world.rand.nextGaussian() * 0.4;
+                arrow.setVolleyArrow(true);
+                arrow.setVolleyId(volleyId);
+                arrow.setVolleyVisualLeader(i == 0);
+                arrow.setPosition(spawnX, spawnY, spawnZ);
+                arrow.setThrowableHeading(
+                    flightDirection.xCoord,
+                    flightDirection.yCoord,
+                    flightDirection.zCoord,
+                    3.1f,
+                    0.12f);
                 world.spawnEntityInWorld((Entity) arrow);
             }
         }
@@ -273,12 +335,13 @@ public class ComponentTrueLawOfCycles
     @Override
     public void addTooltipLines(final ItemStack stack, final EntityPlayer player, final List<String> tooltip,
         final boolean advanced) {
-        tooltip.add("\u00A7d\u2728 \u5706\u73af\u4e4b\u7406 \u00A77| \u00A7d\u795e\u529b\u964d\u4e34");
         tooltip.add(
-            "  \u00A77\u25b6 \u00A7e\u6761\u4ef6\u00A77: \u5fc5\u987b\u5728\u6ede\u7a7a\u65f6\u624d\u80fd\u5c55\u5f00\u795e\u529b");
+            "\u00A7d\u2728 \u5706\u73af\u4e4b\u7406 \u00A77| \u00A7d\u4e07\u7269\u8d77\u6e90\u7684\u6c38\u6052\u5faa\u73af");
+        tooltip.add(
+            "  \u00A77\u25b6 \u00A7e\u6761\u4ef6\u00A77: \u5fc5\u987b\u6ede\u7a7a\u65f6\u624d\u80fd\u5c55\u5f00\u5706\u73af");
         tooltip.add(
             String.format(
-                "  \u00A77\u25b6 \u00A7c\u84c4\u529b\u00A77: %.1f\u79d2 \u81f3\u795e\u529b\u5b8c\u6574\uff08\u843d\u5730\u6253\u65ad\uff09",
+                "  \u00A77\u25b6 \u00A7c\u84c4\u529b\u00A77: %.1f\u79d2 \u81f3\u5706\u73af\u5b8c\u6574\uff08\u843d\u5730\u6253\u65ad\uff09",
                 this.requiredCharge / 20.0f));
         tooltip.add(
             String.format(
@@ -286,7 +349,7 @@ public class ComponentTrueLawOfCycles
                 this.arrowCount));
         tooltip.add(
             String.format(
-                "  \u00A77\u25b6 \u00A74\u4f24\u5bb3\u00A77: \u6bcf\u652f\u5149\u77e2 %.1f \u70b9\u771f\u5b9e\u4f24\u5bb3",
+                "  \u00A77\u25b6 \u00A74\u4f24\u5bb3\u00A77: \u6bcf\u652f\u5149\u77e2 %.1f \u70b9\u4f24\u5bb3",
                 this.baseDamage));
     }
 }

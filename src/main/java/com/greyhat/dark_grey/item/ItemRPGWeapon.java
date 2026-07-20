@@ -115,7 +115,10 @@ public class ItemRPGWeapon extends ItemSword implements IRPGItemContainer {
                 : new com.google.gson.JsonObject();
             try {
                 newComponents.add(com.greyhat.dark_grey.api.ComponentRegistry.create(compName, params));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                com.greyhat.dark_grey.DarkGrey.LOG
+                    .error("Failed to rebuild component " + compName + " for item " + rpgItemId, e);
+            }
         }
 
         this.allComponents = Collections.unmodifiableList(newComponents);
@@ -209,7 +212,9 @@ public class ItemRPGWeapon extends ItemSword implements IRPGItemContainer {
     @Override
     public void onUpdate(ItemStack stack, World world, net.minecraft.entity.Entity entity, int itemSlot,
         boolean isSelected) {
-        if (isSelected && entity instanceof EntityPlayer) {
+        // Server-side held capabilities are dispatched from PlayerTickEvent so they
+        // do not depend on ItemStack's selected flag. Keep this path for client visuals.
+        if (world.isRemote && isSelected && entity instanceof EntityPlayer) {
             for (com.greyhat.dark_grey.api.capability.IOnHeldTick handler : heldTickHandlers) {
                 handler.onHeldTick(stack, world, (EntityPlayer) entity);
             }

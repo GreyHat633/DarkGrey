@@ -34,7 +34,7 @@ public class CommandRPGHelp extends CommandBase {
                 (IChatComponent) new ChatComponentText("§c\u7528\u6cd5: " + this.getCommandUsage(sender)));
             sender.addChatMessage(
                 (IChatComponent) new ChatComponentText(
-                    "§e\u5f53\u524d\u652f\u6301\u8bf4\u660e\u7684\u7ec4\u4ef6: §f\u5207\u5272, \u5438\u8840, \u8d85\u65b0\u661f, \u8679\u4e4b\u613f, \u5706\u73af\u4e4b\u7406"));
+                    "§e\u5f53\u524d\u652f\u6301\u8bf4\u660e\u7684\u7ec4\u4ef6: §f\u91cd\u51fb, \u5438\u8840, \u8d85\u65b0\u661f, \u8679\u4e4b\u613f, \u5706\u73af\u4e4b\u7406"));
             return;
         }
         final String compName = args[0];
@@ -51,11 +51,13 @@ public class CommandRPGHelp extends CommandBase {
 
     static {
         (HELP_DOCS = new HashMap<String, String[]>()).put(
-            "\u5207\u5272",
-            new String[] { "§6=== \u7ec4\u4ef6\u8bf4\u660e: \u5207\u5272 ===",
-                "§b\u529f\u80fd: §f\u653b\u51fb\u65f6\u9644\u5e26\u76ee\u6807\u6700\u5927\u751f\u547d\u503c\u767e\u5206\u6bd4\u7684\u771f\u5b9e\u4f24\u5bb3\u3002",
+            "\u91cd\u51fb",
+            new String[] { "§6=== \u7ec4\u4ef6\u8bf4\u660e: \u91cd\u51fb ===",
+                "§b\u529f\u80fd: §f\u6bcf\u9694\u6307\u5b9a\u79d2\u6570\uff0c\u4f7f\u4e0b\u4e00\u6b21\u8fd1\u6218\u547d\u4e2d\u8ffd\u52a0\u5f53\u524d\u624b\u6301\u6b66\u5668\u653b\u51fb\u529b\u500d\u7387\u4f24\u5bb3\u3002",
                 "§b\u53ef\u7528\u53c2\u6570:",
-                "§f- §epercent§f: \u9020\u6210\u4f24\u5bb3\u7684\u6700\u5927\u751f\u547d\u503c\u767e\u5206\u6bd4\u3002\u4f8b\u5982 percent=0.10 \u8868\u793a10%\u3002" });
+                "§f- §eintervalSeconds§f: \u89e6\u53d1\u95f4\u9694\u79d2\u6570\uff0c\u9ed8\u8ba45\u3002",
+                "§f- §emultiplier§f: \u624b\u6301\u6b66\u5668\u653b\u51fb\u529b\u7684\u9644\u52a0\u4f24\u5bb3\u500d\u7387\uff0c\u9ed8\u8ba44\u3002",
+                "§7\u51b7\u5374\u7ed3\u675f\u65f6\u4f1a\u63d0\u793a\u6301\u6709\u8005\uff0c\u4e0b\u4e00\u6b21\u8fd1\u6218\u547d\u4e2d\u5c06\u89e6\u53d1\u91cd\u51fb\u3002" });
         CommandRPGHelp.HELP_DOCS.put(
             "\u5438\u8840",
             new String[] { "§6=== \u7ec4\u4ef6\u8bf4\u660e: \u5438\u8840 ===",
@@ -65,9 +67,10 @@ public class CommandRPGHelp extends CommandBase {
         CommandRPGHelp.HELP_DOCS.put(
             "\u8d85\u65b0\u661f",
             new String[] { "§6=== \u5957\u88c5\u8bf4\u660e: \u8d85\u65b0\u661f ===",
-                "§b\u529f\u80fd: §f\u5957\u88c5\u6548\u679c\u30022\u4ef6\u5957\u9020\u6210\u6700\u5927\u751f\u547d\u503c\u6bd4\u4f8b\u9644\u52a0\u7269\u7406\u4f24\u5bb3\uff1b4\u4ef6\u5957\u51fb\u6740\u56de\u6ee1\u8840\u91cf\u5e76\u83b7\u5f97\u5c5e\u6027\u589e\u76ca\u3002",
+                "§b\u529f\u80fd: §f2\u4ef6\u5957\u83b7\u5f97\u72ec\u7acb\u51b7\u5374\u7684\u6b66\u5668\u653b\u51fb\u529b\u500d\u7387\u91cd\u51fb\uff1b4\u4ef6\u5957\u51fb\u6740\u56de\u6ee1\u8840\u91cf\u5e76\u83b7\u5f97\u5c5e\u6027\u589e\u76ca\u3002",
                 "§b\u53ef\u7528\u53c2\u6570:",
-                "§f- §edamagePercent§f: 2\u4ef6\u5957\u548c4\u4ef6\u5957\u9644\u52a0\u7684\u6700\u5927\u751f\u547d\u503c\u767e\u5206\u6bd4\u4f24\u5bb3 (\u9ed8\u8ba4: 0.10)",
+                "§f- §eintervalSeconds§f: 2\u4ef6\u5957\u91cd\u51fb\u95f4\u9694\u79d2\u6570 (\u9ed8\u8ba4: 5)",
+                "§f- §emultiplier§f: 2\u4ef6\u5957\u91cd\u51fb\u7684\u624b\u6301\u6b66\u5668\u653b\u51fb\u529b\u500d\u7387 (\u9ed8\u8ba4: 4)",
                 "§f- §ebuffDuration§f: 4\u4ef6\u5957\u51fb\u6740\u540e\u83b7\u5f97\u7684\u836f\u6c34\u6548\u679c\u6301\u7eed\u65f6\u95f4 (\u4ee5tick\u4e3a\u5355\u4f4d, 20tick=1\u79d2, \u9ed8\u8ba4: 200)",
                 "§f- §ebuffId§f: 4\u4ef6\u5957\u51fb\u6740\u540e\u83b7\u5f97\u7684\u836f\u6c34\u6548\u679cID (\u9ed8\u8ba4: 5 \u529b\u91cf)",
                 "§f- §ebuffAmplifier§f: \u836f\u6c34\u6548\u679c\u7b49\u7ea7 (\u9ed8\u8ba4: 1, \u4e5f\u5c31\u662fII\u7ea7)" });

@@ -5,13 +5,18 @@ import java.util.List;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
+import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.RPGDamageSources;
+
 public class EntityAuraTorrent extends Entity {
 
-    private float dotDamage = 20.0f;
+    private float dotDamage = 250.0f;
     private int maxAge = 200; // 10 seconds
     private EntityLivingBase caster;
 
@@ -21,12 +26,13 @@ public class EntityAuraTorrent extends Entity {
     }
 
     public EntityAuraTorrent(World world, EntityLivingBase caster, double x, double y, double z, float radius,
-        float dotDamage) {
+        float dotDamage, int maxAge) {
         this(world);
         this.caster = caster;
         this.setPosition(x, y, z);
         this.setRadius(radius);
         this.dotDamage = dotDamage;
+        this.maxAge = Math.max(20, maxAge);
     }
 
     @Override
@@ -42,6 +48,51 @@ public class EntityAuraTorrent extends Entity {
         this.dataWatcher.updateObject(18, radius);
     }
 
+    /** Applies one server-authoritative pulse without creating knockback. */
+    public static boolean applyAuraEffect(EntityLivingBase caster, EntityLivingBase target, float damage) {
+        if (caster == null || target == null
+            || caster.worldObj == null
+            || caster.worldObj.isRemote
+            || caster.worldObj != target.worldObj
+            || !CombatTargeting.canDamage(caster, target, false)) {
+            return false;
+        }
+
+        double motionX = target.motionX;
+        double motionY = target.motionY;
+        double motionZ = target.motionZ;
+        DamageSource source = RPGDamageSources.causeCasterMagicDamage(caster);
+        boolean damaged = source != null && target.attackEntityFrom(source, damage);
+
+        target.motionX = motionX;
+        target.motionY = motionY;
+        target.motionZ = motionZ;
+        target.isAirBorne = false;
+
+        if (!damaged) {
+            return false;
+        }
+
+        addPotionEffectSafely(target, Potion.confusion, 0);
+        addPotionEffectSafely(target, Potion.weakness, 1);
+        addPotionEffectSafely(target, Potion.blindness, 0);
+        addPotionEffectSafely(target, Potion.moveSlowdown, 1);
+        addPotionEffectSafely(target, Potion.digSlowdown, 1);
+        return true;
+    }
+
+    private static void addPotionEffectSafely(EntityLivingBase target, Potion potion, int amplifier) {
+        if (potion == null) {
+            return;
+        }
+        try {
+            target.addPotionEffect(new PotionEffect(potion.id, 20, amplifier));
+        } catch (RuntimeException ignored) {
+            // Some modded living entities reject individual potion effects. One
+            // incompatible debuff must not cancel the remaining pulse or kick players.
+        }
+    }
+
     @Override
     public void onUpdate() {
         super.onUpdate();
@@ -51,12 +102,18 @@ public class EntityAuraTorrent extends Entity {
             return;
         }
 
+        if (!this.worldObj.isRemote
+            && (this.caster == null || this.caster.isDead || this.caster.worldObj != this.worldObj)) {
+            this.setDead();
+            return;
+        }
+
         float currentRadius = this.getRadius();
 
         // Spawn particles
         if (this.worldObj.isRemote) {
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-            if (mc.thePlayer != null && mc.thePlayer.getDistanceSqToEntity(this) < 4096.0D) {
+            net.minecraft.entity.player.EntityPlayer viewer = this.worldObj.getClosestPlayerToEntity(this, 64.0D);
+            if (viewer != null) {
                 if (this.ticksExisted % 2 == 0) {
                     // Outer ring: largesmoke
                     int ringCount = (int) ((10 + (int) (currentRadius * 8.0))
@@ -109,21 +166,9 @@ public class EntityAuraTorrent extends Entity {
             List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, aabb);
             for (Entity entity : list) {
                 if (entity instanceof EntityLivingBase) {
-                    if (entity == this.caster) continue;
-
                     if (this.getDistanceSqToEntity(entity) <= currentRadius * currentRadius) {
                         EntityLivingBase target = (EntityLivingBase) entity;
-
-                        double mx = target.motionX;
-                        double my = target.motionY;
-                        double mz = target.motionZ;
-
-                        target.attackEntityFrom(DamageSource.magic, dotDamage);
-
-                        target.motionX = mx;
-                        target.motionY = my;
-                        target.motionZ = mz;
-                        target.isAirBorne = false;
+                        applyAuraEffect(this.caster, target, dotDamage);
                     }
                 }
             }
@@ -141,5 +186,6 @@ public class EntityAuraTorrent extends Entity {
     protected void writeEntityToNBT(NBTTagCompound tag) {
         tag.setFloat("Radius", this.getRadius());
         tag.setFloat("DotDamage", this.dotDamage);
+        tag.setInteger("MaxAge", this.maxAge);
     }
 }

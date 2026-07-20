@@ -43,9 +43,17 @@ public class RPGItemLoader {
                 return;
             }
 
+            List<PendingItem> pendingItems = new ArrayList<>();
             for (Map.Entry<String, RPGItemDataManager.ItemConfig> entry : configs.entrySet()) {
                 String id = entry.getKey();
                 RPGItemDataManager.ItemConfig config = entry.getValue();
+
+                if (!id.matches("[a-z0-9_]+")) {
+                    throw new IllegalArgumentException("Invalid RPG item id: " + id);
+                }
+                if (GameRegistry.findItem(DarkGrey.MODID, id) != null) {
+                    throw new IllegalStateException("Duplicate Forge item registration: " + DarkGrey.MODID + ":" + id);
+                }
 
                 String type = config.type;
                 String texture = config.texture;
@@ -63,30 +71,54 @@ public class RPGItemLoader {
                 Item rpgItem = createItemForType(type, id, toolMaterial, armorMaterial, components);
 
                 if (rpgItem == null) {
-                    DarkGrey.LOG.warn(
-                        "Unknown item type: '" + type
-                            + "' for item "
-                            + id
-                            + ". Valid types: 剑, 斧, 镐, 铲, 锄, 弓, 头盔, 胸甲, 护腿, 靴子, 饰品");
-                    continue;
+                    throw new IllegalArgumentException("Unknown item type '" + type + "' for item " + id);
                 }
 
-                // Register
                 rpgItem.setUnlocalizedName(unlocalizedName);
                 if (texture != null && !texture.isEmpty()) {
                     rpgItem.setTextureName(texture);
                 }
                 rpgItem.setCreativeTab(DarkGrey.creativeTab);
-                GameRegistry.registerItem(rpgItem, id);
+                pendingItems.add(new PendingItem(id, type, texture, rpgItem, components.size()));
+            }
+
+            // Nothing touches the Forge registry until every item and component has been constructed successfully.
+            for (PendingItem pending : pendingItems) {
+                GameRegistry.registerItem(pending.item, pending.id);
 
                 // Auto-detect equipped texture for 3D rendering
-                registerEquippedRenderer(rpgItem, id, texture);
+                registerEquippedRenderer(pending.item, pending.id, pending.texture);
 
                 DarkGrey.LOG.info(
-                    "Registered RPG Item: " + id + " (type=" + type + ") with " + components.size() + " components.");
+                    "Registered RPG Item: " + pending.id
+                        + " (type="
+                        + pending.type
+                        + ") with "
+                        + pending.componentCount
+                        + " components.");
             }
+            RPGItemDataManager.getInstance()
+                .freezeRegistry(configs);
         } catch (Exception e) {
             DarkGrey.LOG.error("Failed to load RPG items from Data Manager", e);
+            throw new IllegalStateException("DarkGrey RPG registry initialization aborted before world load", e);
+        }
+    }
+
+    private static final class PendingItem {
+
+        private final String id;
+        private final String type;
+        private final String texture;
+        private final Item item;
+        private final int componentCount;
+
+        private PendingItem(String id, String type, String texture, Item item, int componentCount) {
+            this.id = id;
+            this.type = type;
+            this.texture = texture;
+            this.item = item;
+            this.componentCount = componentCount;
         }
     }
 
@@ -189,8 +221,10 @@ public class RPGItemLoader {
             try {
                 IRPGComponent comp = ComponentRegistry.create(compName, params);
                 components.add(comp);
-            } catch (IllegalArgumentException e) {
-                DarkGrey.LOG.warn(e.getMessage() + " for item " + itemId);
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException(
+                    "Invalid component '" + compName + "' for RPG item '" + itemId + "'",
+                    e);
             }
         }
         return components;

@@ -22,5 +22,7 @@ public interface ISetComponent extends IRPGComponent {
         return rawDamage;
     }
 
+    default void onSetTick(final EntityPlayer player, final int pieceCount) {}
+
     default void onSetKill(final EntityPlayer killer, final EntityLivingBase victim, final int pieceCount) {}
 }

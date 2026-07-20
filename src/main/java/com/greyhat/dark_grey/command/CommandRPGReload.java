@@ -25,11 +25,17 @@ public class CommandRPGReload extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        RPGItemDataManager.getInstance()
+        boolean success = RPGItemDataManager.getInstance()
             .reload();
-        sender.addChatMessage(
-            new ChatComponentText(
-                "§aRPG Item data reloaded successfully! Version: " + RPGItemDataManager.getInstance()
-                    .getDataVersion()));
+        if (success) {
+            sender.addChatMessage(
+                new ChatComponentText(
+                    "§aRPG Item data reloaded successfully! Version: " + RPGItemDataManager.getInstance()
+                        .getDataVersion()));
+        } else {
+            sender.addChatMessage(
+                new ChatComponentText(
+                    "§cRPG Item data reload failed. The previous valid configuration is still active."));
+        }
     }
 }

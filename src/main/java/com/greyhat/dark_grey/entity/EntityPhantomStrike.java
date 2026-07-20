@@ -6,12 +6,14 @@ import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+
+import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
@@ -52,6 +54,12 @@ public class EntityPhantomStrike extends Entity implements IEntityAdditionalSpaw
         this.motionX = dashDir.xCoord * speed;
         this.motionY = dashDir.yCoord * speed;
         this.motionZ = dashDir.zCoord * speed;
+    }
+
+    public void excludeInitialTarget(EntityLivingBase target) {
+        if (target != null) {
+            this.hitEntityIds.add(target.getEntityId());
+        }
     }
 
     @Override
@@ -139,7 +147,8 @@ public class EntityPhantomStrike extends Entity implements IEntityAdditionalSpaw
             List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, aabb);
 
             for (Entity e : list) {
-                if (e instanceof EntityLivingBase && e != this.thrower) {
+                if (e instanceof EntityLivingBase
+                    && CombatTargeting.canDamage(this.thrower, (EntityLivingBase) e, false)) {
                     EntityLivingBase target = (EntityLivingBase) e;
 
                     // 去重检查
@@ -148,15 +157,10 @@ public class EntityPhantomStrike extends Entity implements IEntityAdditionalSpaw
                     }
                     hitEntityIds.add(target.getEntityId());
 
-                    DamageSource source = DamageSource.magic;
-                    if (this.thrower instanceof EntityPlayer) {
-                        // Use magic damage so it doesn't trigger the explosion logic which looks for standard player
-                        // attack
-                        source = DamageSource.causePlayerDamage((EntityPlayer) this.thrower)
-                            .setMagicDamage();
+                    DamageSource source = RPGDamageSources.causeCasterMagicDamage(this.thrower);
+                    if (source == null || !target.attackEntityFrom(source, this.damage)) {
+                        continue;
                     }
-
-                    target.attackEntityFrom(source, this.damage);
 
                     // Apply Scorched Mark to tracking system
                     com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);

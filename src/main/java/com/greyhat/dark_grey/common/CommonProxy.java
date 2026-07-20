@@ -33,4 +33,21 @@ public class CommonProxy {
     public void registerBowRenderer(Item item) {}
 
     public void registerScytheRenderer(Item item, String equippedTextureName) {}
+
+    public void registerNetworkHandlers() {
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.ConfigSyncHandler.class,
+            com.greyhat.dark_grey.network.ConfigSyncMessage.class,
+            0,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.SolarFlareImpactHandler.class,
+            com.greyhat.dark_grey.network.SolarFlareImpactMessage.class,
+            1,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+    }
+
+    public void scheduleConfigApply(String json) {}
+
+    public void scheduleSolarFlareImpact(double motionX, double motionY, double motionZ) {}
 }

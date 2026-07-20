@@ -4,23 +4,28 @@
 
 package com.greyhat.dark_grey.entity;
 
+import java.util.List;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 
 public class EntityMadokaArrow extends EntityThrowable {
 
+    private static final int MAX_LIFETIME_TICKS = 200;
+
     private int chargeLevel;
     private float customDamage;
-    @SideOnly(Side.CLIENT)
+    private int volleyId;
     private boolean hasSpawnedHexagrams;
 
     public EntityMadokaArrow(final World world) {
@@ -43,6 +48,28 @@ public class EntityMadokaArrow extends EntityThrowable {
     protected void entityInit() {
         super.entityInit();
         this.dataWatcher.addObject(20, (byte) 0);
+        this.dataWatcher.addObject(21, (byte) 0);
+        this.dataWatcher.addObject(22, (byte) 0);
+    }
+
+    public void setVolleyArrow(final boolean volleyArrow) {
+        this.dataWatcher.updateObject(21, (byte) (volleyArrow ? 1 : 0));
+    }
+
+    public boolean isVolleyArrow() {
+        return this.dataWatcher.getWatchableObjectByte(21) != 0;
+    }
+
+    public void setVolleyVisualLeader(final boolean visualLeader) {
+        this.dataWatcher.updateObject(22, (byte) (visualLeader ? 1 : 0));
+    }
+
+    public boolean isVolleyVisualLeader() {
+        return this.dataWatcher.getWatchableObjectByte(22) != 0;
+    }
+
+    public void setVolleyId(final int volleyId) {
+        this.volleyId = volleyId;
     }
 
     public int getChargeLevel() {
@@ -54,31 +81,41 @@ public class EntityMadokaArrow extends EntityThrowable {
 
     @Override
     public void onUpdate() {
-        super.onUpdate();
-        final int level = this.getChargeLevel();
-        if (level >= 1) {
-            this.motionY += 0.029999999329447746;
+        if (!this.worldObj.isRemote && this.ticksExisted == 0
+            && this.isVolleyArrow()
+            && this.resolveFormationSpawnGap()) {
+            return;
         }
+        super.onUpdate();
+        if (!this.worldObj.isRemote && this.ticksExisted > MAX_LIFETIME_TICKS) {
+            this.setDead();
+            return;
+        }
+        final int level = this.getChargeLevel();
+        final boolean volleyArrow = this.isVolleyArrow();
         if (this.worldObj.isRemote) {
             if (level >= 1) {
-                for (int i = 0; i < 5; ++i) {
-                    final double pX = this.lastTickPosX + (this.posX - this.lastTickPosX) * (i / 5.0);
-                    final double pY = this.lastTickPosY + (this.posY - this.lastTickPosY) * (i / 5.0);
-                    final double pZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * (i / 5.0);
+                final int count = this.getTrailParticleCount(volleyArrow ? 1 : 5);
+                for (int i = 0; i < count; ++i) {
+                    final double pX = this.lastTickPosX + (this.posX - this.lastTickPosX) * (i / (double) count);
+                    final double pY = this.lastTickPosY + (this.posY - this.lastTickPosY) * (i / (double) count);
+                    final double pZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * (i / (double) count);
                     this.worldObj.spawnParticle("reddust", pX, pY, pZ, 1.0, 1.0, 1.0);
                 }
             }
             if (level >= 2) {
-                for (int i = 0; i < 10; ++i) {
-                    final double pX = this.lastTickPosX + (this.posX - this.lastTickPosX) * (i / 10.0);
-                    final double pY = this.lastTickPosY + (this.posY - this.lastTickPosY) * (i / 10.0);
-                    final double pZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * (i / 10.0);
+                final int count = this.getTrailParticleCount(volleyArrow ? 2 : 10);
+                for (int i = 0; i < count; ++i) {
+                    final double pX = this.lastTickPosX + (this.posX - this.lastTickPosX) * (i / (double) count);
+                    final double pY = this.lastTickPosY + (this.posY - this.lastTickPosY) * (i / (double) count);
+                    final double pZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * (i / (double) count);
                     this.worldObj.spawnParticle("reddust", pX, pY, pZ, 1.0, 0.7, 0.9);
                 }
             }
             if (level >= 3) {
-                for (int i = 0; i < 30; ++i) {
-                    final double interp = i / 30.0;
+                final int count = this.getTrailParticleCount(volleyArrow ? 3 : 30);
+                for (int i = 0; i < count; ++i) {
+                    final double interp = i / (double) count;
                     final double centerX = this.lastTickPosX + (this.posX - this.lastTickPosX) * interp;
                     final double centerY = this.lastTickPosY + (this.posY - this.lastTickPosY) * interp;
                     final double centerZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * interp;
@@ -96,13 +133,63 @@ public class EntityMadokaArrow extends EntityThrowable {
                 }
             }
         }
-        if (this.worldObj.isRemote && level > 0 && !this.hasSpawnedHexagrams) {
+        if (this.worldObj.isRemote && level > 0
+            && !this.hasSpawnedHexagrams
+            && (!volleyArrow || this.isVolleyVisualLeader())) {
             this.hasSpawnedHexagrams = true;
             this.spawnHexagramLayers();
         }
     }
 
-    @SideOnly(Side.CLIENT)
+    /**
+     * The horizontal formation is created several blocks in front of the player.
+     * Resolve that one-time spawn gap so nearby entities and walls cannot be skipped.
+     */
+    private boolean resolveFormationSpawnGap() {
+        EntityLivingBase shooter = this.getThrower();
+        if (shooter == null) return false;
+
+        Vec3 start = Vec3.createVectorHelper(shooter.posX, shooter.posY + shooter.getEyeHeight(), shooter.posZ);
+        Vec3 end = Vec3.createVectorHelper(this.posX, this.posY, this.posZ);
+        MovingObjectPosition nearest = this.worldObj.rayTraceBlocks(start, end);
+        double nearestDistance = nearest == null ? Double.MAX_VALUE : start.distanceTo(nearest.hitVec);
+
+        AxisAlignedBB pathBounds = AxisAlignedBB
+            .getBoundingBox(
+                Math.min(start.xCoord, end.xCoord),
+                Math.min(start.yCoord, end.yCoord),
+                Math.min(start.zCoord, end.zCoord),
+                Math.max(start.xCoord, end.xCoord),
+                Math.max(start.yCoord, end.yCoord),
+                Math.max(start.zCoord, end.zCoord))
+            .expand(0.3D, 0.3D, 0.3D);
+        @SuppressWarnings("unchecked")
+        List<Entity> entities = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, pathBounds);
+        for (Entity entity : entities) {
+            if (entity == shooter || !entity.canBeCollidedWith()) continue;
+            MovingObjectPosition intercept = entity.boundingBox.expand(0.3D, 0.3D, 0.3D)
+                .calculateIntercept(start, end);
+            if (intercept == null) continue;
+            double distance = start.distanceTo(intercept.hitVec);
+            if (distance < nearestDistance) {
+                nearest = new MovingObjectPosition(entity);
+                nearestDistance = distance;
+            }
+        }
+
+        if (nearest == null) return false;
+        this.onImpact(nearest);
+        return this.isDead;
+    }
+
+    private int getTrailParticleCount(final int baseCount) {
+        final double density = com.greyhat.dark_grey.common.Config.particleDensity;
+        if (density <= 0.0) {
+            return 0;
+        }
+        return Math.max(1, (int) Math.ceil(baseCount * density));
+    }
+
     private void spawnHexagramLayers() {
         EntityLivingBase shooter = null;
         if (this.getThrower() != null) {
@@ -148,7 +235,6 @@ public class EntityMadokaArrow extends EntityThrowable {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     private void drawHexagram(final Vec3 center, final Vec3 right, final Vec3 up, final double radius) {
         final Vec3[] p = new Vec3[6];
         for (int i = 0; i < 6; ++i) {
@@ -166,7 +252,9 @@ public class EntityMadokaArrow extends EntityThrowable {
         this.drawParticleLine(p[1], p[3]);
         this.drawParticleLine(p[3], p[5]);
         this.drawParticleLine(p[5], p[1]);
-        for (int circleParticles = (int) (radius * 12.0), j = 0; j < circleParticles; ++j) {
+        final int circleParticles = (int) Math
+            .ceil(radius * 12.0 * com.greyhat.dark_grey.common.Config.particleDensity);
+        for (int j = 0; j < circleParticles; ++j) {
             final double angle2 = 6.283185307179586 * j / circleParticles;
             final double dx2 = Math.cos(angle2) * radius;
             final double dy2 = Math.sin(angle2) * radius;
@@ -177,10 +265,13 @@ public class EntityMadokaArrow extends EntityThrowable {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     private void drawParticleLine(final Vec3 start, final Vec3 end) {
         final double dist = start.distanceTo(end);
-        for (int particles = (int) (dist * 8.0), i = 0; i <= particles; ++i) {
+        final int particles = (int) Math.ceil(dist * 8.0 * com.greyhat.dark_grey.common.Config.particleDensity);
+        if (particles <= 0) {
+            return;
+        }
+        for (int i = 0; i <= particles; ++i) {
             final double fraction = i / (double) particles;
             final double px = start.xCoord + (end.xCoord - start.xCoord) * fraction;
             final double py = start.yCoord + (end.yCoord - start.yCoord) * fraction;
@@ -189,7 +280,6 @@ public class EntityMadokaArrow extends EntityThrowable {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     private void spawnMagicParticle(final double x, final double y, final double z) {
         final double colorG = 0.8 + this.rand.nextDouble() * 0.2;
         final double colorB = 0.9 + this.rand.nextDouble() * 0.1;
@@ -206,9 +296,24 @@ public class EntityMadokaArrow extends EntityThrowable {
         if (!this.worldObj.isRemote) {
             final int level = this.getChargeLevel();
             if (mop.entityHit != null) {
-                final DamageSource src = DamageSource.causeThrownDamage(this, this.getThrower());
-                mop.entityHit.attackEntityFrom(src, this.customDamage);
+                final EntityLivingBase shooter = this.getThrower();
+                if (mop.entityHit instanceof EntityLivingBase && shooter != null
+                    && CombatTargeting.canDamage(shooter, (EntityLivingBase) mop.entityHit, false)) {
+                    final EntityLivingBase target = (EntityLivingBase) mop.entityHit;
+                    if (this.isVolleyArrow()) {
+                        MadokaVolleyDamageManager.queueHit(this, shooter, target, this.volleyId, this.customDamage);
+                    } else {
+                        target.attackEntityFrom(RPGDamageSources.causeArrowDamage(this, shooter), this.customDamage);
+                    }
+                }
             }
+            if (this.isVolleyArrow()) {
+                this.worldObj.setEntityState(this, (byte) 17);
+                this.worldObj.playSoundEffect(this.posX, this.posY, this.posZ, "random.explode", 1.0f, 1.2f);
+                this.setDead();
+                return;
+            }
+
             float explosionSize = 0.0f;
             if (level == 1) {
                 explosionSize = 2.5f;
@@ -218,7 +323,7 @@ public class EntityMadokaArrow extends EntityThrowable {
                 explosionSize = 8.0f;
             }
             if (explosionSize > 0.0f) {
-                this.worldObj.createExplosion(this.getThrower(), this.posX, this.posY, this.posZ, explosionSize, true);
+                this.worldObj.createExplosion(this.getThrower(), this.posX, this.posY, this.posZ, explosionSize, false);
                 if (level >= 2) {
                     this.worldObj.createExplosion(
                         this.getThrower(),
@@ -226,7 +331,7 @@ public class EntityMadokaArrow extends EntityThrowable {
                         this.posY - 1.5,
                         this.posZ,
                         explosionSize * 0.8f,
-                        true);
+                        false);
                 }
             }
             this.setDead();
@@ -234,10 +339,31 @@ public class EntityMadokaArrow extends EntityThrowable {
     }
 
     @Override
+    public void handleHealthUpdate(final byte state) {
+        if (state == 17) {
+            for (int i = 0; i < 18; ++i) {
+                this.worldObj.spawnParticle(
+                    i % 3 == 0 ? "hugeexplosion" : "fireworksSpark",
+                    this.posX + (this.rand.nextDouble() - 0.5) * 1.5,
+                    this.posY + (this.rand.nextDouble() - 0.5) * 1.5,
+                    this.posZ + (this.rand.nextDouble() - 0.5) * 1.5,
+                    0.0,
+                    0.0,
+                    0.0);
+            }
+            return;
+        }
+        super.handleHealthUpdate(state);
+    }
+
+    @Override
     public void writeEntityToNBT(final NBTTagCompound nbt) {
         super.writeEntityToNBT(nbt);
         nbt.setInteger("ChargeLevel", this.chargeLevel);
         nbt.setFloat("CustomDamage", this.customDamage);
+        nbt.setBoolean("VolleyArrow", this.isVolleyArrow());
+        nbt.setBoolean("VolleyVisualLeader", this.isVolleyVisualLeader());
+        nbt.setInteger("VolleyId", this.volleyId);
     }
 
     @Override
@@ -245,6 +371,9 @@ public class EntityMadokaArrow extends EntityThrowable {
         super.readEntityFromNBT(nbt);
         this.chargeLevel = nbt.getInteger("ChargeLevel");
         this.customDamage = nbt.getFloat("CustomDamage");
+        this.setVolleyArrow(nbt.getBoolean("VolleyArrow"));
+        this.setVolleyVisualLeader(nbt.getBoolean("VolleyVisualLeader"));
+        this.volleyId = nbt.getInteger("VolleyId");
         this.dataWatcher.updateObject(20, (byte) this.chargeLevel);
     }
 }

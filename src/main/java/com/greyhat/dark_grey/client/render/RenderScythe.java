@@ -46,7 +46,7 @@ public class RenderScythe extends Render {
 
         // Render a large 2D quad (billboard-like but rotated) for the scythe
         Tessellator tessellator = Tessellator.instance;
-        float size = 3.0F; // 3 blocks radius sweep
+        float size = 5.0F; // Match the five-block gameplay radius.
 
         GL11.glDisable(GL11.GL_CULL_FACE);
 

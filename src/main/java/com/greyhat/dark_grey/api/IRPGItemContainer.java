@@ -17,6 +17,13 @@ public interface IRPGItemContainer {
     String getRpgItemId();
 
     /**
+     * Returns the immutable component snapshot currently used by this item.
+     * Event-driven capabilities use this common accessor so all container types
+     * share the same dispatch path.
+     */
+    java.util.List<IRPGComponent> getAllComponents();
+
+    /**
      * Re-reads component definitions from {@link RPGItemDataManager}
      * and rebuilds all internal capability-typed sublists.
      * Called automatically by the hot-reload system when the JSON config changes.

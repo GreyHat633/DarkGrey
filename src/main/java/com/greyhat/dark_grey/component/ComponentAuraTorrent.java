@@ -20,8 +20,9 @@ public class ComponentAuraTorrent
     implements IRPGComponent, IOnRightClick, IOnHeldTick, IHasTooltip, IOnWeaponUsingTick, IOnPlayerStoppedUsing {
 
     private float radius = 5.0f;
-    private float dotDamage = 20.0f;
-    private int cooldownSeconds = 30;
+    private float dotDamage = 250.0f;
+    private int durationTicks = 200;
+    private int cooldownTicks = 600;
     private static final int MAX_CHARGE_TICKS = 40; // 2 seconds to reach max radius
 
     @Override
@@ -32,17 +33,46 @@ public class ComponentAuraTorrent
     @Override
     public void configure(JsonObject params) {
         if (params.has("radius")) {
-            radius = params.get("radius")
-                .getAsFloat();
+            radius = clamp(
+                params.get("radius")
+                    .getAsFloat(),
+                1.0f,
+                16.0f);
         }
         if (params.has("dotDamage")) {
-            dotDamage = params.get("dotDamage")
-                .getAsFloat();
+            dotDamage = clamp(
+                params.get("dotDamage")
+                    .getAsFloat(),
+                0.0f,
+                10000.0f);
+        } else if (params.has("damage")) {
+            dotDamage = clamp(
+                params.get("damage")
+                    .getAsFloat(),
+                0.0f,
+                10000.0f);
+        }
+        if (params.has("duration")) {
+            durationTicks = Math.max(
+                20,
+                Math.min(
+                    20 * 60,
+                    params.get("duration")
+                        .getAsInt()));
         }
         if (params.has("cooldown")) {
-            cooldownSeconds = params.get("cooldown")
-                .getAsInt();
+            cooldownTicks = Math.max(
+                0,
+                Math.min(
+                    20 * 60 * 60,
+                    params.get("cooldown")
+                        .getAsInt()));
         }
+    }
+
+    private static float clamp(float value, float min, float max) {
+        if (Float.isNaN(value)) return min;
+        return Math.max(min, Math.min(max, value));
     }
 
     @Override
@@ -54,7 +84,7 @@ public class ComponentAuraTorrent
                 + "\uFF0C\u9635\u5185\u6BCF0.5\u79D2"
                 + (int) dotDamage
                 + "\u70B9\u4F24\u5BB3\uFF0C\u51B7\u5374"
-                + cooldownSeconds
+                + String.format("%.1f", cooldownTicks / 20.0f)
                 + "\u79D2)");
     }
 
@@ -69,10 +99,9 @@ public class ComponentAuraTorrent
                 .getLong("LastAuraTorrentTime");
         }
 
-        long cooldownTicks = cooldownSeconds * 20L;
-        if (currentTime - lastTime < cooldownTicks) {
+        if (currentTime - lastTime < this.cooldownTicks) {
             if (!world.isRemote) {
-                long remaining_ticks = cooldownTicks - (currentTime - lastTime);
+                long remaining_ticks = this.cooldownTicks - (currentTime - lastTime);
                 float remaining_seconds = remaining_ticks / 20.0f;
                 player.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
@@ -94,7 +123,7 @@ public class ComponentAuraTorrent
         World world = player.worldObj;
         int charge = weaponStack.getItem()
             .getMaxItemUseDuration(weaponStack) - count;
-        float currentRadius = Math.min(10.0f, charge * 0.15f);
+        float currentRadius = Math.min(radius, radius * charge / MAX_CHARGE_TICKS);
 
         if (world.isRemote) {
             if (world.getTotalWorldTime() % 2 == 0) {
@@ -140,17 +169,7 @@ public class ComponentAuraTorrent
                 if (entity instanceof net.minecraft.entity.EntityLivingBase) {
                     if (player.getDistanceSqToEntity(entity) <= currentRadius * currentRadius) {
                         net.minecraft.entity.EntityLivingBase target = (net.minecraft.entity.EntityLivingBase) entity;
-
-                        double mx = target.motionX;
-                        double my = target.motionY;
-                        double mz = target.motionZ;
-
-                        target.attackEntityFrom(net.minecraft.util.DamageSource.magic, dotDamage);
-
-                        target.motionX = mx;
-                        target.motionY = my;
-                        target.motionZ = mz;
-                        target.isAirBorne = false;
+                        EntityAuraTorrent.applyAuraEffect(player, target, dotDamage);
                     }
                 }
             }
@@ -167,7 +186,7 @@ public class ComponentAuraTorrent
             return;
         }
 
-        float finalRadius = Math.min(10.0f, charge * 0.15f);
+        float finalRadius = Math.min(radius, radius * charge / MAX_CHARGE_TICKS);
 
         if (!world.isRemote) {
             double spawnY = player.boundingBox.minY + 1.0;
@@ -178,7 +197,8 @@ public class ComponentAuraTorrent
                 spawnY,
                 player.posZ,
                 finalRadius,
-                dotDamage);
+                dotDamage,
+                durationTicks);
             world.spawnEntityInWorld(aura);
 
             if (!stack.hasTagCompound()) {
