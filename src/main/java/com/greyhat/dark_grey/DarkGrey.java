@@ -102,6 +102,8 @@ public class DarkGrey {
         ComponentRegistry.register("耀斑", (Supplier<IRPGComponent>) ComponentSolarFlare::new);
         ComponentRegistry
             .register("倒悬", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentSuspendedClockhand::new);
+        ComponentRegistry
+            .register("伊塔尼斯", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentItanis::new);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
@@ -147,6 +149,14 @@ public class DarkGrey {
             64,
             20,
             true);
+        EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityItanisArrow.class,
+            "itanis_arrow",
+            6,
+            (Object) DarkGrey.instance,
+            64,
+            20,
+            true);
         DarkGrey.LOG.info("======== DarkGrey Mod: 吸血鬼实体已注册 ========");
     }
 
@@ -161,6 +171,11 @@ public class DarkGrey {
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register((Object) eventHandler);
+        com.greyhat.dark_grey.event.ItanisServerEventHandler itanisHandler = new com.greyhat.dark_grey.event.ItanisServerEventHandler();
+        MinecraftForge.EVENT_BUS.register((Object) itanisHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) itanisHandler);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }
 

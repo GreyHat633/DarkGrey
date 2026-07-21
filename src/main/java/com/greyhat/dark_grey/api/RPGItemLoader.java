@@ -235,6 +235,11 @@ public class RPGItemLoader {
      */
     private static void registerEquippedRenderer(Item rpgItem, String id, String texture) {
         if (rpgItem instanceof ItemRPGBow) {
+            if ("itanis".equals(id)) {
+                DarkGrey.LOG.info(
+                    "Using vanilla bow renderer for " + id + " so pull animation and hand orientation stay correct");
+                return;
+            }
             DarkGrey.proxy.registerBowRenderer(rpgItem);
             DarkGrey.LOG.info("Bound custom bow renderer for " + id);
             return; // Don't use normal RPGItemRenderer for bows!
@@ -273,6 +278,9 @@ public class RPGItemLoader {
             } else if (isLance) {
                 DarkGrey.proxy.registerLanceRenderer(rpgItem, equippedName);
                 DarkGrey.LOG.info("Bound custom lance renderer for " + id + " using " + equippedName);
+            } else if ("charred_fire_staff".equals(id)) {
+                DarkGrey.proxy.registerAnimatedItemRenderer(rpgItem, equippedName, 6, 100);
+                DarkGrey.LOG.info("Bound animated 3D renderer for " + id + " using " + equippedName);
             } else {
                 DarkGrey.proxy.registerItemRenderer(rpgItem, equippedName);
                 DarkGrey.LOG.info("Bound custom 3D renderer for " + id + " using " + equippedName);

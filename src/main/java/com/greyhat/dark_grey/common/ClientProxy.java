@@ -5,6 +5,13 @@ import net.minecraft.item.Item;
 public class ClientProxy extends CommonProxy {
 
     @Override
+    public void init(cpw.mods.fml.common.event.FMLInitializationEvent event) {
+        super.init(event);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.event.ItanisClientEventHandler());
+    }
+
+    @Override
     public void scheduleSolarFlareImpact(final double motionX, final double motionY, final double motionZ) {
         net.minecraft.client.Minecraft.getMinecraft()
             .func_152344_a(new Runnable() {
@@ -56,6 +63,9 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityPhantomStrike.class,
             new com.greyhat.dark_grey.client.render.RenderPhantomStrike());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityItanisArrow.class,
+            new com.greyhat.dark_grey.client.render.RenderItanisArrow());
     }
 
     @Override
@@ -79,5 +89,11 @@ public class ClientProxy extends CommonProxy {
     public void registerLanceRenderer(Item item, String equippedTextureName) {
         net.minecraftforge.client.MinecraftForgeClient
             .registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderRPGLance(equippedTextureName));
+    }
+
+    public void registerAnimatedItemRenderer(Item item, String equippedTextureName, int frames, int frameTimeMs) {
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(
+            item,
+            new com.greyhat.dark_grey.client.render.AnimatedRPGItemRenderer(equippedTextureName, frames, frameTimeMs));
     }
 }

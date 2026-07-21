@@ -28,6 +28,8 @@ public class CommonProxy {
 
     public void registerLanceRenderer(Item item, String equippedTextureName) {}
 
+    public void registerAnimatedItemRenderer(Item item, String equippedTextureName, int frames, int frameTimeMs) {}
+
     public void registerRenderers() {}
 
     public void registerBowRenderer(Item item) {}
@@ -45,6 +47,11 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.SolarFlareImpactMessage.class,
             1,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.C2SToggleItanisMode.Handler.class,
+            com.greyhat.dark_grey.network.C2SToggleItanisMode.class,
+            2,
+            cpw.mods.fml.relauncher.Side.SERVER);
     }
 
     public void scheduleConfigApply(String json) {}

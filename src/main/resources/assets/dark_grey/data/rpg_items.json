@@ -284,6 +284,39 @@
         }
       ],
       "enchantments": ""
+    },
+    {
+      "id": "itanis",
+      "type": "弓",
+      "displayName": {
+        "zh_CN": "传说之弓·伊塔尼斯",
+        "en_US": "Legendary Bow: Itanis"
+      },
+      "texture": "dark_grey:itanis_bow",
+      "durability": 0,
+      "damage": 300,
+      "components": [
+        {
+          "name": "伊塔尼斯",
+          "params": {
+            "normalDrawTicks": 20,
+            "bonusChance1": 0.85,
+            "bonusMultiplier1": 0.35,
+            "bonusChance2": 0.65,
+            "bonusMultiplier2": 0.6,
+            "bonusChance3": 0.25,
+            "bonusMultiplier3": 0.9,
+            "chargeIntervalTicks": 20,
+            "chargeAutoArrowDamageMultiplier": 0.4,
+            "maxChargeTicks": 200,
+            "fullChargeDamage": 5000.0,
+            "trackingRange": 32.0,
+            "trackingTurnSpeed": 0.18,
+            "trackingAcceleration": 0.08
+          }
+        }
+      ],
+      "enchantments": ""
     }
   ]
 }

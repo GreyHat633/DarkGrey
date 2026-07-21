@@ -226,6 +226,20 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
                 if (j > 0) {
                     return this.bowPullIcons[0];
                 }
+            } else if ("itanis".equals(this.rpgItemId)) {
+                com.greyhat.dark_grey.component.ItanisMode mode = com.greyhat.dark_grey.component.ItanisNBT
+                    .getMode(usingItem);
+                int max = this.getItanisDrawTicks(mode);
+
+                if (j >= (mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? max : Math.ceil(max * 0.9D))) {
+                    return this.bowPullIcons[2];
+                }
+                if (j >= Math.ceil(max * (mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? 0.5D : 0.65D))) {
+                    return this.bowPullIcons[1];
+                }
+                if (j > 0) {
+                    return this.bowPullIcons[0];
+                }
             } else {
                 // Default fallback
                 if (j >= 18) {
@@ -240,6 +254,18 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
             }
         }
         return this.itemIcon;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private int getItanisDrawTicks(com.greyhat.dark_grey.component.ItanisMode mode) {
+        for (IRPGComponent component : this.allComponents) {
+            if (component instanceof com.greyhat.dark_grey.component.ComponentItanis) {
+                com.greyhat.dark_grey.component.ComponentItanis itanis = (com.greyhat.dark_grey.component.ComponentItanis) component;
+                return mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? itanis.getMaxChargeTicks()
+                    : itanis.getNormalDrawTicks();
+            }
+        }
+        return mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? 200 : 20;
     }
 
     @Override
