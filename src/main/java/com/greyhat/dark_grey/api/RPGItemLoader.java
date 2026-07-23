@@ -235,11 +235,6 @@ public class RPGItemLoader {
      */
     private static void registerEquippedRenderer(Item rpgItem, String id, String texture) {
         if (rpgItem instanceof ItemRPGBow) {
-            if ("itanis".equals(id)) {
-                DarkGrey.LOG.info(
-                    "Using vanilla bow renderer for " + id + " so pull animation and hand orientation stay correct");
-                return;
-            }
             DarkGrey.proxy.registerBowRenderer(rpgItem);
             DarkGrey.LOG.info("Bound custom bow renderer for " + id);
             return; // Don't use normal RPGItemRenderer for bows!

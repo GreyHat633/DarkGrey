@@ -4,3 +4,7 @@ itemGroup.DarkGrey=灰之黑
 
 item.dark_grey:cleave_sword.name=重击巨剑
 item.dark_grey:vampire_blade.name=吸血鬼之刃
+item.dark_grey:itanis.name=传说之弓·伊塔尼斯
+msg.dark_grey.itanis.mode_changed=伊塔尼斯：
+msg.dark_grey.itanis.mode_normal=普通模式
+msg.dark_grey.itanis.mode_charge=蓄力模式

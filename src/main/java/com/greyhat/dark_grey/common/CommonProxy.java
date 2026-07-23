@@ -48,8 +48,8 @@ public class CommonProxy {
             1,
             cpw.mods.fml.relauncher.Side.CLIENT);
         DarkGrey.NETWORK.registerMessage(
-            com.greyhat.dark_grey.network.C2SToggleItanisMode.Handler.class,
-            com.greyhat.dark_grey.network.C2SToggleItanisMode.class,
+            com.greyhat.dark_grey.network.ItanisModeSwitchHandler.class,
+            com.greyhat.dark_grey.network.ItanisModeSwitchMessage.class,
             2,
             cpw.mods.fml.relauncher.Side.SERVER);
     }

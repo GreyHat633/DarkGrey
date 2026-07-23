@@ -38,6 +38,7 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
     private List<com.greyhat.dark_grey.api.capability.IOnBowUsingTick> bowUsingTickHandlers;
     private List<com.greyhat.dark_grey.api.capability.IOnBowShoot> bowShootHandlers;
     private List<IOnRightClick> rightClickHandlers;
+    private List<com.greyhat.dark_grey.api.capability.IOnLeftClick> leftClickHandlers;
 
     public ItemRPGBow(String id, List<IRPGComponent> components) {
         this.rpgItemId = id;
@@ -54,6 +55,8 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
         this.bowShootHandlers = IRPGComponent
             .filterByCapability(components, com.greyhat.dark_grey.api.capability.IOnBowShoot.class);
         this.rightClickHandlers = IRPGComponent.filterByCapability(components, IOnRightClick.class);
+        this.leftClickHandlers = IRPGComponent
+            .filterByCapability(components, com.greyhat.dark_grey.api.capability.IOnLeftClick.class);
     }
 
     @Override
@@ -104,6 +107,8 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
         this.bowShootHandlers = IRPGComponent
             .filterByCapability(newComponents, com.greyhat.dark_grey.api.capability.IOnBowShoot.class);
         this.rightClickHandlers = IRPGComponent.filterByCapability(newComponents, IOnRightClick.class);
+        this.leftClickHandlers = IRPGComponent
+            .filterByCapability(newComponents, com.greyhat.dark_grey.api.capability.IOnLeftClick.class);
     }
 
     @Override
@@ -227,14 +232,15 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
                     return this.bowPullIcons[0];
                 }
             } else if ("itanis".equals(this.rpgItemId)) {
-                com.greyhat.dark_grey.component.ItanisMode mode = com.greyhat.dark_grey.component.ItanisNBT
-                    .getMode(usingItem);
-                int max = this.getItanisDrawTicks(mode);
-
-                if (j >= (mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? max : Math.ceil(max * 0.9D))) {
+                boolean chargeMode = stack.hasTagCompound() && stack.getTagCompound().getBoolean("ItanisChargeMode");
+                int maxTicks = chargeMode ? 200 : 20;
+                int frame2 = maxTicks / 3;
+                int frame3 = (maxTicks * 2) / 3;
+                
+                if (j >= frame3) {
                     return this.bowPullIcons[2];
                 }
-                if (j >= Math.ceil(max * (mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? 0.5D : 0.65D))) {
+                if (j >= frame2) {
                     return this.bowPullIcons[1];
                 }
                 if (j > 0) {
@@ -256,18 +262,6 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
         return this.itemIcon;
     }
 
-    @SideOnly(Side.CLIENT)
-    private int getItanisDrawTicks(com.greyhat.dark_grey.component.ItanisMode mode) {
-        for (IRPGComponent component : this.allComponents) {
-            if (component instanceof com.greyhat.dark_grey.component.ComponentItanis) {
-                com.greyhat.dark_grey.component.ComponentItanis itanis = (com.greyhat.dark_grey.component.ComponentItanis) component;
-                return mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? itanis.getMaxChargeTicks()
-                    : itanis.getNormalDrawTicks();
-            }
-        }
-        return mode == com.greyhat.dark_grey.component.ItanisMode.CHARGE ? 200 : 20;
-    }
-
     @Override
     public List<IOnPlayerDeath> getPlayerDeathHandlers() {
         return playerDeathHandlers;
@@ -280,5 +274,9 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
 
     public List<IOnHit> getHitHandlers() {
         return hitHandlers;
+    }
+
+    public List<com.greyhat.dark_grey.api.capability.IOnLeftClick> getLeftClickHandlers() {
+        return leftClickHandlers;
     }
 }

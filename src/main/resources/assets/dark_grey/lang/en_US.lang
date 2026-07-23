@@ -4,3 +4,7 @@ itemGroup.DarkGrey=DarkGrey
 
 item.dark_grey:cleave_sword.name=Cleave Greatsword
 item.dark_grey:vampire_blade.name=Vampire Blade
+item.dark_grey:itanis.name=Legendary Bow: Itanis
+msg.dark_grey.itanis.mode_changed=Itanis: 
+msg.dark_grey.itanis.mode_normal=Normal Mode
+msg.dark_grey.itanis.mode_charge=Charge Mode

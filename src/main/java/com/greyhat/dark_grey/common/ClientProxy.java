@@ -7,8 +7,26 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(cpw.mods.fml.common.event.FMLInitializationEvent event) {
         super.init(event);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS
-            .register(new com.greyhat.dark_grey.event.ItanisClientEventHandler());
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @cpw.mods.fml.common.eventhandler.SubscribeEvent
+    public void onMouseEvent(net.minecraftforge.client.event.MouseEvent event) {
+        if (event.button == 0 && event.buttonstate) { // Left click pressed
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+            if (mc.thePlayer != null && mc.currentScreen == null) {
+                net.minecraft.item.ItemStack held = mc.thePlayer.getCurrentEquippedItem();
+                if (held != null && held.getItem() instanceof com.greyhat.dark_grey.api.IRPGItemContainer) {
+                    com.greyhat.dark_grey.api.IRPGItemContainer container = (com.greyhat.dark_grey.api.IRPGItemContainer) held
+                        .getItem();
+                    if ("itanis".equals(container.getRpgItemId())) {
+                        com.greyhat.dark_grey.DarkGrey.NETWORK
+                            .sendToServer(new com.greyhat.dark_grey.network.ItanisModeSwitchMessage());
+                        event.setCanceled(true);
+                    }
+                }
+            }
+        }
     }
 
     @Override
