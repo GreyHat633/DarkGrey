@@ -361,15 +361,18 @@
       "damage": 135,
       "components": [
         {
-          "name": "红日",
+          "name": "烈阳",
           "params": {
-            "maxChargeTicks": 100,
+            "maxChargeTicks": 180,
             "minFireballSize": 1.0,
-            "maxFireballSize": 5.0,
+            "maxFireballSize": 12.0,
             "minFireballDamage": 100.0,
             "maxFireballDamage": 1250.0,
             "cooldownTicks": 200,
-            "projectileSpeed": 0.65,
+            "minProjectileSpeed": 0.5,
+            "maxProjectileSpeed": 2.0,
+            "volumeShrinkRate": 0.05,
+            "maxExplosionRadius": 25.0,
             "projectileGravity": 0.03,
             "projectileDrag": 0.98,
             "projectileUpwardBoost": 0.12,

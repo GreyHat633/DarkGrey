@@ -107,7 +107,7 @@ public class DarkGrey {
         ComponentRegistry
             .register("地底太阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentUndergroundSun::new);
         ComponentRegistry
-            .register("红日", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
+            .register("烈阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");

@@ -22,13 +22,16 @@ import com.greyhat.dark_grey.status.RedSunBurnData;
 public class ComponentRedSun
     implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IHasTooltip {
 
-    private int maxChargeTicks = 100;
+    private int maxChargeTicks = 180;
     private float minFireballSize = 1.0F;
-    private float maxFireballSize = 5.0F;
+    private float maxFireballSize = 12.0F;
     private float minFireballDamage = 100.0F;
     private float maxFireballDamage = 1250.0F;
     private int cooldownTicks = 200;
-    private float projectileSpeed = 0.65F;
+    
+    private float minProjectileSpeed = 0.5F;
+    private float maxProjectileSpeed = 2.0F;
+    
     private float projectileGravity = 0.03F;
     private float projectileDrag = 0.98F;
     private float projectileUpwardBoost = 0.12F;
@@ -38,6 +41,9 @@ public class ComponentRedSun
     private float burnIncomingDamageMultiplier = 1.20F;
     private boolean ignoreSwitchDamageHurtResistance = true;
 
+    private float volumeShrinkRate = 0.05F;
+    private float maxExplosionRadius = 25.0F;
+
     @Override
     public String getComponentId() {
         return "烈阳";
@@ -45,91 +51,27 @@ public class ComponentRedSun
 
     @Override
     public void configure(JsonObject params) {
-        if (params.has("maxChargeTicks")) maxChargeTicks = Math.max(
-            20,
-            Math.min(
-                1200,
-                params.get("maxChargeTicks")
-                    .getAsInt()));
-        if (params.has("minFireballSize")) minFireballSize = Math.max(
-            0.25F,
-            Math.min(
-                10.0F,
-                params.get("minFireballSize")
-                    .getAsFloat()));
-        if (params.has("maxFireballSize")) maxFireballSize = Math.max(
-            minFireballSize,
-            Math.min(
-                20.0F,
-                params.get("maxFireballSize")
-                    .getAsFloat()));
-        if (params.has("minFireballDamage")) minFireballDamage = Math.max(
-            0.0F,
-            Math.min(
-                100000.0F,
-                params.get("minFireballDamage")
-                    .getAsFloat()));
-        if (params.has("maxFireballDamage")) maxFireballDamage = Math.max(
-            minFireballDamage,
-            params.get("maxFireballDamage")
-                .getAsFloat());
-        if (params.has("cooldownTicks")) cooldownTicks = Math.max(
-            0,
-            Math.min(
-                72000,
-                params.get("cooldownTicks")
-                    .getAsInt()));
-        if (params.has("projectileSpeed")) projectileSpeed = Math.max(
-            0.1F,
-            Math.min(
-                5.0F,
-                params.get("projectileSpeed")
-                    .getAsFloat()));
-        if (params.has("projectileGravity")) projectileGravity = Math.max(
-            0.0F,
-            Math.min(
-                1.0F,
-                params.get("projectileGravity")
-                    .getAsFloat()));
-        if (params.has("projectileDrag")) projectileDrag = Math.max(
-            0.5F,
-            Math.min(
-                1.0F,
-                params.get("projectileDrag")
-                    .getAsFloat()));
-        if (params.has("projectileUpwardBoost")) projectileUpwardBoost = Math.max(
-            -1.0F,
-            Math.min(
-                2.0F,
-                params.get("projectileUpwardBoost")
-                    .getAsFloat()));
-        if (params.has("projectileLifetime")) projectileLifetime = Math.max(
-            20,
-            Math.min(
-                1200,
-                params.get("projectileLifetime")
-                    .getAsInt()));
-        if (params.has("burnDurationTicks")) burnDurationTicks = Math.max(
-            20,
-            Math.min(
-                72000,
-                params.get("burnDurationTicks")
-                    .getAsInt()));
-        if (params.has("burnSwitchDamage")) burnSwitchDamage = Math.max(
-            0.0F,
-            Math.min(
-                1000.0F,
-                params.get("burnSwitchDamage")
-                    .getAsFloat()));
-        if (params.has("burnIncomingDamageMultiplier")) burnIncomingDamageMultiplier = Math.max(
-            1.0F,
-            Math.min(
-                10.0F,
-                params.get("burnIncomingDamageMultiplier")
-                    .getAsFloat()));
-        if (params.has("ignoreSwitchDamageHurtResistance"))
-            ignoreSwitchDamageHurtResistance = params.get("ignoreSwitchDamageHurtResistance")
-                .getAsBoolean();
+        if (params.has("maxChargeTicks")) maxChargeTicks = Math.max(20, Math.min(1200, params.get("maxChargeTicks").getAsInt()));
+        if (params.has("minFireballSize")) minFireballSize = Math.max(0.25F, Math.min(10.0F, params.get("minFireballSize").getAsFloat()));
+        if (params.has("maxFireballSize")) maxFireballSize = Math.max(minFireballSize, Math.min(20.0F, params.get("maxFireballSize").getAsFloat()));
+        if (params.has("minFireballDamage")) minFireballDamage = Math.max(0.0F, Math.min(100000.0F, params.get("minFireballDamage").getAsFloat()));
+        if (params.has("maxFireballDamage")) maxFireballDamage = Math.max(minFireballDamage, params.get("maxFireballDamage").getAsFloat());
+        if (params.has("cooldownTicks")) cooldownTicks = Math.max(0, Math.min(72000, params.get("cooldownTicks").getAsInt()));
+        
+        if (params.has("minProjectileSpeed")) minProjectileSpeed = Math.max(0.1F, Math.min(5.0F, params.get("minProjectileSpeed").getAsFloat()));
+        if (params.has("maxProjectileSpeed")) maxProjectileSpeed = Math.max(minProjectileSpeed, Math.min(10.0F, params.get("maxProjectileSpeed").getAsFloat()));
+        
+        if (params.has("projectileGravity")) projectileGravity = Math.max(0.0F, Math.min(1.0F, params.get("projectileGravity").getAsFloat()));
+        if (params.has("projectileDrag")) projectileDrag = Math.max(0.5F, Math.min(1.0F, params.get("projectileDrag").getAsFloat()));
+        if (params.has("projectileUpwardBoost")) projectileUpwardBoost = Math.max(-1.0F, Math.min(2.0F, params.get("projectileUpwardBoost").getAsFloat()));
+        if (params.has("projectileLifetime")) projectileLifetime = Math.max(20, Math.min(1200, params.get("projectileLifetime").getAsInt()));
+        if (params.has("burnDurationTicks")) burnDurationTicks = Math.max(20, Math.min(72000, params.get("burnDurationTicks").getAsInt()));
+        if (params.has("burnSwitchDamage")) burnSwitchDamage = Math.max(0.0F, Math.min(1000.0F, params.get("burnSwitchDamage").getAsFloat()));
+        if (params.has("burnIncomingDamageMultiplier")) burnIncomingDamageMultiplier = Math.max(1.0F, Math.min(10.0F, params.get("burnIncomingDamageMultiplier").getAsFloat()));
+        if (params.has("ignoreSwitchDamageHurtResistance")) ignoreSwitchDamageHurtResistance = params.get("ignoreSwitchDamageHurtResistance").getAsBoolean();
+        
+        if (params.has("volumeShrinkRate")) volumeShrinkRate = Math.max(0.001F, Math.min(1.0F, params.get("volumeShrinkRate").getAsFloat()));
+        if (params.has("maxExplosionRadius")) maxExplosionRadius = Math.max(1.0F, Math.min(100.0F, params.get("maxExplosionRadius").getAsFloat()));
     }
 
     @Override
@@ -141,8 +83,7 @@ public class ComponentRedSun
 
     @Override
     public ItemStack onRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        long cooldownEnd = player.getEntityData()
-            .getLong("DarkGreyRedSunCooldownEnd");
+        long cooldownEnd = player.getEntityData().getLong("DarkGreyRedSunCooldownEnd");
         if (world.getTotalWorldTime() < cooldownEnd) {
             if (!world.isRemote) {
                 double secs = (cooldownEnd - world.getTotalWorldTime()) / 20.0;
@@ -168,21 +109,22 @@ public class ComponentRedSun
                 maxFireballSize,
                 minFireballDamage,
                 maxFireballDamage,
-                projectileSpeed,
+                minProjectileSpeed,
+                maxProjectileSpeed,
                 projectileGravity,
                 projectileDrag,
                 projectileUpwardBoost,
                 projectileLifetime,
-                burnDurationTicks);
+                burnDurationTicks,
+                volumeShrinkRate,
+                maxExplosionRadius);
             world.spawnEntityInWorld(fireball);
         }
         return itemStack;
     }
 
     @Override
-    public void onUsingTick(ItemStack weaponStack, EntityPlayer player, int count) {
-        // Nothing special to do here, fireball manages itself
-    }
+    public void onUsingTick(ItemStack weaponStack, EntityPlayer player, int count) {}
 
     @Override
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int itemInUseCount) {
@@ -190,8 +132,7 @@ public class ComponentRedSun
             EntityRedSunFireball fireball = RedSunFireballManager.findChargingFireball(player);
             if (fireball != null) {
                 fireball.launch(player.getLookVec());
-                player.getEntityData()
-                    .setLong("DarkGreyRedSunCooldownEnd", world.getTotalWorldTime() + cooldownTicks);
+                player.getEntityData().setLong("DarkGreyRedSunCooldownEnd", world.getTotalWorldTime() + cooldownTicks);
                 world.playSoundAtEntity(player, "mob.ghast.fireball", 1.0F, 1.0F);
             }
         }
@@ -199,15 +140,27 @@ public class ComponentRedSun
 
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
-        tooltip.add(EnumChatFormatting.GOLD + "技能：烈阳");
-        tooltip.add(EnumChatFormatting.GRAY + "所有攻击附加烧伤buff。长按右键可以生成一个1x1x1的火球，");
-        tooltip.add(EnumChatFormatting.GRAY + "蓄力时间越长火球越大，最高到5x5x5，火球膨胀速度为每秒20%，即五秒到最大值。");
-        tooltip.add(EnumChatFormatting.GRAY + "松开后火球以抛物线的形式向前缓慢飞出。");
-        tooltip.add(EnumChatFormatting.GRAY + "伤害随时间增长为（100~1250）。冷却时间为10秒。");
-        tooltip.add(EnumChatFormatting.GRAY + "烧伤buff:玩家每次切换物品都会扣除10点生命值，防御力减少20%");
+        tooltip.add(EnumChatFormatting.GOLD + "范围伤害：" + (int) minFireballDamage + " ~ " + (int) maxFireballDamage);
+        tooltip.add(EnumChatFormatting.AQUA + "所有攻击附带【烧伤】异常状态");
+        tooltip.add("");
+        tooltip.add(EnumChatFormatting.YELLOW + "长按右键：蓄力烈阳");
+        tooltip.add(EnumChatFormatting.YELLOW + "松开右键：发射烈阳");
+        tooltip.add("");
+        tooltip.add(EnumChatFormatting.GREEN + "蓄力烈阳：");
+        tooltip.add(EnumChatFormatting.GRAY + String.format("  按住右键蓄力，最多 %.1f 秒", maxChargeTicks / 20.0F));
+        tooltip.add(EnumChatFormatting.GRAY + String.format("  火球体积从 %.0fx%.0fx%.0f 逐渐膨胀到最大 %.0fx%.0fx%.0f", minFireballSize, minFireballSize, minFireballSize, maxFireballSize, maxFireballSize, maxFireballSize));
+        tooltip.add("");
+        tooltip.add(EnumChatFormatting.LIGHT_PURPLE + "发射烈阳：");
+        tooltip.add(EnumChatFormatting.GRAY + "  松开右键将火球抛出，触地后将沿原方向无情碾压");
+        tooltip.add(EnumChatFormatting.GRAY + "  发射初速度与火球体积呈反比（越小越快）");
+        tooltip.add(EnumChatFormatting.GRAY + "  火球无视实体障碍物，对接触的实体造成碾压伤害并击飞");
+        tooltip.add(EnumChatFormatting.GRAY + "  直到撞击墙壁或动能耗尽停滞时才会发生大规模爆炸");
+        tooltip.add(EnumChatFormatting.GRAY + String.format("  技能冷却时间：%.1f 秒", cooldownTicks / 20.0F));
+        tooltip.add("");
+        tooltip.add(EnumChatFormatting.RED + "【烧伤】异常：");
+        tooltip.add(EnumChatFormatting.GRAY + "  玩家每次切换物品时扣除 10 点生命值，并减少 20% 防御力");
 
-        long cooldownEnd = player.getEntityData()
-            .getLong("DarkGreyRedSunCooldownEnd");
+        long cooldownEnd = player.getEntityData().getLong("DarkGreyRedSunCooldownEnd");
         long now = player.worldObj.getTotalWorldTime();
         if (cooldownEnd > now) {
             double secs = (cooldownEnd - now) / 20.0;

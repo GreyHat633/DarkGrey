@@ -28,7 +28,7 @@ public class RenderRedSunFireball extends Render {
         EntityRedSunFireball fireball = (EntityRedSunFireball) entity;
 
         GL11.glPushMatrix();
-        GL11.glTranslated(x, y, z);
+        GL11.glTranslated(x, y + entity.height / 2.0F, z);
 
         float size = fireball.getCurrentSize() / 2.0F;
 
