@@ -39,4 +39,26 @@ public final class RPGDamageSources {
         }
         return null;
     }
+
+    /** Creates indirect magic damage for Underground Sun. */
+    public static DamageSource causeUndergroundSunDamage(Entity orb, EntityLivingBase shooter) {
+        return new EntityDamageSourceIndirect("magic", orb, shooter).setMagicDamage();
+    }
+
+    public static DamageSource causeRedSunBurnSwitchDamage(EntityLivingBase shooter) {
+        if (shooter != null) {
+            return new net.minecraft.util.EntityDamageSource("red_sun_burn_switch", shooter).setDamageBypassesArmor();
+        } else {
+            return new net.minecraft.util.DamageSource("red_sun_burn_switch").setDamageBypassesArmor();
+        }
+    }
+
+    public static DamageSource causeRedSunFireballDamage(Entity projectile, EntityLivingBase owner) {
+        return new EntityDamageSourceIndirect("red_sun_fireball", projectile, owner).setProjectile()
+            .setMagicDamage();
+    }
+
+    public static boolean isSwitchDamage(DamageSource source) {
+        return "red_sun_burn_switch".equals(source.damageType);
+    }
 }

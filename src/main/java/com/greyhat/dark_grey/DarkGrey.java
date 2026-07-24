@@ -104,6 +104,10 @@ public class DarkGrey {
             .register("倒悬", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentSuspendedClockhand::new);
         ComponentRegistry
             .register("伊塔尼斯", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentItanis::new);
+        ComponentRegistry
+            .register("地底太阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentUndergroundSun::new);
+        ComponentRegistry
+            .register("红日", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
@@ -157,6 +161,22 @@ public class DarkGrey {
             64,
             2,
             true);
+        EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityUndergroundSunOrb.class,
+            "underground_sun_orb",
+            7,
+            (Object) DarkGrey.instance,
+            64,
+            2,
+            true);
+        EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityRedSunFireball.class,
+            "red_sun_fireball",
+            8,
+            (Object) DarkGrey.instance,
+            64,
+            2,
+            true);
         DarkGrey.LOG.info("======== DarkGrey Mod: 吸血鬼实体已注册 ========");
     }
 
@@ -171,6 +191,19 @@ public class DarkGrey {
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register((Object) eventHandler);
+
+        com.greyhat.dark_grey.event.UndergroundSunLifecycleHandler lifecycleHandler = new com.greyhat.dark_grey.event.UndergroundSunLifecycleHandler();
+        MinecraftForge.EVENT_BUS.register((Object) lifecycleHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) lifecycleHandler);
+
+        com.greyhat.dark_grey.event.RedSunBurnHandler burnHandler = new com.greyhat.dark_grey.event.RedSunBurnHandler();
+        MinecraftForge.EVENT_BUS.register((Object) burnHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) burnHandler);
+
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }
 

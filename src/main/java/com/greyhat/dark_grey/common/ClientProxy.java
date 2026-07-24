@@ -19,7 +19,8 @@ public class ClientProxy extends CommonProxy {
                 if (held != null && held.getItem() instanceof com.greyhat.dark_grey.api.IRPGItemContainer) {
                     com.greyhat.dark_grey.api.IRPGItemContainer container = (com.greyhat.dark_grey.api.IRPGItemContainer) held
                         .getItem();
-                    if ("itanis".equals(container.getRpgItemId())) {
+                    if ("itanis".equals(container.getRpgItemId())
+                        || "underground_sun".equals(container.getRpgItemId())) {
                         com.greyhat.dark_grey.DarkGrey.NETWORK
                             .sendToServer(new com.greyhat.dark_grey.network.ItanisModeSwitchMessage());
                         event.setCanceled(true);
@@ -84,6 +85,12 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityItanisArrow.class,
             new com.greyhat.dark_grey.client.render.RenderItanisArrow());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityUndergroundSunOrb.class,
+            new com.greyhat.dark_grey.client.render.RenderUndergroundSunOrb());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityRedSunFireball.class,
+            new com.greyhat.dark_grey.client.render.RenderRedSunFireball());
     }
 
     @Override

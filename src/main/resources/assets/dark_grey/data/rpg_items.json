@@ -316,6 +316,72 @@
         }
       ],
       "enchantments": "34:3, 51:1"
+    },
+    {
+      "id": "underground_sun",
+      "type": "道具",
+      "displayName": {
+        "zh_CN": "地底太阳",
+        "en_US": "Underground Sun"
+      },
+      "texture": "dark_grey:underground_sun",
+      "durability": 0,
+      "damage": 90,
+      "components": [
+        {
+          "name": "地底太阳",
+          "params": {
+            "chargeTicks": 40,
+            "maxStoredOrbs": 3,
+            "damageMultiplier": 5.0,
+            "explosionRadius": 20.0,
+            "explosionHalfHeight": 10.0,
+            "projectileSpeed": 1.8,
+            "projectileLifetime": 100,
+            "launchCooldownTicks": 5,
+            "ignoreHurtResistance": true,
+            "respectWalls": false,
+            "orbitRadius": 1.25,
+            "orbitHeight": -0.2,
+            "orbitSpeed": 2.0
+          }
+        }
+      ],
+      "enchantments": ""
+    },
+    {
+      "id": "red_sun",
+      "type": "剑",
+      "displayName": {
+        "zh_CN": "红日",
+        "en_US": "Red Sun"
+      },
+      "texture": "dark_grey:red_sun",
+      "durability": 0,
+      "damage": 135,
+      "components": [
+        {
+          "name": "红日",
+          "params": {
+            "maxChargeTicks": 100,
+            "minFireballSize": 1.0,
+            "maxFireballSize": 5.0,
+            "minFireballDamage": 100.0,
+            "maxFireballDamage": 1250.0,
+            "cooldownTicks": 200,
+            "projectileSpeed": 0.65,
+            "projectileGravity": 0.03,
+            "projectileDrag": 0.98,
+            "projectileUpwardBoost": 0.12,
+            "projectileLifetime": 200,
+            "burnDurationTicks": 200,
+            "burnSwitchDamage": 10.0,
+            "burnIncomingDamageMultiplier": 1.20,
+            "ignoreSwitchDamageHurtResistance": true
+          }
+        }
+      ],
+      "enchantments": ""
     }
   ]
 }

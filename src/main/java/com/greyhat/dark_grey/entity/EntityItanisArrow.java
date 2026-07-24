@@ -246,7 +246,8 @@ public class EntityItanisArrow extends EntityThrowable {
             int total = Math.max(1, formationTotal);
             double arcStep = total > 1 ? 2.4D / (total - 1) : 0;
             double offsetR = -1.2D + formationSlot * arcStep; // Left to right arc [-1.2, +1.2]
-            double offsetUp = 1.2D + Math.sin((formationSlot / (double) total) * Math.PI) * 0.4D; // Slight vertical curve
+            double offsetUp = 1.2D + Math.sin((formationSlot / (double) total) * Math.PI) * 0.4D; // Slight vertical
+                                                                                                  // curve
             double offsetBack = -0.4D;
 
             double targetX = owner.posX + right.xCoord * offsetR + horizLook.xCoord * offsetBack;
@@ -340,6 +341,7 @@ public class EntityItanisArrow extends EntityThrowable {
         }
 
         java.util.Collections.sort(validTargets, new java.util.Comparator<EntityLivingBase>() {
+
             @Override
             public int compare(EntityLivingBase e1, EntityLivingBase e2) {
                 double d1 = EntityItanisArrow.this.getDistanceSqToEntity(e1);
@@ -453,7 +455,7 @@ public class EntityItanisArrow extends EntityThrowable {
                     + (this.rand.nextDouble() - 0.5D) * 0.4D;
                 double pZ = this.lastTickPosZ + (this.posZ - this.lastTickPosZ) * fraction
                     + (this.rand.nextDouble() - 0.5D) * 0.4D;
-                this.worldObj.spawnParticle("reddust", pX, pY, pZ, 1.0D, 0.85D, 0.3D); // Golden radiant energy
+                this.worldObj.spawnParticle("reddust", pX, pY, pZ, 1.0D, 0.05D, 0.05D); // Red energy
             }
         }
     }

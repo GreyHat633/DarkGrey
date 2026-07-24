@@ -63,13 +63,13 @@ public class RenderItanisArrow extends Render {
             }
 
             if (state == ArrowState.PIERCING) {
-                // Golden Radiant Beam Rendering for Full-Charge Piercing Arrow
-                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-                GL11.glColor4f(1.0F, 0.85F, 0.2F, 0.6F);
+                // Completely Black Piercing Arrow
+                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.9F);
                 drawTexturedArrow(scale * 1.3F);
 
                 GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.95F);
+                GL11.glColor4f(0.0F, 0.0F, 0.0F, 1.0F);
                 drawTexturedArrow(scale);
             } else if (state == ArrowState.HOVERING) {
                 // Gold Floating Arrow Rendering
@@ -101,19 +101,19 @@ public class RenderItanisArrow extends Render {
         float size = scale * 0.8F; // Slightly larger to compensate for diagonal mapping
 
         tessellator.startDrawingQuads();
-        
+
         // Horizontal Quad (XZ plane) - Diamond mapping to align diagonal texture with Z-axis
-        tessellator.addVertexWithUV(-size, 0.0,  0.0,  0.0, 0.0); // Top-Left
-        tessellator.addVertexWithUV( 0.0,  0.0, -size, 0.0, 1.0); // Bottom-Left (Tail)
-        tessellator.addVertexWithUV( size, 0.0,  0.0,  1.0, 1.0); // Bottom-Right
-        tessellator.addVertexWithUV( 0.0,  0.0,  size, 1.0, 0.0); // Top-Right (Tip)
+        tessellator.addVertexWithUV(-size, 0.0, 0.0, 0.0, 0.0); // Top-Left
+        tessellator.addVertexWithUV(0.0, 0.0, -size, 0.0, 1.0); // Bottom-Left (Tail)
+        tessellator.addVertexWithUV(size, 0.0, 0.0, 1.0, 1.0); // Bottom-Right
+        tessellator.addVertexWithUV(0.0, 0.0, size, 1.0, 0.0); // Top-Right (Tip)
 
         // Vertical Quad (YZ plane) - Diamond mapping
-        tessellator.addVertexWithUV(0.0,  size,  0.0,  0.0, 0.0); // Top-Left
-        tessellator.addVertexWithUV(0.0,  0.0,  -size, 0.0, 1.0); // Bottom-Left (Tail)
-        tessellator.addVertexWithUV(0.0, -size,  0.0,  1.0, 1.0); // Bottom-Right
-        tessellator.addVertexWithUV(0.0,  0.0,   size, 1.0, 0.0); // Top-Right (Tip)
-        
+        tessellator.addVertexWithUV(0.0, size, 0.0, 0.0, 0.0); // Top-Left
+        tessellator.addVertexWithUV(0.0, 0.0, -size, 0.0, 1.0); // Bottom-Left (Tail)
+        tessellator.addVertexWithUV(0.0, -size, 0.0, 1.0, 1.0); // Bottom-Right
+        tessellator.addVertexWithUV(0.0, 0.0, size, 1.0, 0.0); // Top-Right (Tip)
+
         tessellator.draw();
     }
 

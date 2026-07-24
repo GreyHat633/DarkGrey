@@ -8,3 +8,5 @@ item.dark_grey:itanis.name=Legendary Bow: Itanis
 msg.dark_grey.itanis.mode_changed=Itanis: 
 msg.dark_grey.itanis.mode_normal=Normal Mode
 msg.dark_grey.itanis.mode_charge=Charge Mode
+
+entity.dark_grey.red_sun_fireball.name=Solar Fireball

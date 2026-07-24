@@ -232,11 +232,12 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
                     return this.bowPullIcons[0];
                 }
             } else if ("itanis".equals(this.rpgItemId)) {
-                boolean chargeMode = stack.hasTagCompound() && stack.getTagCompound().getBoolean("ItanisChargeMode");
+                boolean chargeMode = stack.hasTagCompound() && stack.getTagCompound()
+                    .getBoolean("ItanisChargeMode");
                 int maxTicks = chargeMode ? 200 : 20;
                 int frame2 = maxTicks / 3;
                 int frame3 = (maxTicks * 2) / 3;
-                
+
                 if (j >= frame3) {
                     return this.bowPullIcons[2];
                 }

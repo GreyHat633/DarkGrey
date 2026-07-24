@@ -52,6 +52,11 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.ItanisModeSwitchMessage.class,
             2,
             cpw.mods.fml.relauncher.Side.SERVER);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.UndergroundSunExplosionHandler.class,
+            com.greyhat.dark_grey.network.UndergroundSunExplosionMessage.class,
+            3,
+            cpw.mods.fml.relauncher.Side.CLIENT);
     }
 
     public void scheduleConfigApply(String json) {}

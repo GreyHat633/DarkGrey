@@ -163,6 +163,11 @@ public class RPGItemLoader {
             case "shovel":
                 return new ItemRPGTool(id, toolMaterial, "shovel", components);
 
+            // —— Usable Item ——
+            case "道具":
+            case "usable_item":
+                return new com.greyhat.dark_grey.item.ItemRPGUsableItem(id, components);
+
             // —— Hoe ——
             case "\u9504": // 锄
             case "hoe":

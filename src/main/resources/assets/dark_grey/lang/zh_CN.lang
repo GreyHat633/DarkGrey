@@ -8,3 +8,5 @@ item.dark_grey:itanis.name=传说之弓·伊塔尼斯
 msg.dark_grey.itanis.mode_changed=伊塔尼斯：
 msg.dark_grey.itanis.mode_normal=普通模式
 msg.dark_grey.itanis.mode_charge=蓄力模式
+
+entity.dark_grey.red_sun_fireball.name=太阳火球

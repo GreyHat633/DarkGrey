@@ -187,10 +187,11 @@ public class ComponentItanis
             List<EntityItanisArrow> existingHovering = getPlayerHoveringArrows(world, player);
             int currentHovering = existingHovering.size();
             int maxHovering = 10;
-            
+
             net.minecraft.util.ChatComponentText msg = new net.minecraft.util.ChatComponentText(
                 "已蓄力" + seconds + "秒 浮游箭(" + currentHovering + "/" + maxHovering + ")");
-            msg.getChatStyle().setColor(net.minecraft.util.EnumChatFormatting.GOLD);
+            msg.getChatStyle()
+                .setColor(net.minecraft.util.EnumChatFormatting.GOLD);
             player.addChatMessage(msg);
         }
     }
