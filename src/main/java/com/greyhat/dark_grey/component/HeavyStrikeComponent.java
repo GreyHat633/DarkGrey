@@ -99,7 +99,7 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
      * stack. Player base attributes, potion effects, critical hits and the
      * already-modified event damage are intentionally excluded.
      */
-    static float resolveWeaponAttackDamage(ItemStack weaponStack) {
+    public static float resolveWeaponAttackDamage(ItemStack weaponStack) {
         if (weaponStack == null || weaponStack.getItem() == null) {
             return 0.0F;
         }
@@ -143,7 +143,19 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
         return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 
-    static float applyScaledBonus(NBTTagCompound state, String lastTriggerKey, String readyNotifiedKey, long now,
+    public static boolean isReady(NBTTagCompound state, String lastTriggerKey, long now, float intervalSeconds) {
+        if (state == null) return true;
+        long intervalTicks = Math.max(0L, Math.round(intervalSeconds * 20.0F));
+        if (state.hasKey(lastTriggerKey)) {
+            long lastTrigger = state.getLong(lastTriggerKey);
+            if (now >= lastTrigger && now - lastTrigger < intervalTicks) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static float applyScaledBonus(NBTTagCompound state, String lastTriggerKey, String readyNotifiedKey, long now,
         float intervalSeconds, float weaponAttackDamage, float multiplier, float currentDamage) {
         if (state == null || weaponAttackDamage <= 0.0F || multiplier <= 0.0F) {
             return currentDamage;

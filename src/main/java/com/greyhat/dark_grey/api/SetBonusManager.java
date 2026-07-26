@@ -83,14 +83,15 @@ public class SetBonusManager {
         return 0;
     }
 
-    public static float fireOnHit(final EntityPlayer attacker, final EntityLivingBase target, final float damage) {
+    public static float fireOnHit(final EntityPlayer attacker, final EntityLivingBase target,
+        final net.minecraft.util.DamageSource source, final float damage) {
         final Map<String, SetInfo> playerSets = SetBonusManager.ACTIVE_SETS.get(attacker);
         if (playerSets == null || playerSets.isEmpty()) {
             return damage;
         }
         float currentDamage = damage;
         for (final SetInfo info : playerSets.values()) {
-            currentDamage = info.instance.onSetHit(attacker, target, currentDamage, info.pieceCount);
+            currentDamage = info.instance.onSetHit(attacker, target, source, currentDamage, info.pieceCount);
         }
         return currentDamage;
     }

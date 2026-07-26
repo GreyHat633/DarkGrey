@@ -53,11 +53,7 @@ public class MarkSelfHudRenderer {
 
             @Override
             public int compare(ClientMarkInstance a, ClientMarkInstance b) {
-                if (a.maxed && !b.maxed) return -1;
-                if (!a.maxed && b.maxed) return 1;
-                if (a.decaying && !b.decaying) return -1;
-                if (!a.decaying && b.decaying) return 1;
-                return a.markId.compareTo(b.markId);
+                return Long.compare(a.localCreationTime, b.localCreationTime);
             }
         });
 
@@ -84,8 +80,8 @@ public class MarkSelfHudRenderer {
             int col = i / maxPerColumn;
             int row = i % maxPerColumn;
 
-            int x = 10 + col * 125; // 120 width + 5 spacing
-            int y = 10 + row * 34; // 32 height + 2 spacing
+            int x = 10 + col * 94; // 120 * 0.75 = 90 + 4 spacing
+            int y = 10 + row * 26; // 32 * 0.75 = 24 + 2 spacing
 
             IMarkType type = MarkRegistry.get(instance.markId);
             MarkVisualData visual = type.getVisualData();
@@ -137,7 +133,25 @@ public class MarkSelfHudRenderer {
             int timeColor = 0xAAAAAA;
             boolean drawTime = true;
 
-            if (!instance.decaying && instance.stableUntilWorldTime > 0) {
+            if (instance.markId.equals("shattered_bone")) {
+                if (instance.customData != null) {
+                    boolean maintainedByFracture = instance.customData.getBoolean("MaintainedByFracture");
+                    boolean hasIndependentDuration = instance.customData.getBoolean("HasIndependentDuration");
+                    if (maintainedByFracture) {
+                        timeStr = "\u221E"; // Infinity symbol
+                        timeColor = 0x55FF55; // Green
+                    } else if (hasIndependentDuration) {
+                        long expire = instance.customData.getLong("IndependentExpireWorldTime");
+                        long remainingTicks = expire - mc.theWorld.getTotalWorldTime();
+                        if (remainingTicks < 0) remainingTicks = 0;
+                        long totalSeconds = remainingTicks / 20;
+                        long m = totalSeconds / 60;
+                        long s = totalSeconds % 60;
+                        timeStr = String.format("%d:%02d", m, s);
+                        if (remainingTicks <= 60) timeColor = 0xFF5555;
+                    }
+                }
+            } else if (!instance.decaying && instance.stableUntilWorldTime > 0) {
                 long remainingTicks = instance.stableUntilWorldTime - mc.theWorld.getTotalWorldTime();
                 if (remainingTicks < 0) remainingTicks = 0;
                 long totalSeconds = remainingTicks / 20;
@@ -145,10 +159,17 @@ public class MarkSelfHudRenderer {
                 long s = totalSeconds % 60;
                 timeStr = String.format("%d:%02d", m, s);
             } else if (instance.decaying) {
-                timeStr = "0:00";
+                long remainingTicks = instance.nextDecayTriggerWorldTime - mc.theWorld.getTotalWorldTime();
+                if (remainingTicks < 0) remainingTicks = 0;
+                long totalSeconds = remainingTicks / 20;
+                long m = totalSeconds / 60;
+                long s = totalSeconds % 60;
+                timeStr = String.format("%d:%02d", m, s);
                 timeColor = 0xFF5555; // Light Red
-                if ((mc.theWorld.getTotalWorldTime() / 10) % 2 == 0) {
-                    drawTime = false;
+                if (remainingTicks <= 20) {
+                    if ((mc.theWorld.getTotalWorldTime() / 5) % 2 == 0) {
+                        drawTime = false;
+                    }
                 }
             }
 

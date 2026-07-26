@@ -36,6 +36,22 @@ public class Config {
     public static boolean poisonDamageBypassesMagicResistance = false;
     public static boolean poisonIgnoreHurtResistance = true;
 
+    public static int fractureMaxStacks = 5;
+    public static double fractureSpeedReductionPerStack = 0.10;
+    public static int fractureDecayIntervalTicks = 100;
+
+    // --- Shattered Bone ---
+    public static int shatteredBoneDefaultIndependentDurationTicks = 60; // 3 seconds
+    public static double shatteredBoneMovementThresholdSq = 0.01; // 0.1 blocks per tick
+    public static float shatteredBoneMovementDamage = 5.0f;
+    public static int shatteredBoneMovementCooldownTicks = 5;
+    public static double shatteredBoneSplashRadius = 5.0;
+    public static double shatteredBoneSplashHalfAngleCos = 0.9238; // cos(22.5) -> 45 total degree cone
+    public static float shatteredBoneSplashDamageMultiplier = 2.25f; // 225%
+    public static int shatteredBoneSplashDurationTicks = 60; // 3 seconds
+    public static boolean fractureRefreshDecayOnApply = true;
+    public static boolean fractureRefreshDecayAtMax = true;
+
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
 
@@ -74,6 +90,14 @@ public class Config {
         poisonDamageBypassesMagicResistance = configuration
             .getBoolean("damageBypassesMagicResistance", "marks.poison", false, "");
         poisonIgnoreHurtResistance = configuration.getBoolean("ignoreHurtResistance", "marks.poison", true, "");
+
+        fractureMaxStacks = configuration.getInt("maxStacks", "marks.fracture", 5, 1, 10, "");
+        fractureSpeedReductionPerStack = configuration
+            .get("marks.fracture", "speedReductionPerStack", 0.10, "Speed reduction per stack (0.0 to 0.19)")
+            .getDouble(0.10);
+        fractureDecayIntervalTicks = configuration.getInt("decayIntervalTicks", "marks.fracture", 100, 1, 72000, "");
+        fractureRefreshDecayOnApply = configuration.getBoolean("refreshDecayOnApply", "marks.fracture", true, "");
+        fractureRefreshDecayAtMax = configuration.getBoolean("refreshDecayAtMax", "marks.fracture", true, "");
 
         if (configuration.hasChanged()) {
             configuration.save();

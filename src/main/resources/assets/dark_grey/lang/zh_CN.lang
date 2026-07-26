@@ -1,4 +1,4 @@
-﻿item.potatoHelmet.name=马铃薯头盔
+item.potatoHelmet.name=马铃薯头盔
 
 itemGroup.DarkGrey=灰之黑
 
@@ -11,7 +11,7 @@ msg.dark_grey.itanis.mode_charge=蓄力模式
 
 entity.dark_grey.red_sun_fireball.name=太阳火球
 
-mark.dark_grey.poison.name=剧毒印记
+mark.dark_grey.poison.name=剧毒
 mark.dark_grey.poison.description=受到剧毒的侵蚀。
 mark.ui.max=层数已满
 mark.ui.decaying=正在衰减
@@ -52,3 +52,20 @@ tooltip.corruption_bomb.no_direct_damage=不直接造成伤害
 tooltip.corruption_bomb.no_block_damage=不会破坏方块
 message.corruption_bomb.mark_unavailable=腐败炸弹无法找到印记类型：%s
 message.corruption_bomb.throw_failed=腐败炸弹投掷失败，物品未被消耗
+
+mark.dark_grey.fracture.name=骨折
+mark.dark_grey.fracture.description=每层降低 10% 移动速度。在5层时，将会诱发严重的碎骨，导致移动受损。骨折达到满层之前不会自然衰减，满层后会持续脱落。
+mark.dark_grey.shattered_bone.name=碎骨
+mark.dark_grey.shattered_bone.description=由严重的骨折引发。碎骨导致携带者进行任何移动都会承受巨大的伤害。此外，受到物理攻击时，骨骼碎片会向外溅射，对周围单位造成穿甲伤害并扩散碎骨状态。
+
+mark.fracture.ui.speed_reduction=移动速度降低%s%%
+mark.fracture.ui.next_decay=下一次减少：%s秒
+mark.fracture.ui.max=已达到最大层数
+mark.fracture.floating.gain=骨折 +%s
+mark.fracture.floating.loss=骨折 -%s
+mark.fracture.floating.max=骨折 MAX
+mark.fracture.floating.refresh=骨折持续刷新
+
+item.bone_crusher.name=粉碎之骨
+component.dark_grey.bone_crusher.name=粉碎之骨
+component.dark_grey.bone_crusher.desc=每有效近战命中 %s 次，施加 %s 层骨折印记

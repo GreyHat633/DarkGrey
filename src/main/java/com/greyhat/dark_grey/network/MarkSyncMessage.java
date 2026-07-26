@@ -1,5 +1,7 @@
 package com.greyhat.dark_grey.network;
 
+import net.minecraft.nbt.NBTTagCompound;
+
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import io.netty.buffer.ByteBuf;
@@ -16,11 +18,12 @@ public class MarkSyncMessage implements IMessage {
         public long stableUntilWorldTime;
         public long nextPeriodicTriggerWorldTime;
         public long nextDecayTriggerWorldTime;
+        public NBTTagCompound customData;
 
         public MarkData() {}
 
         public MarkData(String markId, int stacks, int maxStacks, boolean decaying, boolean maxed, long stableUntil,
-            long nextPeriodic, long nextDecay) {
+            long nextPeriodic, long nextDecay, NBTTagCompound customData) {
             this.markId = markId;
             this.stacks = stacks;
             this.maxStacks = maxStacks;
@@ -29,6 +32,7 @@ public class MarkSyncMessage implements IMessage {
             this.stableUntilWorldTime = stableUntil;
             this.nextPeriodicTriggerWorldTime = nextPeriodic;
             this.nextDecayTriggerWorldTime = nextDecay;
+            this.customData = customData;
         }
 
         public void fromBytes(ByteBuf buf) {
@@ -40,6 +44,11 @@ public class MarkSyncMessage implements IMessage {
             this.stableUntilWorldTime = buf.readLong();
             this.nextPeriodicTriggerWorldTime = buf.readLong();
             this.nextDecayTriggerWorldTime = buf.readLong();
+            if (buf.readBoolean()) {
+                this.customData = ByteBufUtils.readTag(buf);
+            } else {
+                this.customData = new NBTTagCompound();
+            }
         }
 
         public void toBytes(ByteBuf buf) {
@@ -51,6 +60,12 @@ public class MarkSyncMessage implements IMessage {
             buf.writeLong(this.stableUntilWorldTime);
             buf.writeLong(this.nextPeriodicTriggerWorldTime);
             buf.writeLong(this.nextDecayTriggerWorldTime);
+            if (this.customData != null && !this.customData.hasNoTags()) {
+                buf.writeBoolean(true);
+                ByteBufUtils.writeTag(buf, this.customData);
+            } else {
+                buf.writeBoolean(false);
+            }
         }
     }
 
@@ -63,10 +78,19 @@ public class MarkSyncMessage implements IMessage {
     public MarkSyncMessage() {}
 
     public MarkSyncMessage(int entityId, String markId, int stacks, int maxStacks, boolean decaying, boolean maxed,
-        long stableUntil, long nextPeriodic, long nextDecay, byte changeReason, int displayedDelta,
-        boolean immediateTriggered) {
+        long stableUntil, long nextPeriodic, long nextDecay, NBTTagCompound customData, byte changeReason,
+        int displayedDelta, boolean immediateTriggered) {
         this.entityId = entityId;
-        this.data = new MarkData(markId, stacks, maxStacks, decaying, maxed, stableUntil, nextPeriodic, nextDecay);
+        this.data = new MarkData(
+            markId,
+            stacks,
+            maxStacks,
+            decaying,
+            maxed,
+            stableUntil,
+            nextPeriodic,
+            nextDecay,
+            customData);
         this.changeReason = changeReason;
         this.displayedDelta = displayedDelta;
         this.immediateTriggered = immediateTriggered;

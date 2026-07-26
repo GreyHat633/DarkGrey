@@ -41,3 +41,20 @@ tooltip.corruption_bomb.no_direct_damage=No direct damage
 tooltip.corruption_bomb.no_block_damage=Does not break blocks
 message.corruption_bomb.mark_unavailable=Corruption Bomb could not find mark type: %s
 message.corruption_bomb.throw_failed=Corruption Bomb throw failed, item not consumed
+
+mark.dark_grey.fracture.name=Fracture
+mark.dark_grey.fracture.description=Reduces movement speed by 10% per stack. Reaching 5 stacks triggers severe Shattered Bone, severely impairing movement. Stacks will not naturally decay before reaching the maximum, but will fall off over time at max stacks.
+mark.dark_grey.shattered_bone.name=Shattered Bone
+mark.dark_grey.shattered_bone.description=Triggered by severe fracture. Shattered Bone causes the bearer to take massive damage upon any movement. Furthermore, when taking physical attacks, bone fragments will splash outwards, dealing armor-piercing damage and spreading the Shattered Bone status to nearby entities.
+
+mark.fracture.ui.speed_reduction=Movement Speed Reduced by %s%%
+mark.fracture.ui.next_decay=Next Reduction: %ss
+mark.fracture.ui.max=Reached Maximum Stacks
+mark.fracture.floating.gain=Fracture +%s
+mark.fracture.floating.loss=Fracture -%s
+mark.fracture.floating.max=Fracture MAX
+mark.fracture.floating.refresh=Fracture Refreshed
+
+item.bone_crusher.name=Bone Crusher
+component.dark_grey.bone_crusher.name=Bone Crusher
+component.dark_grey.bone_crusher.desc=Every %s valid melee hits applies %s stacks of Fracture

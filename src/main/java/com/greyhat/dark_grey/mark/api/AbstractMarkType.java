@@ -30,4 +30,8 @@ public abstract class AbstractMarkType implements IMarkType {
     @Override
     public void onRemoved(EntityLivingBase target, MarkInstance instance, MarkUpdateContext context,
         MarkRemovalReason reason) {}
+
+    @Override
+    public void onStacksChanged(EntityLivingBase target, MarkInstance instance, int oldStacks, int newStacks,
+        MarkUpdateContext context) {}
 }

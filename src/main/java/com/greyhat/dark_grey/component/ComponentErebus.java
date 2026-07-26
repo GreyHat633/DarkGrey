@@ -196,7 +196,13 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             }
 
             if (!world.isRemote) {
-                MarkApplyContext context = new MarkApplyContext(player, addedStacks, now, "erebus", true, true, null);
+                MarkApplyContext context = new MarkApplyContext.Builder().source(player)
+                    .requestedStacks(addedStacks)
+                    .worldTime(now)
+                    .applicationId("erebus")
+                    .refreshDuration(true)
+                    .triggerImmediate(true)
+                    .build();
                 MarkApplyResult result = MarkManager.apply(target, markId, context);
                 if (result != null && result.success) {
                     affectedCount++;

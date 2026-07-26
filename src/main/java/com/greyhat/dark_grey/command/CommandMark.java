@@ -19,7 +19,7 @@ public class CommandMark {
             sender.addChatMessage(
                 new ChatComponentText(
                     EnumChatFormatting.RED
-                        + "Usage: /darkgrey mark <apply|set|remove|clear|list> <target> [markId] [amount]"));
+                        + "Usage: /darkgrey mark <apply|set|remove|clear|list> <target> [markId] [amount] [durationTicks]"));
             return;
         }
 
@@ -89,18 +89,62 @@ public class CommandMark {
             return;
         }
 
+        int durationTicks = 0;
+        if (args.length >= 6) {
+            try {
+                durationTicks = Integer.parseInt(args[5]);
+            } catch (NumberFormatException e) {
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid duration."));
+                return;
+            }
+        }
+
         EntityLivingBase source = sender instanceof EntityLivingBase ? (EntityLivingBase) sender : null;
 
         if (action.equalsIgnoreCase("apply")) {
-            MarkManager.apply(target, markId, amount, source);
+            com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder builder = new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder()
+                .source(source)
+                .requestedStacks(amount)
+                .worldTime(target.worldObj.getTotalWorldTime());
+            if (durationTicks > 0) {
+                builder.durationTicks(durationTicks);
+            }
+            MarkManager.apply(target, markId, builder.build());
             sender.addChatMessage(
                 new ChatComponentText(
-                    EnumChatFormatting.GREEN + "Applied " + amount + " stacks of " + markId + " to target."));
+                    EnumChatFormatting.GREEN + "Applied "
+                        + amount
+                        + " stacks of "
+                        + markId
+                        + " to target."
+                        + (durationTicks > 0 ? (" (" + durationTicks + " ticks)") : "")));
         } else if (action.equalsIgnoreCase("set")) {
             MarkManager.setStacks(target, markId, amount, source);
+            if (durationTicks > 0) {
+                MarkInstance inst = MarkContainer.get(target)
+                    .getMark(markId);
+                if (inst != null) {
+                    inst.getCustomData()
+                        .setBoolean("HasIndependentDuration", true);
+                    inst.getCustomData()
+                        .setLong("IndependentExpireWorldTime", target.worldObj.getTotalWorldTime() + durationTicks);
+                    MarkManager.syncMark(
+                        target,
+                        inst,
+                        com.greyhat.dark_grey.mark.MarkRegistry.get(markId),
+                        (byte) 4,
+                        0,
+                        false);
+                }
+            }
             sender.addChatMessage(
                 new ChatComponentText(
-                    EnumChatFormatting.GREEN + "Set " + markId + " to " + amount + " stacks on target."));
+                    EnumChatFormatting.GREEN + "Set "
+                        + markId
+                        + " to "
+                        + amount
+                        + " stacks on target."
+                        + (durationTicks > 0 ? (" (" + durationTicks + " ticks)") : "")));
         } else {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown mark action: " + action));
         }

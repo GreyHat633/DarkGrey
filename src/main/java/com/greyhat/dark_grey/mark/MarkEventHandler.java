@@ -46,7 +46,10 @@ public class MarkEventHandler {
         MarkUpdateContext context = new MarkUpdateContext(now);
         List<String> toRemove = null;
 
-        for (MarkInstance instance : container.getAllMarks()) {
+        for (MarkInstance instance : new ArrayList<>(container.getAllMarks())) {
+            if (!container.hasMark(instance.getMarkId())) {
+                continue;
+            }
             IMarkType type = MarkRegistry.get(instance.getMarkId());
             if (type == null) {
                 if (toRemove == null) toRemove = new ArrayList<>();

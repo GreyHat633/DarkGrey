@@ -1,9 +1,11 @@
 package com.greyhat.dark_grey.common;
 
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 
 import com.greyhat.dark_grey.DarkGrey;
 import com.greyhat.dark_grey.Tags;
+import com.greyhat.dark_grey.event.BoneCrusherCombatHandler;
 
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -16,6 +18,7 @@ public class CommonProxy {
         Config.synchronizeConfiguration(event.getSuggestedConfigurationFile());
         DarkGrey.LOG.info(Config.greeting);
         DarkGrey.LOG.info("DarkGrey mod loaded, version " + Tags.VERSION);
+        MinecraftForge.EVENT_BUS.register((Object) new BoneCrusherCombatHandler());
     }
 
     public void init(FMLInitializationEvent event) {}

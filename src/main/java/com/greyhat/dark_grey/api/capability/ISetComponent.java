@@ -17,8 +17,8 @@ public interface ISetComponent extends IRPGComponent {
         return this.getSetId();
     }
 
-    default float onSetHit(final EntityPlayer attacker, final EntityLivingBase target, final float rawDamage,
-        final int pieceCount) {
+    default float onSetHit(final EntityPlayer attacker, final EntityLivingBase target,
+        final net.minecraft.util.DamageSource source, final float rawDamage, final int pieceCount) {
         return rawDamage;
     }
 

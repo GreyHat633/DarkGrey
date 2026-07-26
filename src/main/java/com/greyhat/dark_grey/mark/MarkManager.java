@@ -17,14 +17,13 @@ public final class MarkManager {
     private MarkManager() {}
 
     public static MarkApplyResult apply(EntityLivingBase target, String markId, int amount, EntityLivingBase source) {
-        MarkApplyContext context = new MarkApplyContext(
-            source,
-            amount,
-            target != null ? target.worldObj.getTotalWorldTime() : 0,
-            "api",
-            true,
-            true,
-            null);
+        MarkApplyContext context = new MarkApplyContext.Builder().source(source)
+            .requestedStacks(amount)
+            .worldTime(target != null ? target.worldObj.getTotalWorldTime() : 0)
+            .applicationId("api")
+            .refreshDuration(true)
+            .triggerImmediate(true)
+            .build();
         return apply(target, markId, context);
     }
 
@@ -255,14 +254,40 @@ public final class MarkManager {
 
         MarkInstance instance = container.getMark(markId);
         boolean first = false;
+        int oldStacks = 0;
         if (instance == null) {
             instance = new MarkInstance(type.getId());
             container.put(instance);
             first = true;
+        } else {
+            oldStacks = instance.getStacks();
         }
-        instance.setStacks(Math.min(stacks, type.getMaxStacks()));
 
-        syncMark(target, instance, type, (byte) 2, 0, false);
+        int newStacks = Math.min(stacks, type.getMaxStacks());
+        instance.setStacks(newStacks);
+
+        try {
+            if (first) {
+                MarkApplyContext context = new MarkApplyContext.Builder().source(source)
+                    .requestedStacks(newStacks)
+                    .worldTime(target.worldObj.getTotalWorldTime())
+                    .applicationId("command")
+                    .refreshDuration(false)
+                    .triggerImmediate(false)
+                    .build();
+                type.onFirstApplied(target, instance, context);
+            }
+            type.onStacksChanged(
+                target,
+                instance,
+                oldStacks,
+                newStacks,
+                new MarkUpdateContext(target.worldObj.getTotalWorldTime()));
+        } catch (Exception e) {
+            DarkGrey.LOG.error("Error during mark setStacks logic for " + markId, e);
+        }
+
+        syncMark(target, instance, type, (byte) 2, newStacks - oldStacks, false);
     }
 
     public static int consume(EntityLivingBase target, String markId, int amount) {
@@ -300,6 +325,7 @@ public final class MarkManager {
             instance.getStableUntilWorldTime(),
             instance.getNextPeriodicTriggerWorldTime(),
             instance.getNextDecayTriggerWorldTime(),
+            instance.getCustomData(),
             changeReason,
             delta,
             immediateTriggered);

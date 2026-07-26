@@ -25,5 +25,8 @@ public interface IMarkType {
 
     void onRemoved(EntityLivingBase target, MarkInstance instance, MarkUpdateContext context, MarkRemovalReason reason);
 
+    void onStacksChanged(EntityLivingBase target, MarkInstance instance, int oldStacks, int newStacks,
+        MarkUpdateContext context);
+
     MarkVisualData getVisualData();
 }

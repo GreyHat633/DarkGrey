@@ -204,12 +204,28 @@ public class RPGCoreEventHandler {
         if (event.entity.worldObj.isRemote || event.isCanceled()) {
             return;
         }
-        EntityPlayer attacker = resolveDirectMeleeAttacker(event.source, event.entityLiving);
-        if (attacker == null) {
-            return;
+
+        EntityPlayer meleeAttacker = resolveDirectMeleeAttacker(event.source, event.entityLiving);
+        if (meleeAttacker != null) {
+            event.ammount = applyHeldMeleeDamageModifiers(
+                meleeAttacker,
+                event.source,
+                event.entityLiving,
+                event.ammount);
         }
-        float modifiedDamage = applyHeldMeleeDamageModifiers(attacker, event.source, event.entityLiving, event.ammount);
-        event.ammount = SetBonusManager.fireOnHit(attacker, event.entityLiving, modifiedDamage);
+
+        EntityPlayer anyAttacker = resolveAnyAttacker(event.source);
+        if (anyAttacker != null) {
+            event.ammount = SetBonusManager.fireOnHit(anyAttacker, event.entityLiving, event.source, event.ammount);
+        }
+    }
+
+    private EntityPlayer resolveAnyAttacker(net.minecraft.util.DamageSource source) {
+        net.minecraft.entity.Entity sourceEntity = source.getEntity();
+        if (sourceEntity instanceof EntityPlayer) {
+            return (EntityPlayer) sourceEntity;
+        }
+        return null;
     }
 
     /**

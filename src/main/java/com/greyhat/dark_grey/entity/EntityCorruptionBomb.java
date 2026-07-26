@@ -118,14 +118,13 @@ public class EntityCorruptionBomb extends EntityThrowable implements IEntityAddi
             }
 
             if (CombatTargeting.canDamage(thrower, target, false)) {
-                MarkApplyContext context = new MarkApplyContext(
-                    thrower,
-                    this.markStacks,
-                    this.worldObj.getTotalWorldTime(),
-                    "corruption_bomb",
-                    true,
-                    true,
-                    null);
+                MarkApplyContext context = new MarkApplyContext.Builder().source(thrower)
+                    .requestedStacks(this.markStacks)
+                    .worldTime(this.worldObj.getTotalWorldTime())
+                    .applicationId("corruption_bomb")
+                    .refreshDuration(true)
+                    .triggerImmediate(true)
+                    .build();
 
                 MarkManager.apply(target, this.markId, context);
             }

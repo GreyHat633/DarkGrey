@@ -56,7 +56,8 @@ public class PoisonMarkType extends AbstractMarkType {
     public void onFirstApplied(EntityLivingBase target, MarkInstance instance, MarkApplyContext context) {
         long now = context.getWorldTime();
         instance.setNextPeriodicTriggerWorldTime(now + Config.poisonPeriodicIntervalTicks);
-        instance.setStableUntilWorldTime(now + Config.poisonStableDurationTicks);
+        int duration = context.getDurationTicks() > 0 ? context.getDurationTicks() : Config.poisonStableDurationTicks;
+        instance.setStableUntilWorldTime(now + duration);
         instance.setDecaying(false);
         instance.setNextDecayTriggerWorldTime(0);
     }
@@ -65,7 +66,8 @@ public class PoisonMarkType extends AbstractMarkType {
     public void onApplied(EntityLivingBase target, MarkInstance instance, MarkApplyContext context, int requestedStacks,
         int actualAddedStacks) {
         long now = context.getWorldTime();
-        instance.setStableUntilWorldTime(now + Config.poisonStableDurationTicks);
+        int duration = context.getDurationTicks() > 0 ? context.getDurationTicks() : Config.poisonStableDurationTicks;
+        instance.setStableUntilWorldTime(now + duration);
         instance.setDecaying(false);
         instance.setNextDecayTriggerWorldTime(0);
 

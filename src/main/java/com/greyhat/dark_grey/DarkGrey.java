@@ -36,6 +36,7 @@ import com.greyhat.dark_grey.common.DarkGreyTab;
 import com.greyhat.dark_grey.common.EntityVampire;
 import com.greyhat.dark_grey.common.ItemTabIcon;
 import com.greyhat.dark_grey.component.ComponentBloodSacrifice;
+import com.greyhat.dark_grey.component.ComponentBoneCrusher;
 import com.greyhat.dark_grey.component.ComponentCalamity;
 import com.greyhat.dark_grey.component.ComponentErebus;
 import com.greyhat.dark_grey.component.ComponentLawOfCycles;
@@ -112,7 +113,10 @@ public class DarkGrey {
             .register("烈阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
         ComponentRegistry
             .register("腐败炸弹", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentCorruptionBomb::new);
+        ComponentRegistry.register("粉碎之骨", (Supplier<IRPGComponent>) ComponentBoneCrusher::new);
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.PoisonMarkType());
+        com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.FractureMarkType());
+        com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.ShatteredBoneMarkType());
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件和印记已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
@@ -190,7 +194,15 @@ public class DarkGrey {
             64,
             10,
             true);
-        DarkGrey.LOG.info("======== DarkGrey Mod: 吸血鬼实体已注册 ========");
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityStarBullet.class,
+            "star_bullet",
+            10,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            true);
+        DarkGrey.LOG.info("======== DarkGrey Mod: 实体已注册 ========");
     }
 
     @Mod.EventHandler
@@ -227,10 +239,13 @@ public class DarkGrey {
             .register((Object) burnHandler);
 
         com.greyhat.dark_grey.event.ErebusStateHandler erebusHandler = new com.greyhat.dark_grey.event.ErebusStateHandler();
-        MinecraftForge.EVENT_BUS.register((Object) erebusHandler);
+        MinecraftForge.EVENT_BUS.register(erebusHandler);
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register((Object) erebusHandler);
+
+        com.greyhat.dark_grey.combat.ShatteredBoneAttackHandler shatteredBoneHandler = new com.greyhat.dark_grey.combat.ShatteredBoneAttackHandler();
+        MinecraftForge.EVENT_BUS.register((Object) shatteredBoneHandler);
 
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }

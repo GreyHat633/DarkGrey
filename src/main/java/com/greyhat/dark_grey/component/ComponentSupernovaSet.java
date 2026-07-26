@@ -10,7 +10,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.PotionEffect;
 
 import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.SetBonusManager;
@@ -74,11 +73,52 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
     }
 
     @Override
-    public float onSetHit(final EntityPlayer attacker, final EntityLivingBase target, final float rawDamage,
-        final int pieceCount) {
+    public float onSetHit(final EntityPlayer attacker, final EntityLivingBase target,
+        final net.minecraft.util.DamageSource source, final float rawDamage, final int pieceCount) {
+
+        if (source.getSourceOfDamage() instanceof com.greyhat.dark_grey.entity.EntityStarBullet) {
+            return rawDamage; // Prevent infinite loop: star bullets cannot trigger star bullets
+        }
+
         if (pieceCount >= 2) {
             ItemStack heldStack = attacker.getCurrentEquippedItem();
             float weaponAttackDamage = HeavyStrikeComponent.resolveWeaponAttackDamage(heldStack);
+
+            // 4-piece set logic: Fire star bullets on hit
+            if (pieceCount >= 4 && !attacker.worldObj.isRemote) {
+                // Determine if this hit is a heavy strike
+                boolean isHeavyStrikeReady = HeavyStrikeComponent.isReady(
+                    attacker.getEntityData(),
+                    LAST_TRIGGER_TICK,
+                    attacker.worldObj.getTotalWorldTime(),
+                    this.intervalSeconds);
+
+                float bulletDamage = weaponAttackDamage > 0 ? weaponAttackDamage * 1.25f : rawDamage * 1.25f;
+
+                // Spawn left and right star bullets
+                com.greyhat.dark_grey.entity.EntityStarBullet bullet1 = new com.greyhat.dark_grey.entity.EntityStarBullet(
+                    attacker.worldObj,
+                    attacker,
+                    target,
+                    bulletDamage,
+                    isHeavyStrikeReady);
+                bullet1.setPosition(attacker.posX - 1.0, attacker.posY + attacker.getEyeHeight(), attacker.posZ);
+                attacker.worldObj.spawnEntityInWorld(bullet1);
+
+                com.greyhat.dark_grey.entity.EntityStarBullet bullet2 = new com.greyhat.dark_grey.entity.EntityStarBullet(
+                    attacker.worldObj,
+                    attacker,
+                    target,
+                    bulletDamage,
+                    isHeavyStrikeReady);
+                bullet2.setPosition(attacker.posX + 1.0, attacker.posY + attacker.getEyeHeight(), attacker.posZ);
+                attacker.worldObj.spawnEntityInWorld(bullet2);
+            }
+
+            if (source.isProjectile() || source.isMagicDamage() || source.isExplosion()) {
+                return rawDamage; // 2-piece bonus is melee only
+            }
+
             if (weaponAttackDamage <= 0.0F || this.multiplier <= 0.0F) {
                 return rawDamage;
             }
@@ -113,10 +153,7 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
 
     @Override
     public void onSetKill(final EntityPlayer killer, final EntityLivingBase victim, final int pieceCount) {
-        if (pieceCount >= 4) {
-            killer.setHealth(killer.getMaxHealth());
-            killer.addPotionEffect(new PotionEffect(this.buffId, this.buffDuration, this.buffAmplifier));
-        }
+        // Removed old 4-piece kill logic
     }
 
     @Override
@@ -142,9 +179,10 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
         final String prefix3 = (activeCount >= 4) ? "\u00A7a\u2714 " : "\u00A78\u2716 ";
         tooltipLines.add(
             prefix3 + color3
-                + "\u56db\u4ef6\u5957: \u00A77\u51fb\u6740\u654c\u4eba\u540e \u00A7a\u77ac\u95f4\u56de\u6ee1\u751f\u547d\u503c \u00A77\u5e76\u83b7\u5f97 \u00A7e\u529b\u91cf II \u00A77(\u6301\u7eed"
-                + this.buffDuration / 20
-                + "\u79d2)");
+                + "\u56db\u4ef6\u5957: \u00A77\u5934\u90e8\u4e24\u4fa7\u51fa\u73b0\u4f34\u98de\u661f\u7403\u3002\u653b\u51fb\u547d\u4e2d\u65f6\uff0c\u661f\u7403\u4f1a\u53d1\u5c04");
+        tooltipLines.add(
+            "    " + color3
+                + "\u81ea\u52a8\u8ffd\u8e2a\u7684\u661f\u661f\u5f39\uff0c\u9020\u6210\u5f53\u524d\u6b66\u5668 \u00A7c125% \u00A77\u7684\u4f24\u5bb3\u3002\u661f\u661f\u5f39\u53ef\u89e6\u53d1\u91cd\u51fb\u3002");
         final String countColor = (activeCount > 0) ? ((activeCount >= 4) ? "\u00A7a" : "\u00A7e") : "\u00A77";
         tooltipLines.add("    " + countColor + "\u5f53\u524d\u5df2\u88c5\u5907: (" + activeCount + "/4) \u4ef6");
         tooltipLines.add("\u00A76\u2727 ---------------------- \u2727");

@@ -62,21 +62,18 @@ public class MarkTrackingHandler {
     private void sendSnapshot(EntityPlayerMP player, EntityLivingBase target, MarkContainer container) {
         List<MarkSyncMessage.MarkData> list = new ArrayList<>();
         for (MarkInstance instance : container.getAllMarks()) {
-            int maxStacks = 99;
             com.greyhat.dark_grey.mark.api.IMarkType type = MarkRegistry.get(instance.getMarkId());
-            if (type != null) {
-                maxStacks = type.getMaxStacks();
-            }
             list.add(
                 new MarkSyncMessage.MarkData(
                     instance.getMarkId(),
                     instance.getStacks(),
-                    maxStacks,
+                    type != null ? type.getMaxStacks() : 99,
                     instance.isDecaying(),
-                    instance.getStacks() >= maxStacks,
+                    instance.getStacks() >= (type != null ? type.getMaxStacks() : 99),
                     instance.getStableUntilWorldTime(),
                     instance.getNextPeriodicTriggerWorldTime(),
-                    instance.getNextDecayTriggerWorldTime()));
+                    instance.getNextDecayTriggerWorldTime(),
+                    instance.getCustomData()));
         }
         if (!list.isEmpty()) {
             DarkGrey.NETWORK.sendTo(new MarkSnapshotMessage(target.getEntityId(), list), player);

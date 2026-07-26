@@ -53,11 +53,7 @@ public class MarkTargetPanelRenderer {
 
                 @Override
                 public int compare(ClientMarkInstance a, ClientMarkInstance b) {
-                    if (a.maxed && !b.maxed) return -1;
-                    if (!a.maxed && b.maxed) return 1;
-                    if (a.decaying && !b.decaying) return -1;
-                    if (!a.decaying && b.decaying) return 1;
-                    return a.markId.compareTo(b.markId);
+                    return Long.compare(a.localCreationTime, b.localCreationTime);
                 }
             });
 
@@ -75,7 +71,21 @@ public class MarkTargetPanelRenderer {
                 String name = StatCollector.translateToLocal(visual.displayNameKey);
 
                 String stateStr;
-                if (instance.decaying) {
+                if (instance.markId.equals("shattered_bone")) {
+                    boolean maintainedByFracture = instance.customData != null
+                        && instance.customData.getBoolean("MaintainedByFracture");
+                    boolean hasIndependentDuration = instance.customData != null
+                        && instance.customData.getBoolean("HasIndependentDuration");
+                    if (maintainedByFracture) {
+                        stateStr = "维持: \u221E";
+                    } else if (hasIndependentDuration) {
+                        long expire = instance.customData.getLong("IndependentExpireWorldTime");
+                        double remaining = (expire - now) / 20.0;
+                        stateStr = "剩余: " + String.format("%.1f", Math.max(0, remaining)) + "s";
+                    } else {
+                        stateStr = "消失中";
+                    }
+                } else if (instance.decaying) {
                     double nextDecay = (instance.nextDecayTriggerWorldTime - now) / 20.0;
                     stateStr = "衰减中 (" + String.format("%.1f", Math.max(0, nextDecay)) + "s)";
                 } else {
@@ -83,12 +93,14 @@ public class MarkTargetPanelRenderer {
                     stateStr = "稳定: " + String.format("%.1f", Math.max(0, stable)) + "s";
                 }
 
-                String dmgStr = "";
+                String extraStr = "";
                 if ("poison".equals(instance.markId)) {
-                    dmgStr = " | 预计伤害: " + instance.stacks;
+                    extraStr = " | 预计伤害: " + instance.stacks;
+                } else if ("fracture".equals(instance.markId)) {
+                    extraStr = " | 减速: " + (instance.stacks * 10) + "%";
                 }
 
-                String line = name + " " + instance.stacks + "层 \u00A77| " + stateStr + dmgStr;
+                String line = name + " " + instance.stacks + "层 \u00A77| " + stateStr + extraStr;
 
                 int color = instance.maxed ? visual.maxColor
                     : (instance.decaying ? visual.decayColor : visual.primaryColor);

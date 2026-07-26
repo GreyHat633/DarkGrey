@@ -52,6 +52,7 @@ public class ClientMarkCache {
         instance.stableUntilWorldTime = data.stableUntilWorldTime;
         instance.nextPeriodicTriggerWorldTime = data.nextPeriodicTriggerWorldTime;
         instance.nextDecayTriggerWorldTime = data.nextDecayTriggerWorldTime;
+        instance.customData = data.customData;
 
         instance.changeReason = changeReason;
         instance.displayedDelta = displayedDelta;
