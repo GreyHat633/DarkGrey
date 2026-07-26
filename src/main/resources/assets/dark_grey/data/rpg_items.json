@@ -1,5 +1,54 @@
-{
+﻿{
   "items": [
+    {
+      "id": "bone_crusher",
+      "type": "剑",
+      "displayName": {
+        "zh_CN": "粉碎之骨",
+        "en_US": "Bone Crusher"
+      },
+      "texture": "dark_grey:bone_crusher",
+      "damage": 8,
+      "durability": 0,
+      "components": [
+        {
+          "name": "粉碎之骨",
+          "params": {
+            "requiredHits": 3,
+            "fractureMarkId": "fracture",
+            "fractureStacksPerTrigger": 1,
+            "fractureDurationTicks": 100,
+            "showThirdHitFeedback": true
+          }
+        }
+      ],
+      "enchantments": ""
+    },
+    {
+      "id": "erebus",
+      "type": "法杖",
+      "displayName": {
+        "zh_CN": "诅咒之物·厄瑞波斯",
+        "en_US": "Cursed Relic \"Erebus\""
+      },
+      "texture": "dark_grey:erebus",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "厄瑞波斯",
+          "params": {
+            "markId": "poison",
+            "minRadius": 3,
+            "maxRadius": 7,
+            "radiusStep": 1,
+            "cooldownTicks": 60,
+            "rangeResetDelayTicks": 100
+          }
+        }
+      ],
+      "enchantments": ""
+    },
     {
       "id": "cleave_sword",
       "type": "剑",
@@ -420,3 +469,5 @@
     }
   ]
 }
+
+
