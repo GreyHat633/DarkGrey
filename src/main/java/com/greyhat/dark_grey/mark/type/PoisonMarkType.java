@@ -136,7 +136,8 @@ public class PoisonMarkType extends AbstractMarkType {
         double prevMotionZ = target.motionZ;
         boolean prevIsAirBorne = target.isAirBorne;
 
-        target.attackEntityFrom(RPGDamageSources.causeMarkDamage(getId(), source), damage);
+        RPGDamageSources
+            .dealDamageWithoutInvulnerability(target, RPGDamageSources.causeMarkDamage(getId(), source), damage);
 
         target.motionX = prevMotionX;
         target.motionY = prevMotionY;

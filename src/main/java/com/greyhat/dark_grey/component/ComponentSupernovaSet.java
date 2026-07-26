@@ -76,8 +76,9 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
     public float onSetHit(final EntityPlayer attacker, final EntityLivingBase target,
         final net.minecraft.util.DamageSource source, final float rawDamage, final int pieceCount) {
 
-        if (source.getSourceOfDamage() instanceof com.greyhat.dark_grey.entity.EntityStarBullet) {
-            return rawDamage; // Prevent infinite loop: star bullets cannot trigger star bullets
+        if (source.getSourceOfDamage() instanceof com.greyhat.dark_grey.entity.EntityStarBullet
+            || com.greyhat.dark_grey.api.RPGDamageSources.isMarkDamage(source)) {
+            return rawDamage; // Prevent infinite loop: star bullets and marks cannot trigger star bullets
         }
 
         if (pieceCount >= 2) {

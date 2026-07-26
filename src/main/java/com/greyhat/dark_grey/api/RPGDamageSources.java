@@ -62,6 +62,10 @@ public final class RPGDamageSources {
         return "red_sun_burn_switch".equals(source.damageType);
     }
 
+    public static boolean isMarkDamage(DamageSource source) {
+        return source != null && source.damageType != null && source.damageType.startsWith("mark_");
+    }
+
     public static DamageSource causeMarkDamage(String markId, EntityLivingBase shooter) {
         DamageSource source;
         if (shooter != null) {
@@ -79,5 +83,25 @@ public final class RPGDamageSources {
             }
         }
         return source;
+    }
+
+    /**
+     * Deals damage to the target without triggering Minecraft's invulnerability frames (i-frames).
+     * This ensures that DOT effects (like Poison) do not block the player's normal melee attacks.
+     */
+    public static boolean dealDamageWithoutInvulnerability(EntityLivingBase target, DamageSource source, float damage) {
+        int oldHurtResistantTime = target.hurtResistantTime;
+        int oldHurtTime = target.hurtTime;
+
+        // Temporarily reset resistance so the attack connects
+        target.hurtResistantTime = 0;
+
+        boolean success = target.attackEntityFrom(source, damage);
+
+        // Restore the original resistance so future attacks are mitigated correctly
+        target.hurtResistantTime = oldHurtResistantTime;
+        target.hurtTime = oldHurtTime;
+
+        return success;
     }
 }

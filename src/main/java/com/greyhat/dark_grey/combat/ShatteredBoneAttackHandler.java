@@ -73,7 +73,8 @@ public class ShatteredBoneAttackHandler {
         if (distSq >= 0.01) {
             long now = world.getTotalWorldTime();
             if (now >= data.nextDamageTick) {
-                entity.attackEntityFrom(ShatteredBoneDamageSources.causeMovementDamage(), 5.0F);
+                com.greyhat.dark_grey.api.RPGDamageSources
+                    .dealDamageWithoutInvulnerability(entity, ShatteredBoneDamageSources.causeMovementDamage(), 5.0F);
                 data.nextDamageTick = now + 5;
             }
         }
@@ -104,36 +105,73 @@ public class ShatteredBoneAttackHandler {
 
         com.greyhat.dark_grey.util.SplashRecursionGuard.setProcessingSplash(true);
         try {
+            // Calculate reliable attack direction (from attacker to target)
+            double dirX = target.posX - attacker.posX;
+            double dirY = (target.posY + target.height / 2.0F) - (attacker.posY + attacker.getEyeHeight());
+            double dirZ = target.posZ - attacker.posZ;
+            double dirLen = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+
+            if (dirLen < 0.01) {
+                net.minecraft.util.Vec3 lv = attacker.getLookVec();
+                dirX = lv.xCoord;
+                dirY = lv.yCoord;
+                dirZ = lv.zCoord;
+            } else {
+                dirX /= dirLen;
+                dirY /= dirLen;
+                dirZ /= dirLen;
+            }
+
             if (target.worldObj instanceof net.minecraft.world.WorldServer) {
                 net.minecraft.world.WorldServer ws = (net.minecraft.world.WorldServer) target.worldObj;
-                net.minecraft.util.Vec3 lookVec = attacker.getLookVec();
                 java.util.Random rand = ws.rand;
 
-                // Spawn particles throughout the entire 5-block cone
-                for (int i = 0; i < 150; i++) {
-                    // Generate a vector within the 45-degree cone
-                    double vx = lookVec.xCoord + (rand.nextDouble() - 0.5) * 0.8;
-                    double vy = lookVec.yCoord + (rand.nextDouble() - 0.5) * 0.4;
-                    double vz = lookVec.zCoord + (rand.nextDouble() - 0.5) * 0.8;
-                    double len = Math.sqrt(vx * vx + vy * vy + vz * vz);
-                    vx /= len;
-                    vy /= len;
-                    vz /= len;
+                // Physical Parabolic Spray of Bone Fragments
+                for (int i = 0; i < 200; i++) {
+                    // Base horizontal direction
+                    double hLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
+                    double bx = dirX, bz = dirZ;
+                    if (hLen > 0.001) {
+                        bx /= hLen;
+                        bz /= hLen;
+                    }
 
-                    // Pick a random distance up to 5 blocks
-                    double dist = rand.nextDouble() * 5.0;
+                    // Random angle spread within +/- 25 degrees (approx 0.8 radians total)
+                    double angle = (rand.nextDouble() - 0.5) * 0.8;
+                    double cosA = Math.cos(angle);
+                    double sinA = Math.sin(angle);
 
-                    double px = target.posX + vx * dist;
-                    double py = target.posY + target.height / 2.0F + vy * dist;
-                    double pz = target.posZ + vz * dist;
+                    double hx = bx * cosA - bz * sinA;
+                    double hz = bz * cosA + bx * sinA;
 
-                    // Give them a slight outward velocity so they look dynamic
-                    double speed = 0.05 + rand.nextDouble() * 0.1;
+                    // Flatter, faster trajectory like a shotgun blast
+                    double targetDist = 1.0 + rand.nextDouble() * 4.0;
 
-                    String particleType = (i % 3 == 0) ? "crit" : "blockcrack_155_0";
-                    ws.func_147487_a(particleType, px, py, pz, 0, vx * speed, vy * speed, vz * speed, 1.0D);
+                    // Lower upward velocity (0.05 to 0.15) for a flat spray
+                    double vy = 0.05 + rand.nextDouble() * 0.1;
+
+                    // Time in air approx = 2 * vy / 0.04 = vy * 50
+                    double timeInAir = vy * 50.0;
+
+                    // Required horizontal velocity
+                    double vHoriz = (targetDist / timeInAir) * 1.1;
+
+                    double vx = hx * vHoriz;
+                    double vz = hz * vHoriz;
+
+                    ws.func_147487_a(
+                        "iconcrack_352", // Bone item fragments
+                        target.posX,
+                        target.posY + target.height / 2.0F,
+                        target.posZ,
+                        0,
+                        vx,
+                        vy,
+                        vz,
+                        1.0D);
                 }
             }
+
             double radius = 5.0;
             java.util.List<EntityLivingBase> list = target.worldObj
                 .getEntitiesWithinAABB(EntityLivingBase.class, target.boundingBox.expand(radius, radius, radius));
@@ -141,17 +179,29 @@ public class ShatteredBoneAttackHandler {
                 if (splashTarget == target || splashTarget == attacker) continue;
                 if (!splashTarget.isEntityAlive()) continue;
 
-                double dx = splashTarget.posX - attacker.posX;
-                double dz = splashTarget.posZ - attacker.posZ;
+                // Calculate distance from TARGET to SPLASH_TARGET
+                double dx = splashTarget.posX - target.posX;
+                double dz = splashTarget.posZ - target.posZ;
                 double dist = Math.sqrt(dx * dx + dz * dz);
-                if (dist > radius || dist < 0.01) continue;
 
-                net.minecraft.util.Vec3 lookVec = attacker.getLookVec();
-                double dot = (dx / dist) * lookVec.xCoord + (dz / dist) * lookVec.zCoord;
-                if (dot >= 0.9238) {
+                // Allow edge hits: distance to the EDGE of the entity's cylinder must be <= radius
+                if (dist - splashTarget.width / 2.0 > radius || dist < 0.01) continue;
+
+                // Accurate Cone-to-Cylinder Intersection:
+                // Calculate the angular width of the entity as seen from the target
+                double targetHalfAngle = Math.asin(Math.min(1.0, (splashTarget.width / 2.0) / Math.max(dist, 0.5)));
+
+                // Calculate the angle between the attack direction and the entity's center
+                double currentAngle = Math.acos(Math.max(-1.0, Math.min(1.0, (dx / dist) * dirX + (dz / dist) * dirZ)));
+
+                // The requested cone has a total angle of 45 degrees, so half-angle is 22.5 degrees (0.3927 radians)
+                // If the current angle minus the entity's half-angle is <= 22.5 degrees, they overlap!
+                if (currentAngle - targetHalfAngle <= 0.3927) {
                     if (com.greyhat.dark_grey.api.CombatTargeting.canDamage(attacker, splashTarget, false)) {
-                        splashTarget
-                            .attackEntityFrom(ShatteredBoneDamageSources.causeSplashDamage(attacker), splashDamage);
+                        com.greyhat.dark_grey.api.RPGDamageSources.dealDamageWithoutInvulnerability(
+                            splashTarget,
+                            ShatteredBoneDamageSources.causeSplashDamage(attacker),
+                            splashDamage);
 
                         if (splashTarget.worldObj instanceof net.minecraft.world.WorldServer) {
                             ((net.minecraft.world.WorldServer) splashTarget.worldObj).func_147487_a(
@@ -159,10 +209,10 @@ public class ShatteredBoneAttackHandler {
                                 splashTarget.posX,
                                 splashTarget.posY + splashTarget.height / 2.0F,
                                 splashTarget.posZ,
-                                15,
-                                0.3D,
-                                0.3D,
-                                0.3D,
+                                20,
+                                0.4D,
+                                0.4D,
+                                0.4D,
                                 0.1D);
                         }
 
