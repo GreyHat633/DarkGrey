@@ -1,4 +1,4 @@
-item.potatoHelmet.name=马铃薯头盔
+﻿item.potatoHelmet.name=马铃薯头盔
 
 itemGroup.DarkGrey=灰之黑
 
@@ -10,3 +10,45 @@ msg.dark_grey.itanis.mode_normal=普通模式
 msg.dark_grey.itanis.mode_charge=蓄力模式
 
 entity.dark_grey.red_sun_fireball.name=太阳火球
+
+mark.dark_grey.poison.name=剧毒印记
+mark.dark_grey.poison.description=受到剧毒的侵蚀。
+mark.ui.max=层数已满
+mark.ui.decaying=正在衰减
+mark.ui.next_decay=距下次衰减: %s秒
+mark.ui.decay_amount=衰减层数: %s
+mark.ui.stable_time=稳定时间: %s秒
+mark.ui.refresh_at_max=上限时刷新
+mark.ui.periodic_time=距下次触发: %s秒
+mark.ui.periodic_damage=预计伤害: %s
+
+mark.floating.max_trigger=�� ����
+
+
+item.dark_grey:erebus.name=诅咒之物·厄瑞波斯
+component.erebus.name=厄瑞波斯
+tooltip.erebus.attack=攻击：%s
+tooltip.erebus.right_click=右键：向周围圆形范围施加剧毒印记
+tooltip.erebus.initial_radius=首次半径：%s格
+tooltip.erebus.radius_growth=每次使用后，下一次半径增加%s格
+tooltip.erebus.max_radius=最大半径：%s格
+tooltip.erebus.reset=连续%s秒未使用时，半径重置为%s
+tooltip.erebus.cooldown=右键冷却：%s秒
+tooltip.erebus.chance_five=%s%%概率施加%s层剧毒
+tooltip.erebus.chance_two=%s%%概率施加%s层剧毒
+tooltip.erebus.chance_base=%s%%概率施加%s层剧毒
+message.erebus.cast=§5【厄瑞波斯】诅咒半径%s；施加%s层剧毒
+message.erebus.reset=§5【厄瑞波斯】诅咒领域已收缩，作用半径重置为 %s
+message.erebus.cooldown=§5【厄瑞波斯】技能冷却中，还需等待 %s 秒。
+message.erebus.mark_unavailable=厄瑞波斯无法找到印记类型：%s
+ 
+item.dark_grey:corruption_bomb.name=腐败炸弹
+component.corruption_bomb.name=腐败炸弹
+tooltip.corruption_bomb.stack_size=最大堆叠：%s
+tooltip.corruption_bomb.throw=右键：向前投掷一枚腐败炸弹
+tooltip.corruption_bomb.area=碰撞后影响水平%s×%s范围
+tooltip.corruption_bomb.poison=范围内合法敌人获得%s层剧毒印记
+tooltip.corruption_bomb.no_direct_damage=不直接造成伤害
+tooltip.corruption_bomb.no_block_damage=不会破坏方块
+message.corruption_bomb.mark_unavailable=腐败炸弹无法找到印记类型：%s
+message.corruption_bomb.throw_failed=腐败炸弹投掷失败，物品未被消耗

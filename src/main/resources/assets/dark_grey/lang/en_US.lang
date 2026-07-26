@@ -10,3 +10,34 @@ msg.dark_grey.itanis.mode_normal=Normal Mode
 msg.dark_grey.itanis.mode_charge=Charge Mode
 
 entity.dark_grey.red_sun_fireball.name=Solar Fireball
+
+mark.floating.max_trigger=MAX!
+
+
+item.dark_grey:erebus.name=Cursed Relic "Erebus"
+component.erebus.name=Erebus
+tooltip.erebus.attack=Damage: %s
+tooltip.erebus.right_click=Right Click: Apply poison mark in a circular area
+tooltip.erebus.initial_radius=Initial Radius: %s blocks
+tooltip.erebus.radius_growth=Radius increases by %s block(s) after each use
+tooltip.erebus.max_radius=Max Radius: %s blocks
+tooltip.erebus.reset=Resets to %s after %s seconds of inactivity
+tooltip.erebus.cooldown=Cooldown: %s seconds
+tooltip.erebus.chance_five=%s%% chance to apply %s stacks of poison
+tooltip.erebus.chance_two=%s%% chance to apply %s stacks of poison
+tooltip.erebus.chance_base=%s%% chance to apply %s stack of poison
+message.erebus.cast=§5[Erebus] Curse radius %s; applied %s poison stacks.
+message.erebus.reset=§5[Erebus] Curse domain has contracted, radius reset to %s
+message.erebus.cooldown=§5[Erebus] Skill is on cooldown, please wait %s seconds.
+message.erebus.mark_unavailable=Erebus could not find mark type: %s
+
+item.dark_grey:corruption_bomb.name=Corruption Bomb
+component.corruption_bomb.name=Corruption Bomb
+tooltip.corruption_bomb.stack_size=Max Stack: %s
+tooltip.corruption_bomb.throw=Right Click: Throw a Corruption Bomb
+tooltip.corruption_bomb.area=Affects horizontal %sx%s area on impact
+tooltip.corruption_bomb.poison=Applies %s stacks of Poison Mark to targets
+tooltip.corruption_bomb.no_direct_damage=No direct damage
+tooltip.corruption_bomb.no_block_damage=Does not break blocks
+message.corruption_bomb.mark_unavailable=Corruption Bomb could not find mark type: %s
+message.corruption_bomb.throw_failed=Corruption Bomb throw failed, item not consumed

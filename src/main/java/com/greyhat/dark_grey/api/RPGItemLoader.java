@@ -79,6 +79,7 @@ public class RPGItemLoader {
                     rpgItem.setTextureName(texture);
                 }
                 rpgItem.setCreativeTab(DarkGrey.creativeTab);
+                rpgItem.setMaxStackSize(config.maxStackSize);
                 pendingItems.add(new PendingItem(id, type, texture, rpgItem, components.size()));
             }
 

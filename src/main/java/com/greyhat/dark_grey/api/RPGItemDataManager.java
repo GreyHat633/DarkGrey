@@ -264,6 +264,10 @@ public class RPGItemDataManager {
                 .getAsInt() : 0;
             config.damage = itemObj.has("damage") ? itemObj.get("damage")
                 .getAsFloat() : 0.0f;
+            config.maxStackSize = itemObj.has("maxStackSize") ? itemObj.get("maxStackSize")
+                .getAsInt() : 1;
+            if (config.maxStackSize < 1) config.maxStackSize = 1;
+            if (config.maxStackSize > 64) config.maxStackSize = 64;
             config.enchantments = itemObj.has("enchantments") ? itemObj.get("enchantments")
                 .getAsString() : "";
             if (itemObj.has("components")) {
@@ -369,6 +373,7 @@ public class RPGItemDataManager {
         public String texture;
         public int durability;
         public float damage;
+        public int maxStackSize = 1;
         public String enchantments;
         public JsonArray componentsJson;
     }

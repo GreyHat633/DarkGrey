@@ -26,6 +26,8 @@ public class CommonProxy {
 
     public void registerItemRenderer(Item item, String equippedTextureName) {}
 
+    public void registerScaledItemRenderer(Item item, String equippedTextureName, float scale) {}
+
     public void registerLanceRenderer(Item item, String equippedTextureName) {}
 
     public void registerAnimatedItemRenderer(Item item, String equippedTextureName, int frames, int frameTimeMs) {}
@@ -56,6 +58,31 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.UndergroundSunExplosionHandler.class,
             com.greyhat.dark_grey.network.UndergroundSunExplosionMessage.class,
             3,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MarkSyncHandler.class,
+            com.greyhat.dark_grey.network.MarkSyncMessage.class,
+            4,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MarkRemoveHandler.class,
+            com.greyhat.dark_grey.network.MarkRemoveMessage.class,
+            5,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MarkSnapshotHandler.class,
+            com.greyhat.dark_grey.network.MarkSnapshotMessage.class,
+            6,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MarkClearEntityHandler.class,
+            com.greyhat.dark_grey.network.MarkClearEntityMessage.class,
+            7,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.ErebusHitHandler.class,
+            com.greyhat.dark_grey.network.ErebusHitMessage.class,
+            8,
             cpw.mods.fml.relauncher.Side.CLIENT);
     }
 

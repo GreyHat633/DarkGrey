@@ -37,6 +37,7 @@ import com.greyhat.dark_grey.common.EntityVampire;
 import com.greyhat.dark_grey.common.ItemTabIcon;
 import com.greyhat.dark_grey.component.ComponentBloodSacrifice;
 import com.greyhat.dark_grey.component.ComponentCalamity;
+import com.greyhat.dark_grey.component.ComponentErebus;
 import com.greyhat.dark_grey.component.ComponentLawOfCycles;
 import com.greyhat.dark_grey.component.ComponentSolarFlare;
 import com.greyhat.dark_grey.component.ComponentSupernovaSet;
@@ -93,6 +94,7 @@ public class DarkGrey {
         ComponentRegistry.register("圆环之理", (Supplier<IRPGComponent>) ComponentTrueLawOfCycles::new);
         ComponentRegistry.register("血祭", (Supplier<IRPGComponent>) ComponentBloodSacrifice::new);
         ComponentRegistry.register("劫难", (Supplier<IRPGComponent>) ComponentCalamity::new);
+        ComponentRegistry.register("厄瑞波斯", (Supplier<IRPGComponent>) ComponentErebus::new);
         ComponentRegistry
             .register("灵气洪流", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentAuraTorrent::new);
         ComponentRegistry
@@ -108,7 +110,10 @@ public class DarkGrey {
             .register("地底太阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentUndergroundSun::new);
         ComponentRegistry
             .register("烈阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
-        DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件已注册 ========");
+        ComponentRegistry
+            .register("腐败炸弹", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentCorruptionBomb::new);
+        com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.PoisonMarkType());
+        DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件和印记已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
         EntityRegistry
@@ -177,6 +182,14 @@ public class DarkGrey {
             64,
             2,
             true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityCorruptionBomb.class,
+            "corruption_bomb",
+            9,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            true);
         DarkGrey.LOG.info("======== DarkGrey Mod: 吸血鬼实体已注册 ========");
     }
 
@@ -198,11 +211,26 @@ public class DarkGrey {
             .bus()
             .register((Object) lifecycleHandler);
 
+        com.greyhat.dark_grey.mark.MarkEventHandler markEventHandler = new com.greyhat.dark_grey.mark.MarkEventHandler();
+        MinecraftForge.EVENT_BUS.register((Object) markEventHandler);
+
+        com.greyhat.dark_grey.mark.MarkTrackingHandler markTrackingHandler = new com.greyhat.dark_grey.mark.MarkTrackingHandler();
+        MinecraftForge.EVENT_BUS.register((Object) markTrackingHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) markTrackingHandler);
+
         com.greyhat.dark_grey.event.RedSunBurnHandler burnHandler = new com.greyhat.dark_grey.event.RedSunBurnHandler();
         MinecraftForge.EVENT_BUS.register((Object) burnHandler);
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register((Object) burnHandler);
+
+        com.greyhat.dark_grey.event.ErebusStateHandler erebusHandler = new com.greyhat.dark_grey.event.ErebusStateHandler();
+        MinecraftForge.EVENT_BUS.register((Object) erebusHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) erebusHandler);
 
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }

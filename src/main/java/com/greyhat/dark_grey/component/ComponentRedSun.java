@@ -28,10 +28,10 @@ public class ComponentRedSun
     private float minFireballDamage = 100.0F;
     private float maxFireballDamage = 1250.0F;
     private int cooldownTicks = 200;
-    
+
     private float minProjectileSpeed = 0.5F;
     private float maxProjectileSpeed = 2.0F;
-    
+
     private float projectileGravity = 0.03F;
     private float projectileDrag = 0.98F;
     private float projectileUpwardBoost = 0.12F;
@@ -51,27 +51,112 @@ public class ComponentRedSun
 
     @Override
     public void configure(JsonObject params) {
-        if (params.has("maxChargeTicks")) maxChargeTicks = Math.max(20, Math.min(1200, params.get("maxChargeTicks").getAsInt()));
-        if (params.has("minFireballSize")) minFireballSize = Math.max(0.25F, Math.min(10.0F, params.get("minFireballSize").getAsFloat()));
-        if (params.has("maxFireballSize")) maxFireballSize = Math.max(minFireballSize, Math.min(20.0F, params.get("maxFireballSize").getAsFloat()));
-        if (params.has("minFireballDamage")) minFireballDamage = Math.max(0.0F, Math.min(100000.0F, params.get("minFireballDamage").getAsFloat()));
-        if (params.has("maxFireballDamage")) maxFireballDamage = Math.max(minFireballDamage, params.get("maxFireballDamage").getAsFloat());
-        if (params.has("cooldownTicks")) cooldownTicks = Math.max(0, Math.min(72000, params.get("cooldownTicks").getAsInt()));
-        
-        if (params.has("minProjectileSpeed")) minProjectileSpeed = Math.max(0.1F, Math.min(5.0F, params.get("minProjectileSpeed").getAsFloat()));
-        if (params.has("maxProjectileSpeed")) maxProjectileSpeed = Math.max(minProjectileSpeed, Math.min(10.0F, params.get("maxProjectileSpeed").getAsFloat()));
-        
-        if (params.has("projectileGravity")) projectileGravity = Math.max(0.0F, Math.min(1.0F, params.get("projectileGravity").getAsFloat()));
-        if (params.has("projectileDrag")) projectileDrag = Math.max(0.5F, Math.min(1.0F, params.get("projectileDrag").getAsFloat()));
-        if (params.has("projectileUpwardBoost")) projectileUpwardBoost = Math.max(-1.0F, Math.min(2.0F, params.get("projectileUpwardBoost").getAsFloat()));
-        if (params.has("projectileLifetime")) projectileLifetime = Math.max(20, Math.min(1200, params.get("projectileLifetime").getAsInt()));
-        if (params.has("burnDurationTicks")) burnDurationTicks = Math.max(20, Math.min(72000, params.get("burnDurationTicks").getAsInt()));
-        if (params.has("burnSwitchDamage")) burnSwitchDamage = Math.max(0.0F, Math.min(1000.0F, params.get("burnSwitchDamage").getAsFloat()));
-        if (params.has("burnIncomingDamageMultiplier")) burnIncomingDamageMultiplier = Math.max(1.0F, Math.min(10.0F, params.get("burnIncomingDamageMultiplier").getAsFloat()));
-        if (params.has("ignoreSwitchDamageHurtResistance")) ignoreSwitchDamageHurtResistance = params.get("ignoreSwitchDamageHurtResistance").getAsBoolean();
-        
-        if (params.has("volumeShrinkRate")) volumeShrinkRate = Math.max(0.001F, Math.min(1.0F, params.get("volumeShrinkRate").getAsFloat()));
-        if (params.has("maxExplosionRadius")) maxExplosionRadius = Math.max(1.0F, Math.min(100.0F, params.get("maxExplosionRadius").getAsFloat()));
+        if (params.has("maxChargeTicks")) maxChargeTicks = Math.max(
+            20,
+            Math.min(
+                1200,
+                params.get("maxChargeTicks")
+                    .getAsInt()));
+        if (params.has("minFireballSize")) minFireballSize = Math.max(
+            0.25F,
+            Math.min(
+                10.0F,
+                params.get("minFireballSize")
+                    .getAsFloat()));
+        if (params.has("maxFireballSize")) maxFireballSize = Math.max(
+            minFireballSize,
+            Math.min(
+                20.0F,
+                params.get("maxFireballSize")
+                    .getAsFloat()));
+        if (params.has("minFireballDamage")) minFireballDamage = Math.max(
+            0.0F,
+            Math.min(
+                100000.0F,
+                params.get("minFireballDamage")
+                    .getAsFloat()));
+        if (params.has("maxFireballDamage")) maxFireballDamage = Math.max(
+            minFireballDamage,
+            params.get("maxFireballDamage")
+                .getAsFloat());
+        if (params.has("cooldownTicks")) cooldownTicks = Math.max(
+            0,
+            Math.min(
+                72000,
+                params.get("cooldownTicks")
+                    .getAsInt()));
+
+        if (params.has("minProjectileSpeed")) minProjectileSpeed = Math.max(
+            0.1F,
+            Math.min(
+                5.0F,
+                params.get("minProjectileSpeed")
+                    .getAsFloat()));
+        if (params.has("maxProjectileSpeed")) maxProjectileSpeed = Math.max(
+            minProjectileSpeed,
+            Math.min(
+                10.0F,
+                params.get("maxProjectileSpeed")
+                    .getAsFloat()));
+
+        if (params.has("projectileGravity")) projectileGravity = Math.max(
+            0.0F,
+            Math.min(
+                1.0F,
+                params.get("projectileGravity")
+                    .getAsFloat()));
+        if (params.has("projectileDrag")) projectileDrag = Math.max(
+            0.5F,
+            Math.min(
+                1.0F,
+                params.get("projectileDrag")
+                    .getAsFloat()));
+        if (params.has("projectileUpwardBoost")) projectileUpwardBoost = Math.max(
+            -1.0F,
+            Math.min(
+                2.0F,
+                params.get("projectileUpwardBoost")
+                    .getAsFloat()));
+        if (params.has("projectileLifetime")) projectileLifetime = Math.max(
+            20,
+            Math.min(
+                1200,
+                params.get("projectileLifetime")
+                    .getAsInt()));
+        if (params.has("burnDurationTicks")) burnDurationTicks = Math.max(
+            20,
+            Math.min(
+                72000,
+                params.get("burnDurationTicks")
+                    .getAsInt()));
+        if (params.has("burnSwitchDamage")) burnSwitchDamage = Math.max(
+            0.0F,
+            Math.min(
+                1000.0F,
+                params.get("burnSwitchDamage")
+                    .getAsFloat()));
+        if (params.has("burnIncomingDamageMultiplier")) burnIncomingDamageMultiplier = Math.max(
+            1.0F,
+            Math.min(
+                10.0F,
+                params.get("burnIncomingDamageMultiplier")
+                    .getAsFloat()));
+        if (params.has("ignoreSwitchDamageHurtResistance"))
+            ignoreSwitchDamageHurtResistance = params.get("ignoreSwitchDamageHurtResistance")
+                .getAsBoolean();
+
+        if (params.has("volumeShrinkRate")) volumeShrinkRate = Math.max(
+            0.001F,
+            Math.min(
+                1.0F,
+                params.get("volumeShrinkRate")
+                    .getAsFloat()));
+        if (params.has("maxExplosionRadius")) maxExplosionRadius = Math.max(
+            1.0F,
+            Math.min(
+                100.0F,
+                params.get("maxExplosionRadius")
+                    .getAsFloat()));
     }
 
     @Override
@@ -83,12 +168,14 @@ public class ComponentRedSun
 
     @Override
     public ItemStack onRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        long cooldownEnd = player.getEntityData().getLong("DarkGreyRedSunCooldownEnd");
+        long cooldownEnd = player.getEntityData()
+            .getLong("DarkGreyRedSunCooldownEnd");
         if (world.getTotalWorldTime() < cooldownEnd) {
             if (!world.isRemote) {
                 double secs = (cooldownEnd - world.getTotalWorldTime()) / 20.0;
-                player.addChatMessage(new net.minecraft.util.ChatComponentText(
-                    EnumChatFormatting.RED + String.format("技能冷却中：%.1f 秒", secs)));
+                player.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        EnumChatFormatting.RED + String.format("技能冷却中：%.1f 秒", secs)));
             }
             return itemStack;
         }
@@ -132,7 +219,8 @@ public class ComponentRedSun
             EntityRedSunFireball fireball = RedSunFireballManager.findChargingFireball(player);
             if (fireball != null) {
                 fireball.launch(player.getLookVec());
-                player.getEntityData().setLong("DarkGreyRedSunCooldownEnd", world.getTotalWorldTime() + cooldownTicks);
+                player.getEntityData()
+                    .setLong("DarkGreyRedSunCooldownEnd", world.getTotalWorldTime() + cooldownTicks);
                 world.playSoundAtEntity(player, "mob.ghast.fireball", 1.0F, 1.0F);
             }
         }
@@ -148,7 +236,15 @@ public class ComponentRedSun
         tooltip.add("");
         tooltip.add(EnumChatFormatting.GREEN + "蓄力烈阳：");
         tooltip.add(EnumChatFormatting.GRAY + String.format("  按住右键蓄力，最多 %.1f 秒", maxChargeTicks / 20.0F));
-        tooltip.add(EnumChatFormatting.GRAY + String.format("  火球体积从 %.0fx%.0fx%.0f 逐渐膨胀到最大 %.0fx%.0fx%.0f", minFireballSize, minFireballSize, minFireballSize, maxFireballSize, maxFireballSize, maxFireballSize));
+        tooltip.add(
+            EnumChatFormatting.GRAY + String.format(
+                "  火球体积从 %.0fx%.0fx%.0f 逐渐膨胀到最大 %.0fx%.0fx%.0f",
+                minFireballSize,
+                minFireballSize,
+                minFireballSize,
+                maxFireballSize,
+                maxFireballSize,
+                maxFireballSize));
         tooltip.add("");
         tooltip.add(EnumChatFormatting.LIGHT_PURPLE + "发射烈阳：");
         tooltip.add(EnumChatFormatting.GRAY + "  松开右键将火球抛出，触地后将沿原方向无情碾压");
@@ -160,7 +256,8 @@ public class ComponentRedSun
         tooltip.add(EnumChatFormatting.RED + "【烧伤】异常：");
         tooltip.add(EnumChatFormatting.GRAY + "  玩家每次切换物品时扣除 10 点生命值，并减少 20% 防御力");
 
-        long cooldownEnd = player.getEntityData().getLong("DarkGreyRedSunCooldownEnd");
+        long cooldownEnd = player.getEntityData()
+            .getLong("DarkGreyRedSunCooldownEnd");
         long now = player.worldObj.getTotalWorldTime();
         if (cooldownEnd > now) {
             double secs = (cooldownEnd - now) / 20.0;

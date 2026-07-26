@@ -385,6 +385,38 @@
         }
       ],
       "enchantments": ""
+    },
+    {
+      "id": "corruption_bomb",
+      "type": "道具",
+      "displayName": {
+        "zh_CN": "腐败炸弹",
+        "en_US": "Corruption Bomb"
+      },
+      "texture": "dark_grey:corruption_bomb",
+      "durability": 0,
+      "damage": 0,
+      "maxStackSize": 4,
+      "components": [
+        {
+          "name": "腐败炸弹",
+          "params": {
+            "markId": "poison",
+            "markStacks": 3,
+            "areaWidth": 5.0,
+            "areaHeight": 5.0,
+            "areaShape": "square",
+            "projectileVelocity": 0.75,
+            "projectileInaccuracy": 1.0,
+            "projectileGravity": 0.03,
+            "projectileLifetime": 200,
+            "respectWalls": false,
+            "affectThrower": false,
+            "consumeInCreative": false
+          }
+        }
+      ],
+      "enchantments": ""
     }
   ]
 }

@@ -14,10 +14,16 @@ public class RPGItemRenderer implements IItemRenderer {
 
     private final String equippedTextureName;
     private final ResourceLocation equippedTex;
+    private final float scale;
 
     public RPGItemRenderer(String equippedTextureName) {
+        this(equippedTextureName, 1.0f);
+    }
+
+    public RPGItemRenderer(String equippedTextureName, float scale) {
         this.equippedTextureName = equippedTextureName;
         this.equippedTex = new ResourceLocation("dark_grey", "textures/items/" + this.equippedTextureName + ".png");
+        this.scale = scale;
     }
 
     @Override
@@ -43,6 +49,10 @@ public class RPGItemRenderer implements IItemRenderer {
 
         // Setup state for ItemRenderer.renderItemIn2D
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+
+        if (this.scale != 1.0f) {
+            GL11.glScalef(this.scale, this.scale, this.scale);
+        }
 
         // UV coordinates for a full, non-atlased texture
         float maxU = 1.0F;

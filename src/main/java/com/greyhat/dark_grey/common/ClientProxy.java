@@ -8,6 +8,19 @@ public class ClientProxy extends CommonProxy {
     public void init(cpw.mods.fml.common.event.FMLInitializationEvent event) {
         super.init(event);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
+
+        com.greyhat.dark_grey.mark.client.ClientMarkCache cache = new com.greyhat.dark_grey.mark.client.ClientMarkCache();
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cache);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(cache);
+
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.mark.client.render.MarkEntityOverlayRenderer());
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.mark.client.render.MarkTargetPanelRenderer());
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.mark.client.render.MarkSelfHudRenderer());
     }
 
     @cpw.mods.fml.common.eventhandler.SubscribeEvent
@@ -91,12 +104,22 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityRedSunFireball.class,
             new com.greyhat.dark_grey.client.render.RenderRedSunFireball());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityCorruptionBomb.class,
+            new com.greyhat.dark_grey.client.render.RenderCorruptionBomb());
     }
 
     @Override
     public void registerItemRenderer(Item item, String equippedTextureName) {
         net.minecraftforge.client.MinecraftForgeClient
             .registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RPGItemRenderer(equippedTextureName));
+    }
+
+    @Override
+    public void registerScaledItemRenderer(Item item, String equippedTextureName, float scale) {
+        net.minecraftforge.client.MinecraftForgeClient.registerItemRenderer(
+            item,
+            new com.greyhat.dark_grey.client.render.RPGItemRenderer(equippedTextureName, scale));
     }
 
     public void registerBowRenderer(Item item) {

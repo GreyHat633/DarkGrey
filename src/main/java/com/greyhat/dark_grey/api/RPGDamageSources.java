@@ -61,4 +61,23 @@ public final class RPGDamageSources {
     public static boolean isSwitchDamage(DamageSource source) {
         return "red_sun_burn_switch".equals(source.damageType);
     }
+
+    public static DamageSource causeMarkDamage(String markId, EntityLivingBase shooter) {
+        DamageSource source;
+        if (shooter != null) {
+            source = new net.minecraft.util.EntityDamageSource("mark_" + markId, shooter);
+        } else {
+            source = new net.minecraft.util.DamageSource("mark_" + markId);
+        }
+
+        if ("poison".equals(markId)) {
+            if (com.greyhat.dark_grey.common.Config.poisonDamageBypassesArmor) {
+                source.setDamageBypassesArmor();
+            }
+            if (com.greyhat.dark_grey.common.Config.poisonDamageBypassesMagicResistance) {
+                source.setMagicDamage();
+            }
+        }
+        return source;
+    }
 }

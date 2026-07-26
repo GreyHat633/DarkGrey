@@ -45,6 +45,8 @@ public class CommandDarkGrey extends CommandBase {
                         new ChatComponentText(EnumChatFormatting.RED + "你必须手持倒悬时针或其他支持灵魂值的RPG武器！"));
                 }
             } // Close if (sender instanceof EntityPlayer)
+        } else if (args.length > 0 && args[0].equalsIgnoreCase("mark")) {
+            com.greyhat.dark_grey.command.CommandMark.processMarkCommand(sender, args);
         } else {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "未知子指令！" + getCommandUsage(sender)));
         }

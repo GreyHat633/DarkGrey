@@ -1,6 +1,5 @@
 package com.greyhat.dark_grey.client.render;
 
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
@@ -33,7 +32,8 @@ public class RenderRedSunFireball extends Render {
         float size = fireball.getCurrentSize() / 2.0F;
 
         GL11.glDisable(GL11.GL_LIGHTING);
-        net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
+        net.minecraft.client.renderer.OpenGlHelper
+            .setLightmapTextureCoords(net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);

@@ -41,16 +41,16 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     private float maxSize = 12.0F;
     private float minDamage = 100.0F;
     private float maxDamage = 1250.0F;
-    
+
     private float minProjectileSpeed = 0.5F;
     private float maxProjectileSpeed = 2.0F;
-    
+
     private float projectileGravity = 0.03F;
     private float projectileDrag = 0.98F;
     private float projectileUpwardBoost = 0.12F;
     private int projectileLifetime = 200;
     private int burnDurationTicks = 200;
-    
+
     private float volumeShrinkRate = 0.05F;
     private float maxExplosionRadius = 25.0F;
 
@@ -67,8 +67,9 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     }
 
     public EntityRedSunFireball(World world, EntityPlayer owner, int maxChargeTicks, float minSize, float maxSize,
-        float minDamage, float maxDamage, float minProjectileSpeed, float maxProjectileSpeed, float projectileGravity, float projectileDrag,
-        float projectileUpwardBoost, int projectileLifetime, int burnDurationTicks, float volumeShrinkRate, float maxExplosionRadius) {
+        float minDamage, float maxDamage, float minProjectileSpeed, float maxProjectileSpeed, float projectileGravity,
+        float projectileDrag, float projectileUpwardBoost, int projectileLifetime, int burnDurationTicks,
+        float volumeShrinkRate, float maxExplosionRadius) {
         this(world);
         this.ownerUuid = owner.getUniqueID();
         this.ownerEntityId = owner.getEntityId();
@@ -167,7 +168,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
                 currentSize = minSize + (maxSize - minSize) * chargeProgress;
                 currentDamage = minDamage + (maxDamage - minDamage) * chargeProgress;
                 this.setSize(currentSize, currentSize);
-                
+
                 if (chargeProgress >= 1.0F && !playedMaxChargeSound) {
                     playedMaxChargeSound = true;
                     worldObj.playSoundAtEntity(player, "random.orb", 1.0F, 1.2F);
@@ -185,7 +186,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
                 double py = this.posY + (this.rand.nextFloat() - 0.5D) * this.currentSize * 1.5;
                 double pz = this.posZ + (this.rand.nextFloat() - 0.5D) * this.currentSize * 1.5;
                 this.worldObj.spawnParticle("flame", px, py, pz, 0.0D, 0.05D, 0.0D);
-                
+
                 if (this.ticksExisted % 3 == 0) {
                     this.worldObj.spawnParticle("lava", px, py, pz, 0.0D, 0.0D, 0.0D);
                 }
@@ -238,15 +239,16 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
             if (!worldObj.isRemote) triggerImpact();
             return;
         }
-        
+
         Vec3 oldPos = Vec3.createVectorHelper(this.posX, this.posY, this.posZ);
-        Vec3 newPos = Vec3.createVectorHelper(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
-        
+        Vec3 newPos = Vec3
+            .createVectorHelper(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
+
         net.minecraft.util.MovingObjectPosition mop = this.worldObj.func_147447_a(oldPos, newPos, false, true, false);
         if (mop != null) {
             newPos = Vec3.createVectorHelper(mop.hitVec.xCoord, mop.hitVec.yCoord, mop.hitVec.zCoord);
         }
-        
+
         if (!worldObj.isRemote) {
             doRollingDamage();
         }
@@ -264,17 +266,17 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
             }
             return;
         }
-        
+
         this.posX += this.motionX;
         this.posY += this.motionY;
         this.posZ += this.motionZ;
         this.setPosition(this.posX, this.posY, this.posZ);
-        
+
         this.motionX *= projectileDrag;
         this.motionY *= projectileDrag;
         this.motionZ *= projectileDrag;
         this.motionY -= projectileGravity;
-        
+
         this.flyingTicks++;
 
         if (worldObj.isRemote) {
@@ -285,37 +287,37 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     private void onRollingUpdate() {
         if (!worldObj.isRemote) {
             this.stepHeight = this.currentSize / 2.0F; // Climb blocks shorter than radius!
-            
+
             this.motionY -= projectileGravity * 2.0D; // Stronger gravity for ground stickiness
-            
+
             this.moveEntity(this.motionX, this.motionY, this.motionZ);
-            
+
             if (this.isCollidedHorizontally) {
                 triggerImpact(); // Explode if hit a wall taller than stepHeight
                 return;
             }
-            
+
             this.motionX *= 0.96D; // Rolling drag
             this.motionZ *= 0.96D;
-            
+
             this.rollingTicks++;
-            
-            this.currentSize -= volumeShrinkRate; 
-            
+
+            this.currentSize -= volumeShrinkRate;
+
             if (this.currentSize <= 0.1F) {
                 this.setDead(); // Vanish silently
                 return;
             }
-            
+
             this.setSize(currentSize, currentSize);
-            
+
             double speedSq = this.motionX * this.motionX + this.motionZ * this.motionZ;
             if (speedSq < 0.0001D && this.currentSize > 0.5F) {
                 this.state = STATE_STOPPED;
                 this.motionX = 0;
                 this.motionZ = 0;
             }
-            
+
             doRollingDamage();
         } else {
             // Spawn trail particles at the bottom
@@ -334,17 +336,17 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     private void doRollingDamage() {
         AxisAlignedBB aoe = this.boundingBox.expand(0.5D, 0.0D, 0.5D);
         List<EntityLivingBase> targets = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, aoe);
-        
+
         Entity owner = worldObj.getEntityByID(ownerEntityId);
         EntityLivingBase ownerLiving = owner instanceof EntityLivingBase ? (EntityLivingBase) owner : null;
         DamageSource ds = RPGDamageSources.causeRedSunFireballDamage(this, ownerLiving);
-        
+
         for (EntityLivingBase target : targets) {
             if (ownerLiving != null && !CombatTargeting.canDamage(ownerLiving, target, false)) {
                 continue;
             }
             if (target.getEntityId() == this.ownerEntityId) continue;
-            
+
             boolean damaged = target.attackEntityFrom(ds, currentDamage);
             if (damaged) {
                 if (ownerLiving != null) RedSunBurnData.apply(target, ownerLiving, burnDurationTicks);
@@ -381,7 +383,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
                 this.setDead();
                 return;
             }
-            
+
             AxisAlignedBB aoe = AxisAlignedBB.getBoundingBox(
                 this.posX - explosionRadius,
                 this.posY - explosionRadius,
@@ -417,9 +419,17 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
             worldObj.playSoundEffect(this.posX, this.posY, this.posZ, "random.explode", 4.0F, 1.0F);
             if (worldObj instanceof net.minecraft.world.WorldServer) {
-                ((net.minecraft.world.WorldServer) worldObj)
-                    .func_147487_a("hugeexplosion", this.posX, this.posY, this.posZ, (int)(3 * currentSize), 1.0, 1.0, 1.0, 0.1);
-                
+                ((net.minecraft.world.WorldServer) worldObj).func_147487_a(
+                    "hugeexplosion",
+                    this.posX,
+                    this.posY,
+                    this.posZ,
+                    (int) (3 * currentSize),
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.1);
+
                 ((net.minecraft.world.WorldServer) worldObj).func_147487_a(
                     "flame",
                     this.posX,
