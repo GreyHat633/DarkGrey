@@ -215,9 +215,9 @@ public final class MarkManager {
         MarkContainer container = MarkContainer.get(target);
         if (container == null) return;
 
-        for (MarkInstance instance : container.getAllMarks()) {
+        for (MarkInstance instance : new java.util.ArrayList<MarkInstance>(container.getAllMarks())) {
             IMarkType type = MarkRegistry.get(instance.getMarkId());
-            if (type != null) {
+            if (type != null && container.hasMark(instance.getMarkId())) {
                 try {
                     type.onRemoved(
                         target,
