@@ -26,7 +26,7 @@ public class Config {
 
     public static int poisonMaxStacks = 99;
     public static int poisonPeriodicIntervalTicks = 10;
-    public static int poisonStableDurationTicks = 200;
+    public static int poisonDefaultStableDurationTicks = 200;
     public static int poisonDecayIntervalTicks = 10;
     public static int poisonDecayAmount = 10;
     public static boolean poisonImmediateDamageOnApply = true;
@@ -38,10 +38,10 @@ public class Config {
 
     public static int fractureMaxStacks = 5;
     public static double fractureSpeedReductionPerStack = 0.10;
-    public static int fractureDecayIntervalTicks = 100;
+    public static int fractureDefaultStableDurationTicks = 100;
 
     // --- Shattered Bone ---
-    public static int shatteredBoneDefaultIndependentDurationTicks = 60; // 3 seconds
+    public static int shatteredBoneDefaultStableDurationTicks = 60; // 3 seconds
     public static double shatteredBoneMovementThresholdSq = 0.01; // 0.1 blocks per tick
     public static float shatteredBoneMovementDamage = 5.0f;
     public static int shatteredBoneMovementCooldownTicks = 5;
@@ -49,8 +49,6 @@ public class Config {
     public static double shatteredBoneSplashHalfAngleCos = 0.9238; // cos(22.5) -> 45 total degree cone
     public static float shatteredBoneSplashDamageMultiplier = 2.25f; // 225%
     public static int shatteredBoneSplashDurationTicks = 60; // 3 seconds
-    public static boolean fractureRefreshDecayOnApply = true;
-    public static boolean fractureRefreshDecayAtMax = true;
 
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
@@ -79,7 +77,8 @@ public class Config {
 
         poisonMaxStacks = configuration.getInt("maxStacks", "marks.poison", 99, 1, 100000, "");
         poisonPeriodicIntervalTicks = configuration.getInt("periodicIntervalTicks", "marks.poison", 10, 1, 72000, "");
-        poisonStableDurationTicks = configuration.getInt("stableDurationTicks", "marks.poison", 200, 1, 720000, "");
+        poisonDefaultStableDurationTicks = configuration
+            .getInt("stableDurationTicks", "marks.poison", 200, 1, 720000, "");
         poisonDecayIntervalTicks = configuration.getInt("decayIntervalTicks", "marks.poison", 10, 1, 72000, "");
         poisonDecayAmount = configuration.getInt("decayAmount", "marks.poison", 10, 1, 100000, "");
         poisonImmediateDamageOnApply = configuration.getBoolean("immediateDamageOnApply", "marks.poison", true, "");
@@ -95,10 +94,18 @@ public class Config {
         fractureSpeedReductionPerStack = configuration
             .get("marks.fracture", "speedReductionPerStack", 0.10, "Speed reduction per stack (0.0 to 0.19)")
             .getDouble(0.10);
-        fractureDecayIntervalTicks = configuration.getInt("decayIntervalTicks", "marks.fracture", 100, 1, 72000, "");
-        fractureRefreshDecayOnApply = configuration.getBoolean("refreshDecayOnApply", "marks.fracture", true, "");
-        fractureRefreshDecayAtMax = configuration.getBoolean("refreshDecayAtMax", "marks.fracture", true, "");
-
+        int legacyFractureStableDurationTicks = 100;
+        if (configuration.hasKey("marks.fracture", "decayIntervalTicks")) {
+            legacyFractureStableDurationTicks = configuration
+                .getInt("decayIntervalTicks", "marks.fracture", 100, 1, 72000, "Legacy name for stable duration.");
+        }
+        fractureDefaultStableDurationTicks = configuration.getInt(
+            "defaultStableDurationTicks",
+            "marks.fracture",
+            legacyFractureStableDurationTicks,
+            1,
+            720000,
+            "Default stable duration used when an application does not provide one.");
         if (configuration.hasChanged()) {
             configuration.save();
         }

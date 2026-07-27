@@ -93,15 +93,37 @@ public final class RPGDamageSources {
         int oldHurtResistantTime = target.hurtResistantTime;
         int oldHurtTime = target.hurtTime;
 
-        // Temporarily reset resistance so the attack connects
-        target.hurtResistantTime = 0;
+        try {
+            // Temporarily reset resistance so the attack connects.
+            target.hurtResistantTime = 0;
+            return target.attackEntityFrom(source, damage);
+        } finally {
+            // Never let an exception or canceled damage corrupt later combat timing.
+            target.hurtResistantTime = oldHurtResistantTime;
+            target.hurtTime = oldHurtTime;
+        }
+    }
 
-        boolean success = target.attackEntityFrom(source, damage);
+    /**
+     * Deals one independent hit while retaining the longer of the target's old and
+     * newly-created invulnerability frames.
+     *
+     * <p>
+     * This is intended for multi-projectile attacks whose separate projectiles must
+     * all deal damage. Unlike {@link #dealDamageWithoutInvulnerability}, a successful
+     * hit still leaves the target with normal post-hit protection.
+     * </p>
+     */
+    public static boolean dealIndependentProjectileDamage(EntityLivingBase target, DamageSource source, float damage) {
+        int oldHurtResistantTime = target.hurtResistantTime;
+        int oldHurtTime = target.hurtTime;
 
-        // Restore the original resistance so future attacks are mitigated correctly
-        target.hurtResistantTime = oldHurtResistantTime;
-        target.hurtTime = oldHurtTime;
-
-        return success;
+        try {
+            target.hurtResistantTime = 0;
+            return target.attackEntityFrom(source, damage);
+        } finally {
+            target.hurtResistantTime = Math.max(oldHurtResistantTime, target.hurtResistantTime);
+            target.hurtTime = Math.max(oldHurtTime, target.hurtTime);
+        }
     }
 }

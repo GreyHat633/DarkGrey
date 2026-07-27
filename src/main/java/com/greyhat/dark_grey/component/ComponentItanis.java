@@ -62,36 +62,106 @@ public class ComponentItanis
     public void configure(JsonObject params) {
         if (params == null) return;
 
-        if (params.has("normalDrawTicks")) normalDrawTicks = params.get("normalDrawTicks")
-            .getAsInt();
-        if (params.has("bonusChance1")) bonusChance1 = params.get("bonusChance1")
-            .getAsFloat();
-        if (params.has("bonusMultiplier1")) bonusMultiplier1 = params.get("bonusMultiplier1")
-            .getAsFloat();
+        if (params.has("normalDrawTicks")) {
+            normalDrawTicks = Math.max(
+                1,
+                Math.min(
+                    1200,
+                    params.get("normalDrawTicks")
+                        .getAsInt()));
+        }
+        if (params.has("bonusChance1")) bonusChance1 = clampFinite(
+            params.get("bonusChance1")
+                .getAsFloat(),
+            0,
+            1,
+            0.85F);
+        if (params.has("bonusMultiplier1")) {
+            bonusMultiplier1 = clampFinite(
+                params.get("bonusMultiplier1")
+                    .getAsFloat(),
+                0,
+                1000,
+                0.35F);
+        }
 
-        if (params.has("bonusChance2")) bonusChance2 = params.get("bonusChance2")
-            .getAsFloat();
-        if (params.has("bonusMultiplier2")) bonusMultiplier2 = params.get("bonusMultiplier2")
-            .getAsFloat();
+        if (params.has("bonusChance2")) bonusChance2 = clampFinite(
+            params.get("bonusChance2")
+                .getAsFloat(),
+            0,
+            1,
+            0.65F);
+        if (params.has("bonusMultiplier2")) {
+            bonusMultiplier2 = clampFinite(
+                params.get("bonusMultiplier2")
+                    .getAsFloat(),
+                0,
+                1000,
+                0.60F);
+        }
 
-        if (params.has("bonusChance3")) bonusChance3 = params.get("bonusChance3")
-            .getAsFloat();
-        if (params.has("bonusMultiplier3")) bonusMultiplier3 = params.get("bonusMultiplier3")
-            .getAsFloat();
+        if (params.has("bonusChance3")) bonusChance3 = clampFinite(
+            params.get("bonusChance3")
+                .getAsFloat(),
+            0,
+            1,
+            0.25F);
+        if (params.has("bonusMultiplier3")) {
+            bonusMultiplier3 = clampFinite(
+                params.get("bonusMultiplier3")
+                    .getAsFloat(),
+                0,
+                1000,
+                0.90F);
+        }
 
-        if (params.has("formationIntervalTicks")) formationIntervalTicks = params.get("formationIntervalTicks")
-            .getAsInt();
-        if (params.has("formationDamageMultiplier")) formationDamageMultiplier = params.get("formationDamageMultiplier")
-            .getAsFloat();
-        if (params.has("maxChargeTicks")) maxChargeTicks = params.get("maxChargeTicks")
-            .getAsInt();
+        if (params.has("formationIntervalTicks")) {
+            formationIntervalTicks = Math.max(
+                1,
+                Math.min(
+                    1200,
+                    params.get("formationIntervalTicks")
+                        .getAsInt()));
+        }
+        if (params.has("formationDamageMultiplier")) {
+            formationDamageMultiplier = clampFinite(
+                params.get("formationDamageMultiplier")
+                    .getAsFloat(),
+                0,
+                1000,
+                0.40F);
+        }
+        if (params.has("maxChargeTicks")) {
+            maxChargeTicks = Math.max(
+                1,
+                Math.min(
+                    72000,
+                    params.get("maxChargeTicks")
+                        .getAsInt()));
+        }
 
-        if (params.has("fullChargeDamage")) fullChargeDamage = params.get("fullChargeDamage")
-            .getAsFloat();
-        if (params.has("targetRange")) targetRange = params.get("targetRange")
-            .getAsDouble();
-        if (params.has("formationRemainTicks")) formationRemainTicks = params.get("formationRemainTicks")
-            .getAsInt();
+        if (params.has("fullChargeDamage")) {
+            fullChargeDamage = clampFinite(
+                params.get("fullChargeDamage")
+                    .getAsFloat(),
+                0,
+                1000000,
+                5000.0F);
+        }
+        if (params.has("targetRange")) {
+            double configuredRange = params.get("targetRange")
+                .getAsDouble();
+            targetRange = Double.isNaN(configuredRange) || Double.isInfinite(configuredRange) ? 32.0D
+                : Math.max(1.0D, Math.min(128.0D, configuredRange));
+        }
+        if (params.has("formationRemainTicks")) {
+            formationRemainTicks = Math.max(
+                1,
+                Math.min(
+                    72000,
+                    params.get("formationRemainTicks")
+                        .getAsInt()));
+        }
     }
 
     private float getBaseDamage(ItemStack stack) {
@@ -167,6 +237,7 @@ public class ComponentItanis
                 float floatDmg = baseDmg * formationDamageMultiplier; // 120.0F
 
                 EntityItanisArrow arrow = new EntityItanisArrow(world, player, floatDmg, ArrowState.HOVERING);
+                configureArrow(arrow);
                 arrow.setFormationSlot(slot);
                 arrow.setFormationTotal(slot + 1);
                 world.spawnEntityInWorld(arrow);
@@ -211,6 +282,7 @@ public class ComponentItanis
 
             // Normal Mode Shoot
             EntityItanisArrow mainArrow = new EntityItanisArrow(world, player, baseDmg, ArrowState.LAUNCHED);
+            configureArrow(mainArrow);
             Vec3 look = player.getLookVec();
             mainArrow.motionX = look.xCoord * 3.0D;
             mainArrow.motionY = look.yCoord * 3.5D;
@@ -234,6 +306,7 @@ public class ComponentItanis
                     player,
                     fullChargeDamage,
                     ArrowState.PIERCING);
+                configureArrow(piercingArrow);
                 Vec3 look = player.getLookVec();
                 piercingArrow.motionX = look.xCoord * 3.5D;
                 piercingArrow.motionY = look.yCoord * 3.5D;
@@ -256,6 +329,7 @@ public class ComponentItanis
         List<EntityLivingBase> targets, int targetIndex) {
         if (rand.nextFloat() < chance) {
             EntityItanisArrow bonusArrow = new EntityItanisArrow(world, player, damage, ArrowState.LAUNCHED);
+            configureArrow(bonusArrow);
             Vec3 look = player.getLookVec();
 
             // Slight spread velocity
@@ -294,7 +368,7 @@ public class ComponentItanis
 
     @SuppressWarnings("unchecked")
     private List<EntityItanisArrow> getPlayerHoveringArrows(World world, EntityPlayer player) {
-        AxisAlignedBB box = player.boundingBox.expand(32.0D, 32.0D, 32.0D);
+        AxisAlignedBB box = player.boundingBox.expand(targetRange, targetRange, targetRange);
         List rawList = world.getEntitiesWithinAABB(EntityItanisArrow.class, box);
         List<EntityItanisArrow> result = new ArrayList<>();
         for (Object obj : rawList) {
@@ -306,6 +380,18 @@ public class ComponentItanis
             }
         }
         return result;
+    }
+
+    private void configureArrow(EntityItanisArrow arrow) {
+        arrow.setTargetRange(this.targetRange);
+        arrow.setHoverRemainTicks(this.formationRemainTicks);
+    }
+
+    private static float clampFinite(float value, float minimum, float maximum, float fallback) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return fallback;
+        }
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     @Override

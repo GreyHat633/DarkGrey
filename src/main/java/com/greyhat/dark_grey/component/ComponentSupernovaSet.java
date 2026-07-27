@@ -88,11 +88,12 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
             // 4-piece set logic: Fire star bullets on hit
             if (pieceCount >= 4 && !attacker.worldObj.isRemote) {
                 // Determine if this hit is a heavy strike
-                boolean isHeavyStrikeReady = HeavyStrikeComponent.isReady(
-                    attacker.getEntityData(),
-                    LAST_TRIGGER_TICK,
-                    attacker.worldObj.getTotalWorldTime(),
-                    this.intervalSeconds);
+                boolean isHeavyStrikeReady = com.greyhat.dark_grey.util.DirectAttackClassifier.isDirectAttack(source)
+                    && HeavyStrikeComponent.isReady(
+                        attacker.getEntityData(),
+                        LAST_TRIGGER_TICK,
+                        attacker.worldObj.getTotalWorldTime(),
+                        this.intervalSeconds);
 
                 float bulletDamage = weaponAttackDamage > 0 ? weaponAttackDamage * 1.25f : rawDamage * 1.25f;
 

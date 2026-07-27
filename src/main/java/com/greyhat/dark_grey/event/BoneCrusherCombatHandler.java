@@ -77,7 +77,7 @@ public class BoneCrusherCombatHandler {
 
             MarkApplyContext context = new MarkApplyContext.Builder().source(attacker)
                 .requestedStacks(boneCrusher.getFractureStacksPerTrigger())
-                .durationTicks(boneCrusher.getFractureDurationTicks())
+                .stableDurationTicks(boneCrusher.getFractureStableDurationTicks())
                 .worldTime(target.worldObj.getTotalWorldTime())
                 .applicationId("bone_crusher")
                 .refreshDuration(true)

@@ -266,6 +266,11 @@ public class DarkGrey {
         com.greyhat.dark_grey.combat.ShatteredBoneAttackHandler shatteredBoneHandler = new com.greyhat.dark_grey.combat.ShatteredBoneAttackHandler();
         MinecraftForge.EVENT_BUS.register((Object) shatteredBoneHandler);
 
+        MinecraftForge.EVENT_BUS.register((Object) new com.greyhat.dark_grey.event.CombatExplosionHandler());
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) new com.greyhat.dark_grey.event.ServerLeftClickHandler());
+
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }
 

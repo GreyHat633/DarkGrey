@@ -10,6 +10,7 @@ import com.greyhat.dark_grey.mark.MarkInstance;
 import com.greyhat.dark_grey.mark.MarkManager;
 import com.greyhat.dark_grey.mark.api.AbstractMarkType;
 import com.greyhat.dark_grey.mark.api.MarkApplyContext;
+import com.greyhat.dark_grey.mark.api.MarkDecayMode;
 import com.greyhat.dark_grey.mark.api.MarkUpdateContext;
 import com.greyhat.dark_grey.mark.api.MarkVisualData;
 
@@ -48,6 +49,26 @@ public class PoisonMarkType extends AbstractMarkType {
     }
 
     @Override
+    public MarkDecayMode getDecayMode() {
+        return MarkDecayMode.CONTINUOUS;
+    }
+
+    @Override
+    public int getDefaultStableDurationTicks() {
+        return Config.poisonDefaultStableDurationTicks;
+    }
+
+    @Override
+    public int getDecayIntervalTicks() {
+        return Config.poisonDecayIntervalTicks;
+    }
+
+    @Override
+    public int getDecayAmount() {
+        return Config.poisonDecayAmount;
+    }
+
+    @Override
     public MarkVisualData getVisualData() {
         return visualData;
     }
@@ -56,7 +77,7 @@ public class PoisonMarkType extends AbstractMarkType {
     public void onFirstApplied(EntityLivingBase target, MarkInstance instance, MarkApplyContext context) {
         long now = context.getWorldTime();
         instance.setNextPeriodicTriggerWorldTime(now + Config.poisonPeriodicIntervalTicks);
-        int duration = context.getDurationTicks() > 0 ? context.getDurationTicks() : Config.poisonStableDurationTicks;
+        int duration = getStableDurationTicks(instance);
         instance.setStableUntilWorldTime(now + duration);
         instance.setDecaying(false);
         instance.setNextDecayTriggerWorldTime(0);
@@ -66,7 +87,7 @@ public class PoisonMarkType extends AbstractMarkType {
     public void onApplied(EntityLivingBase target, MarkInstance instance, MarkApplyContext context, int requestedStacks,
         int actualAddedStacks) {
         long now = context.getWorldTime();
-        int duration = context.getDurationTicks() > 0 ? context.getDurationTicks() : Config.poisonStableDurationTicks;
+        int duration = getStableDurationTicks(instance);
         instance.setStableUntilWorldTime(now + duration);
         instance.setDecaying(false);
         instance.setNextDecayTriggerWorldTime(0);
@@ -96,7 +117,7 @@ public class PoisonMarkType extends AbstractMarkType {
     @Override
     public void onEnterDecay(EntityLivingBase target, MarkInstance instance, MarkUpdateContext context) {
         instance.setDecaying(true);
-        instance.setNextDecayTriggerWorldTime(context.getWorldTime() + Config.poisonDecayIntervalTicks);
+        instance.setNextDecayTriggerWorldTime(context.getWorldTime() + getDecayIntervalTicks());
         MarkManager.syncMark(target, instance, this, (byte) 4, 0, false);
     }
 
@@ -104,14 +125,19 @@ public class PoisonMarkType extends AbstractMarkType {
     public void onDecayTrigger(EntityLivingBase target, MarkInstance instance, MarkUpdateContext context) {
         long now = context.getWorldTime();
 
-        int newStacks = Math.max(0, instance.getStacks() - Config.poisonDecayAmount);
+        int newStacks = Math.max(0, instance.getStacks() - getDecayAmount());
         int delta = newStacks - instance.getStacks();
         instance.setStacks(newStacks);
 
         if (newStacks > 0) {
-            instance.setNextDecayTriggerWorldTime(now + Config.poisonDecayIntervalTicks);
+            instance.setNextDecayTriggerWorldTime(now + getDecayIntervalTicks());
             MarkManager.syncMark(target, instance, this, (byte) 5, delta, false);
         }
+    }
+
+    private int getStableDurationTicks(MarkInstance instance) {
+        int duration = instance.getStableDurationTicks();
+        return duration > 0 ? duration : getDefaultStableDurationTicks();
     }
 
     private void triggerPoisonDamage(EntityLivingBase target, MarkInstance instance) {
@@ -127,21 +153,25 @@ public class PoisonMarkType extends AbstractMarkType {
             }
         }
 
-        if (Config.poisonIgnoreHurtResistance) {
-            target.hurtResistantTime = 0;
-        }
-
         double prevMotionX = target.motionX;
         double prevMotionY = target.motionY;
         double prevMotionZ = target.motionZ;
         boolean prevIsAirBorne = target.isAirBorne;
 
-        RPGDamageSources
-            .dealDamageWithoutInvulnerability(target, RPGDamageSources.causeMarkDamage(getId(), source), damage);
-
-        target.motionX = prevMotionX;
-        target.motionY = prevMotionY;
-        target.motionZ = prevMotionZ;
-        target.isAirBorne = prevIsAirBorne;
+        try {
+            if (Config.poisonIgnoreHurtResistance) {
+                RPGDamageSources.dealDamageWithoutInvulnerability(
+                    target,
+                    RPGDamageSources.causeMarkDamage(getId(), source),
+                    damage);
+            } else {
+                target.attackEntityFrom(RPGDamageSources.causeMarkDamage(getId(), source), damage);
+            }
+        } finally {
+            target.motionX = prevMotionX;
+            target.motionY = prevMotionY;
+            target.motionZ = prevMotionZ;
+            target.isAirBorne = prevIsAirBorne;
+        }
     }
 }

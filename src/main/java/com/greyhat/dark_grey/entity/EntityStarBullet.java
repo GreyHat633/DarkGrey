@@ -28,15 +28,20 @@ public class EntityStarBullet extends EntityThrowable {
         this.homingTarget = target;
         this.customDamage = damage;
         this.isHeavyStrike = isHeavyStrike;
+        this.dataWatcher.updateObject(20, Byte.valueOf((byte) (isHeavyStrike ? 1 : 0)));
     }
 
     @Override
     protected void entityInit() {
         super.entityInit();
+        this.dataWatcher.addObject(20, Byte.valueOf((byte) 0));
     }
 
     @Override
     public void onUpdate() {
+        if (this.worldObj.isRemote) {
+            this.isHeavyStrike = this.dataWatcher.getWatchableObjectByte(20) != 0;
+        }
         super.onUpdate();
 
         if (this.ticksExisted > 100) {
@@ -93,11 +98,7 @@ public class EntityStarBullet extends EntityThrowable {
                     && CombatTargeting.canDamage(shooter, (EntityLivingBase) mop.entityHit, false)) {
                     EntityLivingBase target = (EntityLivingBase) mop.entityHit;
                     DamageSource source = RPGDamageSources.causeArrowDamage(this, shooter);
-                    if (this.isHeavyStrike) {
-                        source.setDamageBypassesArmor();
-                    }
-                    target.attackEntityFrom(source, this.customDamage);
-                    target.hurtResistantTime = 0; // ensure it doesn't get blocked by i-frames if multiple hit
+                    RPGDamageSources.dealDamageWithoutInvulnerability(target, source, this.customDamage);
                 }
             }
 
@@ -137,5 +138,10 @@ public class EntityStarBullet extends EntityThrowable {
         super.readEntityFromNBT(nbt);
         this.customDamage = nbt.getFloat("CustomDamage");
         this.isHeavyStrike = nbt.getBoolean("IsHeavyStrike");
+        this.dataWatcher.updateObject(20, Byte.valueOf((byte) (this.isHeavyStrike ? 1 : 0)));
+        if (!this.worldObj.isRemote) {
+            // The fixed homing target cannot be reconstructed safely after a chunk reload.
+            this.setDead();
+        }
     }
 }

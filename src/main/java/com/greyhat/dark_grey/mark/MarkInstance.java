@@ -13,6 +13,7 @@ public class MarkInstance {
     private long lastAppliedWorldTime;
 
     private long stableUntilWorldTime;
+    private int stableDurationTicks;
     private long nextPeriodicTriggerWorldTime;
     private long nextDecayTriggerWorldTime;
     private long lastPeriodicTriggerWorldTime;
@@ -64,6 +65,14 @@ public class MarkInstance {
 
     public void setStableUntilWorldTime(long stableUntilWorldTime) {
         this.stableUntilWorldTime = stableUntilWorldTime;
+    }
+
+    public int getStableDurationTicks() {
+        return stableDurationTicks;
+    }
+
+    public void setStableDurationTicks(int stableDurationTicks) {
+        this.stableDurationTicks = Math.max(0, stableDurationTicks);
     }
 
     public long getNextPeriodicTriggerWorldTime() {
@@ -136,6 +145,7 @@ public class MarkInstance {
         nbt.setLong("FirstApplied", firstAppliedWorldTime);
         nbt.setLong("LastApplied", lastAppliedWorldTime);
         nbt.setLong("StableUntil", stableUntilWorldTime);
+        nbt.setInteger("StableDurationTicks", stableDurationTicks);
         nbt.setLong("NextPeriodic", nextPeriodicTriggerWorldTime);
         nbt.setLong("NextDecay", nextDecayTriggerWorldTime);
         nbt.setLong("LastPeriodic", lastPeriodicTriggerWorldTime);
@@ -163,6 +173,7 @@ public class MarkInstance {
         instance.firstAppliedWorldTime = nbt.getLong("FirstApplied");
         instance.lastAppliedWorldTime = nbt.getLong("LastApplied");
         instance.stableUntilWorldTime = nbt.getLong("StableUntil");
+        instance.stableDurationTicks = nbt.getInteger("StableDurationTicks");
         instance.nextPeriodicTriggerWorldTime = nbt.getLong("NextPeriodic");
         instance.nextDecayTriggerWorldTime = nbt.getLong("NextDecay");
         instance.lastPeriodicTriggerWorldTime = nbt.getLong("LastPeriodic");

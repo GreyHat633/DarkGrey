@@ -20,6 +20,7 @@ public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasToo
     private float directDamage = 12.0F;
     private float lingeringDamage = 2.0F;
     private int fieldDuration = 1200; // 60s
+    private int fractureStableDurationTicks = 100;
     private float projectileVelocity = 0.75F;
     private float projectileInaccuracy = 1.0F;
     private float projectileGravity = 0.03F;
@@ -31,18 +32,62 @@ public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasToo
 
     @Override
     public void configure(JsonObject params) {
-        if (params.has("directDamage")) this.directDamage = params.get("directDamage")
-            .getAsFloat();
-        if (params.has("lingeringDamage")) this.lingeringDamage = params.get("lingeringDamage")
-            .getAsFloat();
-        if (params.has("fieldDuration")) this.fieldDuration = params.get("fieldDuration")
-            .getAsInt();
-        if (params.has("projectileVelocity")) this.projectileVelocity = params.get("projectileVelocity")
-            .getAsFloat();
-        if (params.has("projectileInaccuracy")) this.projectileInaccuracy = params.get("projectileInaccuracy")
-            .getAsFloat();
-        if (params.has("projectileGravity")) this.projectileGravity = params.get("projectileGravity")
-            .getAsFloat();
+        if (params.has("directDamage")) {
+            this.directDamage = clampFinite(
+                params.get("directDamage")
+                    .getAsFloat(),
+                0.0F,
+                1000000.0F,
+                12.0F);
+        }
+        if (params.has("lingeringDamage")) {
+            this.lingeringDamage = clampFinite(
+                params.get("lingeringDamage")
+                    .getAsFloat(),
+                0.0F,
+                1000000.0F,
+                2.0F);
+        }
+        if (params.has("fieldDuration")) {
+            this.fieldDuration = Math.max(
+                1,
+                Math.min(
+                    72000,
+                    params.get("fieldDuration")
+                        .getAsInt()));
+        }
+        if (params.has("fractureStableDurationTicks")) {
+            this.fractureStableDurationTicks = Math.max(
+                1,
+                Math.min(
+                    720000,
+                    params.get("fractureStableDurationTicks")
+                        .getAsInt()));
+        }
+        if (params.has("projectileVelocity")) {
+            this.projectileVelocity = clampFinite(
+                params.get("projectileVelocity")
+                    .getAsFloat(),
+                0.01F,
+                10.0F,
+                0.75F);
+        }
+        if (params.has("projectileInaccuracy")) {
+            this.projectileInaccuracy = clampFinite(
+                params.get("projectileInaccuracy")
+                    .getAsFloat(),
+                0.0F,
+                180.0F,
+                1.0F);
+        }
+        if (params.has("projectileGravity")) {
+            this.projectileGravity = clampFinite(
+                params.get("projectileGravity")
+                    .getAsFloat(),
+                0.0F,
+                1.0F,
+                0.03F);
+        }
     }
 
     @Override
@@ -54,6 +99,8 @@ public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasToo
             flask.directDamage = this.directDamage;
             flask.lingeringDamage = this.lingeringDamage;
             flask.fieldDuration = this.fieldDuration;
+            flask.fractureStableDurationTicks = this.fractureStableDurationTicks;
+            flask.projectileGravity = this.projectileGravity;
 
             flask.setThrowableHeading(
                 player.getLookVec().xCoord,
@@ -74,6 +121,13 @@ public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasToo
             }
         }
         return stack;
+    }
+
+    private static float clampFinite(float value, float minimum, float maximum, float fallback) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return fallback;
+        }
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     @Override

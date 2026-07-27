@@ -12,6 +12,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import com.greyhat.dark_grey.DarkGrey;
 import com.greyhat.dark_grey.api.CombatTargeting;
@@ -173,6 +174,11 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
     public void onUpdate() {
         super.onUpdate();
 
+        if (!this.worldObj.isRemote && this.resolveOwnerLiving() == null) {
+            this.setDead();
+            return;
+        }
+
         if (this.worldObj.isRemote) {
             this.orbState = this.dataWatcher.getWatchableObjectByte(10);
             this.ownerEntityId = this.dataWatcher.getWatchableObjectInt(11);
@@ -305,8 +311,26 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
     }
 
     public Entity getOwnerEntity() {
-        if (this.ownerEntityId != -1) {
-            return this.worldObj.getEntityByID(this.ownerEntityId);
+        Entity byId = this.ownerEntityId == -1 ? null : this.worldObj.getEntityByID(this.ownerEntityId);
+        if (byId != null && (this.ownerUuid == null || this.ownerUuid.equals(byId.getUniqueID()))) {
+            return byId;
+        }
+        return this.worldObj.isRemote ? null : this.resolveOwnerLiving();
+    }
+
+    private EntityLivingBase resolveOwnerLiving() {
+        Entity byId = this.ownerEntityId == -1 ? null : this.worldObj.getEntityByID(this.ownerEntityId);
+        if (byId instanceof EntityLivingBase && (this.ownerUuid == null || this.ownerUuid.equals(byId.getUniqueID()))
+            && byId.isEntityAlive()) {
+            return (EntityLivingBase) byId;
+        }
+        if (this.ownerUuid != null && this.worldObj instanceof WorldServer) {
+            EntityPlayer resolved = ((WorldServer) this.worldObj).func_152378_a(this.ownerUuid);
+            if (resolved != null && resolved.isEntityAlive()) {
+                this.ownerEntityId = resolved.getEntityId();
+                this.dataWatcher.updateObject(11, this.ownerEntityId);
+                return resolved;
+            }
         }
         return null;
     }
@@ -356,9 +380,10 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
 
                     DamageSource source = RPGDamageSources.causeUndergroundSunDamage(this, ownerLiving);
                     if (this.ignoreHurtResistance) {
-                        target.hurtResistantTime = 0;
+                        RPGDamageSources.dealDamageWithoutInvulnerability(target, source, this.explosionDamage);
+                    } else {
+                        target.attackEntityFrom(source, this.explosionDamage);
                     }
-                    target.attackEntityFrom(source, this.explosionDamage);
                 }
             }
         }
@@ -383,6 +408,7 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
         if (nbt.hasKey("OwnerUUIDMost") && nbt.hasKey("OwnerUUIDLeast")) {
             this.ownerUuid = new UUID(nbt.getLong("OwnerUUIDMost"), nbt.getLong("OwnerUUIDLeast"));
         }
+        this.ownerEntityId = -1;
         this.orbState = nbt.getByte("OrbState");
         this.formationSlot = nbt.getInteger("FormationSlot");
         this.explosionDamage = nbt.getFloat("ExplosionDamage");
@@ -400,6 +426,7 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
         this.exploded = nbt.getBoolean("Exploded");
 
         this.dataWatcher.updateObject(10, this.orbState);
+        this.dataWatcher.updateObject(11, -1);
         this.dataWatcher.updateObject(12, this.formationSlot);
     }
 

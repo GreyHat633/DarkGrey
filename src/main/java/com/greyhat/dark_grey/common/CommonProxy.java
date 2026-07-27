@@ -87,9 +87,28 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.ErebusHitMessage.class,
             8,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.ShatteredBoneParticlesHandler.class,
+            com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage.class,
+            9,
+            cpw.mods.fml.relauncher.Side.CLIENT);
     }
 
     public void scheduleConfigApply(String json) {}
 
     public void scheduleSolarFlareImpact(double motionX, double motionY, double motionZ) {}
+
+    public void scheduleMarkSync(com.greyhat.dark_grey.network.MarkSyncMessage message) {}
+
+    public void scheduleMarkRemove(com.greyhat.dark_grey.network.MarkRemoveMessage message) {}
+
+    public void scheduleMarkSnapshot(com.greyhat.dark_grey.network.MarkSnapshotMessage message) {}
+
+    public void scheduleMarkClearEntity(com.greyhat.dark_grey.network.MarkClearEntityMessage message) {}
+
+    public void scheduleErebusHit(com.greyhat.dark_grey.network.ErebusHitMessage message) {}
+
+    public void scheduleUndergroundSunExplosion(com.greyhat.dark_grey.network.UndergroundSunExplosionMessage message) {}
+
+    public void scheduleShatteredBoneParticles(com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage message) {}
 }

@@ -5,8 +5,11 @@ import java.util.List;
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
 
 public class MarkSnapshotMessage implements IMessage {
+
+    private static final int MAX_MARKS_PER_ENTITY = 64;
 
     public int entityId;
     public List<MarkSyncMessage.MarkData> marks;
@@ -22,6 +25,9 @@ public class MarkSnapshotMessage implements IMessage {
     public void fromBytes(ByteBuf buf) {
         this.entityId = buf.readInt();
         int count = buf.readInt();
+        if (count < 0 || count > MAX_MARKS_PER_ENTITY) {
+            throw new DecoderException("Invalid mark snapshot count: " + count);
+        }
         this.marks = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             MarkSyncMessage.MarkData data = new MarkSyncMessage.MarkData();

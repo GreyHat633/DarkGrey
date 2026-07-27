@@ -38,7 +38,7 @@ public class RedSunBurnHandler {
         RedSunBurnData data = RedSunBurnData.get(target);
         if (data != null && data.isActive(target.worldObj)) {
             if (!RPGDamageSources.isSwitchDamage(event.source)) {
-                event.ammount *= 1.20F;
+                event.ammount *= data.getIncomingDamageMultiplier();
             }
         }
     }
@@ -82,8 +82,15 @@ public class RedSunBurnHandler {
                 }
 
                 DamageSource ds = RPGDamageSources.causeRedSunBurnSwitchDamage(sourcePlayer);
-                player.hurtResistantTime = 0;
-                player.attackEntityFrom(ds, 10.0F);
+                boolean damaged;
+                if (data.isIgnoringSwitchDamageHurtResistance()) {
+                    damaged = RPGDamageSources.dealDamageWithoutInvulnerability(player, ds, data.getSwitchDamage());
+                } else {
+                    damaged = player.attackEntityFrom(ds, data.getSwitchDamage());
+                }
+                if (!damaged) {
+                    return;
+                }
 
                 player.worldObj.playSoundAtEntity(player, "random.fizz", 1.0F, 1.0F);
                 if (player.worldObj instanceof WorldServer) {

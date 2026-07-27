@@ -1,11 +1,8 @@
 package com.greyhat.dark_grey.network;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 
-import com.greyhat.dark_grey.api.IRPGComponent;
-import com.greyhat.dark_grey.api.IRPGItemContainer;
-import com.greyhat.dark_grey.api.capability.IOnLeftClick;
+import com.greyhat.dark_grey.event.ServerLeftClickHandler;
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -20,17 +17,7 @@ public class ItanisModeSwitchHandler implements IMessageHandler<ItanisModeSwitch
             return null;
         }
 
-        ItemStack heldStack = player.getCurrentEquippedItem();
-        if (heldStack == null || !(heldStack.getItem() instanceof IRPGItemContainer)) {
-            return null;
-        }
-
-        IRPGItemContainer container = (IRPGItemContainer) heldStack.getItem();
-        for (IRPGComponent component : container.getAllComponents()) {
-            if (component instanceof IOnLeftClick) {
-                ((IOnLeftClick) component).onLeftClick(heldStack, player);
-            }
-        }
+        ServerLeftClickHandler.request(player);
         return null;
     }
 }

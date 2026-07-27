@@ -125,9 +125,11 @@ public class ShatteredBoneAttackHandler {
             if (target.worldObj instanceof net.minecraft.world.WorldServer) {
                 net.minecraft.world.WorldServer ws = (net.minecraft.world.WorldServer) target.worldObj;
                 java.util.Random rand = ws.rand;
+                float[] velocities = new float[com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage.PARTICLE_COUNT
+                    * 3];
 
                 // Physical Parabolic Spray of Bone Fragments
-                for (int i = 0; i < 200; i++) {
+                for (int i = 0; i < com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage.PARTICLE_COUNT; i++) {
                     // Base horizontal direction
                     double hLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
                     double bx = dirX, bz = dirZ;
@@ -159,16 +161,25 @@ public class ShatteredBoneAttackHandler {
                     double vx = hx * vHoriz;
                     double vz = hz * vHoriz;
 
-                    ws.func_147487_a(
-                        "iconcrack_352", // Bone item fragments
-                        target.posX,
-                        target.posY + target.height / 2.0F,
-                        target.posZ,
-                        0,
-                        vx,
-                        vy,
-                        vz,
-                        1.0D);
+                    int velocityOffset = i * 3;
+                    velocities[velocityOffset] = (float) vx;
+                    velocities[velocityOffset + 1] = (float) vy;
+                    velocities[velocityOffset + 2] = (float) vz;
+                }
+                com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage particleMessage = new com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage(
+                    target.posX,
+                    target.posY + target.height / 2.0F,
+                    target.posZ,
+                    velocities);
+                for (Object playerObject : ws.playerEntities) {
+                    net.minecraft.entity.player.EntityPlayerMP player = (net.minecraft.entity.player.EntityPlayerMP) playerObject;
+                    net.minecraft.util.ChunkCoordinates coordinates = player.getPlayerCoordinates();
+                    double playerDx = target.posX - coordinates.posX;
+                    double playerDy = target.posY + target.height / 2.0F - coordinates.posY;
+                    double playerDz = target.posZ - coordinates.posZ;
+                    if (playerDx * playerDx + playerDy * playerDy + playerDz * playerDz <= 256.0D) {
+                        com.greyhat.dark_grey.DarkGrey.NETWORK.sendTo(particleMessage, player);
+                    }
                 }
             }
 
@@ -198,10 +209,13 @@ public class ShatteredBoneAttackHandler {
                 // If the current angle minus the entity's half-angle is <= 22.5 degrees, they overlap!
                 if (currentAngle - targetHalfAngle <= 0.3927) {
                     if (com.greyhat.dark_grey.api.CombatTargeting.canDamage(attacker, splashTarget, false)) {
-                        com.greyhat.dark_grey.api.RPGDamageSources.dealDamageWithoutInvulnerability(
+                        boolean damaged = com.greyhat.dark_grey.api.RPGDamageSources.dealDamageWithoutInvulnerability(
                             splashTarget,
                             ShatteredBoneDamageSources.causeSplashDamage(attacker),
                             splashDamage);
+                        if (!damaged) {
+                            continue;
+                        }
 
                         if (splashTarget.worldObj instanceof net.minecraft.world.WorldServer) {
                             ((net.minecraft.world.WorldServer) splashTarget.worldObj).func_147487_a(
@@ -221,7 +235,7 @@ public class ShatteredBoneAttackHandler {
                             .requestedStacks(1)
                             .worldTime(splashTarget.worldObj.getTotalWorldTime())
                             .applicationId("shattered_bone_splash")
-                            .durationTicks(60)
+                            .stableDurationTicks(com.greyhat.dark_grey.common.Config.shatteredBoneSplashDurationTicks)
                             .build();
                         com.greyhat.dark_grey.mark.MarkManager.apply(splashTarget, ShatteredBoneMarkType.ID, context);
                     }

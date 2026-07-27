@@ -15,7 +15,7 @@ public final class MarkApplyContext {
     private final boolean refreshDuration;
     private final boolean triggerImmediate;
     private final NBTTagCompound extraData;
-    private final int durationTicks;
+    private final int stableDurationTicks;
 
     private MarkApplyContext(Builder builder) {
         this.source = builder.source;
@@ -27,7 +27,7 @@ public final class MarkApplyContext {
         this.refreshDuration = builder.refreshDuration;
         this.triggerImmediate = builder.triggerImmediate;
         this.extraData = builder.extraData != null ? (NBTTagCompound) builder.extraData.copy() : null;
-        this.durationTicks = builder.durationTicks;
+        this.stableDurationTicks = builder.stableDurationTicks;
     }
 
     public EntityLivingBase getSource() {
@@ -62,8 +62,20 @@ public final class MarkApplyContext {
         return extraData != null ? (NBTTagCompound) extraData.copy() : null;
     }
 
+    public boolean hasStableDurationTicks() {
+        return stableDurationTicks >= 0;
+    }
+
+    public int getStableDurationTicks() {
+        return stableDurationTicks;
+    }
+
+    /**
+     * @deprecated Use {@link #getStableDurationTicks()}.
+     */
+    @Deprecated
     public int getDurationTicks() {
-        return durationTicks;
+        return getStableDurationTicks();
     }
 
     public static class Builder {
@@ -76,7 +88,7 @@ public final class MarkApplyContext {
         private boolean refreshDuration = true;
         private boolean triggerImmediate = true;
         private NBTTagCompound extraData;
-        private int durationTicks = 0;
+        private int stableDurationTicks = -1;
 
         public Builder source(EntityLivingBase source) {
             this.source = source;
@@ -118,9 +130,20 @@ public final class MarkApplyContext {
             return this;
         }
 
-        public Builder durationTicks(int durationTicks) {
-            this.durationTicks = durationTicks;
+        public Builder stableDurationTicks(int stableDurationTicks) {
+            if (stableDurationTicks < 0) {
+                throw new IllegalArgumentException("stableDurationTicks must be >= 0");
+            }
+            this.stableDurationTicks = stableDurationTicks;
             return this;
+        }
+
+        /**
+         * @deprecated Use {@link #stableDurationTicks(int)}.
+         */
+        @Deprecated
+        public Builder durationTicks(int durationTicks) {
+            return stableDurationTicks(durationTicks);
         }
 
         public MarkApplyContext build() {

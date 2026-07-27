@@ -281,7 +281,7 @@ public class RPGItemLoader {
                 DarkGrey.LOG.info("Bound custom lance renderer for " + id + " using " + equippedName);
             } else if ("charred_fire_staff".equals(id)) {
                 DarkGrey.proxy.registerAnimatedItemRenderer(rpgItem, equippedName, 6, 100);
-                DarkGrey.LOG.info("Bound animated 3D renderer for " + id + " using " + equippedName);
+                DarkGrey.LOG.info("Bound animated inventory and 3D renderer for " + id + " using " + equippedName);
             } else {
                 DarkGrey.proxy.registerItemRenderer(rpgItem, equippedName);
                 DarkGrey.LOG.info("Bound custom 3D renderer for " + id + " using " + equippedName);

@@ -14,8 +14,10 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.FriendlyFireExplosion;
 import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
 import com.greyhat.dark_grey.api.RPGDamageSources;
 
@@ -323,15 +325,21 @@ public class EntityMadokaArrow extends EntityThrowable {
                 explosionSize = 8.0f;
             }
             if (explosionSize > 0.0f) {
-                this.worldObj.createExplosion(this.getThrower(), this.posX, this.posY, this.posZ, explosionSize, false);
+                EntityLivingBase shooter = this.getThrower();
+                if (shooter != null && this.worldObj instanceof WorldServer) {
+                    FriendlyFireExplosion
+                        .create((WorldServer) this.worldObj, shooter, this.posX, this.posY, this.posZ, explosionSize);
+                }
                 if (level >= 2) {
-                    this.worldObj.createExplosion(
-                        this.getThrower(),
-                        this.posX,
-                        this.posY - 1.5,
-                        this.posZ,
-                        explosionSize * 0.8f,
-                        false);
+                    if (shooter != null && this.worldObj instanceof WorldServer) {
+                        FriendlyFireExplosion.create(
+                            (WorldServer) this.worldObj,
+                            shooter,
+                            this.posX,
+                            this.posY - 1.5,
+                            this.posZ,
+                            explosionSize * 0.8f);
+                    }
                 }
             }
             this.setDead();

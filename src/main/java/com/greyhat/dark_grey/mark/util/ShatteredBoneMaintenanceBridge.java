@@ -31,7 +31,7 @@ public class ShatteredBoneMaintenanceBridge {
                     .applicationId("fracture_maintenance")
                     .refreshDuration(false)
                     .triggerImmediate(true)
-                    .durationTicks(0)
+                    .stableDurationTicks(0)
                     .build();
                 MarkManager.apply(target, ShatteredBoneMarkType.ID, context);
                 instance = container.getMark(ShatteredBoneMarkType.ID);

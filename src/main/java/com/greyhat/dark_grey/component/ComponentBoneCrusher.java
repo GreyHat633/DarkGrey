@@ -15,7 +15,7 @@ public class ComponentBoneCrusher implements IRPGComponent, IHasTooltip {
     private int requiredHits = 3;
     private String fractureMarkId = "fracture";
     private int fractureStacksPerTrigger = 1;
-    private int fractureDurationTicks = 100;
+    private int fractureStableDurationTicks = 100;
     private boolean showThirdHitFeedback = true;
 
     @Override
@@ -41,9 +41,20 @@ public class ComponentBoneCrusher implements IRPGComponent, IHasTooltip {
             this.showThirdHitFeedback = params.get("showThirdHitFeedback")
                 .getAsBoolean();
         }
-        if (params.has("fractureDurationTicks")) {
-            this.fractureDurationTicks = params.get("fractureDurationTicks")
-                .getAsInt();
+        if (params.has("fractureStableDurationTicks")) {
+            this.fractureStableDurationTicks = Math.max(
+                1,
+                Math.min(
+                    720000,
+                    params.get("fractureStableDurationTicks")
+                        .getAsInt()));
+        } else if (params.has("fractureDurationTicks")) {
+            this.fractureStableDurationTicks = Math.max(
+                1,
+                Math.min(
+                    720000,
+                    params.get("fractureDurationTicks")
+                        .getAsInt()));
         }
     }
 
@@ -59,8 +70,8 @@ public class ComponentBoneCrusher implements IRPGComponent, IHasTooltip {
         return fractureStacksPerTrigger;
     }
 
-    public int getFractureDurationTicks() {
-        return fractureDurationTicks;
+    public int getFractureStableDurationTicks() {
+        return fractureStableDurationTicks;
     }
 
     public boolean isShowThirdHitFeedback() {

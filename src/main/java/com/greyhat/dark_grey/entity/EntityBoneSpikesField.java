@@ -1,21 +1,27 @@
 package com.greyhat.dark_grey.entity;
 
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
+import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.mark.MarkManager;
+import com.greyhat.dark_grey.mark.api.MarkApplyContext;
 import com.greyhat.dark_grey.mark.type.FractureMarkType;
 
 public class EntityBoneSpikesField extends Entity {
 
     private EntityLivingBase thrower;
+    private UUID throwerUuid;
     public float lingeringDamage = 2.0F;
     public int fieldDuration = 1200;
+    public int fractureStableDurationTicks = 100;
 
     public EntityBoneSpikesField(World world) {
         super(world);
@@ -31,6 +37,7 @@ public class EntityBoneSpikesField extends Entity {
 
     public void setThrower(EntityLivingBase thrower) {
         this.thrower = thrower;
+        this.throwerUuid = thrower == null ? null : thrower.getUniqueID();
     }
 
     public EntityLivingBase getThrower() {
@@ -53,13 +60,23 @@ public class EntityBoneSpikesField extends Entity {
             return;
         }
 
+        EntityLivingBase owner = this.resolveThrower();
+        if (owner == null) {
+            this.setDead();
+            return;
+        }
+
         // Server side logic
         List<EntityLivingBase> entities = this.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.boundingBox);
         int bitmask = this.dataWatcher.getWatchableObjectInt(16);
+        if (bitmask == 0) {
+            this.setDead();
+            return;
+        }
         boolean changed = false;
 
         for (EntityLivingBase entity : entities) {
-            if (entity == this.thrower) continue;
+            if (!CombatTargeting.canDamage(owner, entity, false)) continue;
 
             // Calculate relative grid position
             int relX = (int) Math.round(entity.posX - this.posX);
@@ -69,12 +86,20 @@ public class EntityBoneSpikesField extends Entity {
                 int index = (relX + 1) + (relZ + 1) * 3;
                 if ((bitmask & (1 << index)) != 0) {
                     // Apply damage and mark
-                    DamageSource source = this.thrower != null
-                        ? DamageSource.causeIndirectMagicDamage(this, this.thrower)
-                        : DamageSource.magic;
-
-                    entity.attackEntityFrom(source, this.lingeringDamage);
-                    MarkManager.apply(entity, FractureMarkType.ID, 1, this.thrower);
+                    DamageSource source = DamageSource.causeIndirectMagicDamage(this, owner);
+                    boolean damaged = entity.attackEntityFrom(source, this.lingeringDamage);
+                    if (!damaged) {
+                        continue;
+                    }
+                    MarkApplyContext context = new MarkApplyContext.Builder().source(owner)
+                        .requestedStacks(1)
+                        .worldTime(this.worldObj.getTotalWorldTime())
+                        .applicationId("bone_flask_spike")
+                        .refreshDuration(true)
+                        .triggerImmediate(true)
+                        .stableDurationTicks(this.fractureStableDurationTicks)
+                        .build();
+                    MarkManager.apply(entity, FractureMarkType.ID, context);
 
                     // Consume spike
                     bitmask &= ~(1 << index);
@@ -89,7 +114,25 @@ public class EntityBoneSpikesField extends Entity {
 
         if (changed) {
             this.dataWatcher.updateObject(16, Integer.valueOf(bitmask));
+            if (bitmask == 0) {
+                this.setDead();
+            }
         }
+    }
+
+    private EntityLivingBase resolveThrower() {
+        if (this.thrower != null && !this.thrower.isDead
+            && (this.throwerUuid == null || this.throwerUuid.equals(this.thrower.getUniqueID()))) {
+            return this.thrower;
+        }
+        this.thrower = null;
+        if (this.throwerUuid != null && this.worldObj instanceof WorldServer) {
+            Entity resolved = ((WorldServer) this.worldObj).func_152378_a(this.throwerUuid);
+            if (resolved instanceof EntityLivingBase && !resolved.isDead) {
+                this.thrower = (EntityLivingBase) resolved;
+            }
+        }
+        return this.thrower;
     }
 
     private void spawnParticles() {
@@ -118,15 +161,30 @@ public class EntityBoneSpikesField extends Entity {
     protected void readEntityFromNBT(NBTTagCompound nbt) {
         this.lingeringDamage = nbt.getFloat("LingeringDamage");
         this.fieldDuration = nbt.getInteger("FieldDuration");
+        if (nbt.hasKey("FractureStableDurationTicks")) {
+            this.fractureStableDurationTicks = nbt.getInteger("FractureStableDurationTicks");
+        }
         this.dataWatcher.updateObject(16, Integer.valueOf(nbt.getInteger("ActiveSpikesBitmask")));
         this.ticksExisted = nbt.getInteger("TicksExisted");
+        if (nbt.hasKey("ThrowerUUID")) {
+            try {
+                this.throwerUuid = UUID.fromString(nbt.getString("ThrowerUUID"));
+            } catch (IllegalArgumentException ignored) {
+                this.throwerUuid = null;
+            }
+        }
+        this.thrower = null;
     }
 
     @Override
     protected void writeEntityToNBT(NBTTagCompound nbt) {
         nbt.setFloat("LingeringDamage", this.lingeringDamage);
         nbt.setInteger("FieldDuration", this.fieldDuration);
+        nbt.setInteger("FractureStableDurationTicks", this.fractureStableDurationTicks);
         nbt.setInteger("ActiveSpikesBitmask", this.dataWatcher.getWatchableObjectInt(16));
         nbt.setInteger("TicksExisted", this.ticksExisted);
+        if (this.throwerUuid != null) {
+            nbt.setString("ThrowerUUID", this.throwerUuid.toString());
+        }
     }
 }

@@ -19,6 +19,9 @@ public class RedSunBurnData implements IExtendedEntityProperties {
     private UUID sourceUuid;
     private int lastSelectedHotbarSlot;
     private long lastSwitchDamageTick;
+    private float switchDamage = 10.0F;
+    private float incomingDamageMultiplier = 1.20F;
+    private boolean ignoreSwitchDamageHurtResistance = true;
 
     public RedSunBurnData(EntityLivingBase entity) {
         this.entity = entity;
@@ -34,6 +37,11 @@ public class RedSunBurnData implements IExtendedEntityProperties {
     }
 
     public static void apply(EntityLivingBase target, EntityLivingBase source, int durationTicks) {
+        apply(target, source, durationTicks, 10.0F, 1.20F, true);
+    }
+
+    public static void apply(EntityLivingBase target, EntityLivingBase source, int durationTicks, float switchDamage,
+        float incomingDamageMultiplier, boolean ignoreSwitchDamageHurtResistance) {
         RedSunBurnData data = get(target);
         if (data != null) {
             data.active = true;
@@ -44,6 +52,9 @@ public class RedSunBurnData implements IExtendedEntityProperties {
             if (target instanceof EntityPlayer) {
                 data.lastSelectedHotbarSlot = ((EntityPlayer) target).inventory.currentItem;
             }
+            data.switchDamage = switchDamage;
+            data.incomingDamageMultiplier = incomingDamageMultiplier;
+            data.ignoreSwitchDamageHurtResistance = ignoreSwitchDamageHurtResistance;
         }
     }
 
@@ -82,6 +93,18 @@ public class RedSunBurnData implements IExtendedEntityProperties {
         this.lastSwitchDamageTick = tick;
     }
 
+    public float getSwitchDamage() {
+        return this.switchDamage;
+    }
+
+    public float getIncomingDamageMultiplier() {
+        return this.incomingDamageMultiplier;
+    }
+
+    public boolean isIgnoringSwitchDamageHurtResistance() {
+        return this.ignoreSwitchDamageHurtResistance;
+    }
+
     @Override
     public void saveNBTData(NBTTagCompound compound) {
         NBTTagCompound nbt = new NBTTagCompound();
@@ -92,6 +115,9 @@ public class RedSunBurnData implements IExtendedEntityProperties {
             nbt.setLong("SourceUUIDLeast", sourceUuid.getLeastSignificantBits());
         }
         nbt.setInteger("LastSlot", lastSelectedHotbarSlot);
+        nbt.setFloat("SwitchDamage", this.switchDamage);
+        nbt.setFloat("IncomingDamageMultiplier", this.incomingDamageMultiplier);
+        nbt.setBoolean("IgnoreSwitchDamageHurtResistance", this.ignoreSwitchDamageHurtResistance);
         compound.setTag(PROP_NAME, nbt);
     }
 
@@ -105,6 +131,13 @@ public class RedSunBurnData implements IExtendedEntityProperties {
                 sourceUuid = new UUID(nbt.getLong("SourceUUIDMost"), nbt.getLong("SourceUUIDLeast"));
             }
             lastSelectedHotbarSlot = nbt.getInteger("LastSlot");
+            if (nbt.hasKey("SwitchDamage")) this.switchDamage = nbt.getFloat("SwitchDamage");
+            if (nbt.hasKey("IncomingDamageMultiplier")) {
+                this.incomingDamageMultiplier = nbt.getFloat("IncomingDamageMultiplier");
+            }
+            if (nbt.hasKey("IgnoreSwitchDamageHurtResistance")) {
+                this.ignoreSwitchDamageHurtResistance = nbt.getBoolean("IgnoreSwitchDamageHurtResistance");
+            }
         }
     }
 

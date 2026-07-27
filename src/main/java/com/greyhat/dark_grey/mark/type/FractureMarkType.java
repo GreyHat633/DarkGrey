@@ -14,6 +14,7 @@ import com.greyhat.dark_grey.mark.MarkInstance;
 import com.greyhat.dark_grey.mark.MarkManager;
 import com.greyhat.dark_grey.mark.api.AbstractMarkType;
 import com.greyhat.dark_grey.mark.api.MarkApplyContext;
+import com.greyhat.dark_grey.mark.api.MarkDecayMode;
 import com.greyhat.dark_grey.mark.api.MarkRemovalReason;
 import com.greyhat.dark_grey.mark.api.MarkUpdateContext;
 import com.greyhat.dark_grey.mark.api.MarkVisualData;
@@ -57,6 +58,26 @@ public class FractureMarkType extends AbstractMarkType {
     }
 
     @Override
+    public MarkDecayMode getDecayMode() {
+        return MarkDecayMode.INSTANT;
+    }
+
+    @Override
+    public int getDefaultStableDurationTicks() {
+        return Config.fractureDefaultStableDurationTicks;
+    }
+
+    @Override
+    public int getDecayIntervalTicks() {
+        return 0;
+    }
+
+    @Override
+    public int getDecayAmount() {
+        return 1;
+    }
+
+    @Override
     public MarkVisualData getVisualData() {
         return this.visualData;
     }
@@ -66,7 +87,7 @@ public class FractureMarkType extends AbstractMarkType {
         if (target.worldObj.isRemote) return;
 
         instance.setDecaying(false);
-        int duration = context.getDurationTicks() > 0 ? context.getDurationTicks() : Config.fractureDecayIntervalTicks;
+        int duration = getStableDurationTicks(instance);
         instance.setStableUntilWorldTime(context.getWorldTime() + duration);
 
         refreshSpeedModifier(target, instance.getStacks());
@@ -85,21 +106,14 @@ public class FractureMarkType extends AbstractMarkType {
         boolean reachedMax = instance.getStacks() >= getMaxStacks();
         boolean wasMax = (instance.getStacks() - actualAddedStacks) >= getMaxStacks();
 
+        if (requestedStacks > 0) {
+            instance.setStableUntilWorldTime(context.getWorldTime() + getStableDurationTicks(instance));
+        }
+
         if (actualAddedStacks > 0) {
-            if (Config.fractureRefreshDecayOnApply) {
-                int duration = context.getDurationTicks() > 0 ? context.getDurationTicks()
-                    : Config.fractureDecayIntervalTicks;
-                instance.setStableUntilWorldTime(context.getWorldTime() + duration);
-            }
             refreshSpeedModifier(target, instance.getStacks());
             if (reachedMax && !wasMax) {
                 onReachedMaxStacks(target, instance, new MarkUpdateContext(context.getWorldTime()));
-            }
-        } else if (wasMax && requestedStacks > 0) {
-            if (Config.fractureRefreshDecayAtMax) {
-                int duration = context.getDurationTicks() > 0 ? context.getDurationTicks()
-                    : Config.fractureDecayIntervalTicks;
-                instance.setStableUntilWorldTime(context.getWorldTime() + duration);
             }
         }
     }
@@ -109,7 +123,7 @@ public class FractureMarkType extends AbstractMarkType {
         if (target.worldObj.isRemote) return;
 
         int oldStacks = instance.getStacks();
-        int newStacks = Math.max(0, oldStacks - 1);
+        int newStacks = Math.max(0, oldStacks - getDecayAmount());
 
         if (oldStacks >= getMaxStacks() && newStacks < getMaxStacks()) {
             onLeftMaxStacks(target, instance, context);
@@ -118,9 +132,9 @@ public class FractureMarkType extends AbstractMarkType {
         if (newStacks > 0) {
             instance.setStacks(newStacks);
             instance.setDecaying(false);
-            instance.setStableUntilWorldTime(context.getWorldTime() + Config.fractureDecayIntervalTicks);
+            instance.setStableUntilWorldTime(context.getWorldTime() + getStableDurationTicks(instance));
             refreshSpeedModifier(target, newStacks);
-            MarkManager.syncMark(target, instance, this, (byte) 5, -1, false);
+            MarkManager.syncMark(target, instance, this, (byte) 5, newStacks - oldStacks, false);
         } else {
             instance.setStacks(0);
         }
@@ -157,9 +171,14 @@ public class FractureMarkType extends AbstractMarkType {
         } else {
             refreshSpeedModifier(target, newStacks);
             if (instance.getStableUntilWorldTime() <= context.getWorldTime()) {
-                instance.setStableUntilWorldTime(context.getWorldTime() + Config.fractureDecayIntervalTicks);
+                instance.setStableUntilWorldTime(context.getWorldTime() + getStableDurationTicks(instance));
             }
         }
+    }
+
+    private int getStableDurationTicks(MarkInstance instance) {
+        int duration = instance.getStableDurationTicks();
+        return duration > 0 ? duration : getDefaultStableDurationTicks();
     }
 
     private void refreshSpeedModifier(EntityLivingBase target, int stacks) {

@@ -10,11 +10,18 @@ public final class DirectAttackClassifier {
     public static boolean isDirectAttack(DamageSource source) {
         if (source == null) return false;
 
-        if (source.isDamageAbsolute() || source.isUnblockable() || source.isFireDamage() || source.isExplosion()) {
+        if (source.isDamageAbsolute() || source.isUnblockable()
+            || source.isFireDamage()
+            || source.isExplosion()
+            || source.isProjectile()
+            || source.isMagicDamage()) {
             return false;
         }
 
         if (!(source.getEntity() instanceof EntityLivingBase)) {
+            return false;
+        }
+        if (source.getSourceOfDamage() != null && source.getSourceOfDamage() != source.getEntity()) {
             return false;
         }
 

@@ -21,6 +21,7 @@ public class EntityCorruptionBomb extends EntityThrowable implements IEntityAddi
 
     public String markId = "poison";
     public int markStacks = 3;
+    public int markStableDurationTicks = 200;
     public float areaWidth = 5.0F;
     public float areaHeight = 5.0F;
     public String areaShape = "square";
@@ -124,6 +125,7 @@ public class EntityCorruptionBomb extends EntityThrowable implements IEntityAddi
                     .applicationId("corruption_bomb")
                     .refreshDuration(true)
                     .triggerImmediate(true)
+                    .stableDurationTicks(this.markStableDurationTicks)
                     .build();
 
                 MarkManager.apply(target, this.markId, context);
@@ -153,6 +155,7 @@ public class EntityCorruptionBomb extends EntityThrowable implements IEntityAddi
         super.writeEntityToNBT(compound);
         compound.setString("MarkId", this.markId);
         compound.setInteger("MarkStacks", this.markStacks);
+        compound.setInteger("MarkStableDurationTicks", this.markStableDurationTicks);
         compound.setFloat("AreaWidth", this.areaWidth);
         compound.setFloat("AreaHeight", this.areaHeight);
         compound.setString("AreaShape", this.areaShape);
@@ -169,6 +172,9 @@ public class EntityCorruptionBomb extends EntityThrowable implements IEntityAddi
         super.readEntityFromNBT(compound);
         if (compound.hasKey("MarkId")) this.markId = compound.getString("MarkId");
         if (compound.hasKey("MarkStacks")) this.markStacks = compound.getInteger("MarkStacks");
+        if (compound.hasKey("MarkStableDurationTicks")) {
+            this.markStableDurationTicks = compound.getInteger("MarkStableDurationTicks");
+        }
         if (compound.hasKey("AreaWidth")) this.areaWidth = compound.getFloat("AreaWidth");
         if (compound.hasKey("AreaHeight")) this.areaHeight = compound.getFloat("AreaHeight");
         if (compound.hasKey("AreaShape")) this.areaShape = compound.getString("AreaShape");

@@ -20,17 +20,8 @@ public class RenderStarBullet extends Render {
         "dark_grey",
         "textures/entity/ring_texture.png");
 
-    private static org.lwjgl.util.glu.Sphere sphereRenderer;
-
     @Override
     public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
-        if (sphereRenderer == null) {
-            sphereRenderer = new org.lwjgl.util.glu.Sphere();
-            sphereRenderer.setDrawStyle(org.lwjgl.util.glu.GLU.GLU_FILL);
-            sphereRenderer.setNormals(org.lwjgl.util.glu.GLU.GLU_SMOOTH);
-            sphereRenderer.setTextureFlag(true);
-        }
-
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glPushMatrix();
         GL11.glTranslated(x, y + 0.5, z);
@@ -70,7 +61,7 @@ public class RenderStarBullet extends Render {
         // Sphere needs to be rotated 90 degrees on X to align texture poles properly (GLU Sphere poles are on Z axis)
         GL11.glPushMatrix();
         GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        sphereRenderer.draw(sphereRadius, 32, 32);
+        SphereDisplayList.draw(sphereRadius);
         GL11.glPopMatrix();
 
         // Restore texture matrix

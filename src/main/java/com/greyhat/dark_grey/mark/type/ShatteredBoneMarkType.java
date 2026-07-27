@@ -10,6 +10,7 @@ import com.greyhat.dark_grey.mark.MarkInstance;
 import com.greyhat.dark_grey.mark.MarkManager;
 import com.greyhat.dark_grey.mark.api.AbstractMarkType;
 import com.greyhat.dark_grey.mark.api.MarkApplyContext;
+import com.greyhat.dark_grey.mark.api.MarkDecayMode;
 import com.greyhat.dark_grey.mark.api.MarkRemovalReason;
 import com.greyhat.dark_grey.mark.api.MarkUpdateContext;
 import com.greyhat.dark_grey.mark.api.MarkVisualData;
@@ -51,6 +52,26 @@ public class ShatteredBoneMarkType extends AbstractMarkType {
     }
 
     @Override
+    public MarkDecayMode getDecayMode() {
+        return MarkDecayMode.INSTANT;
+    }
+
+    @Override
+    public int getDefaultStableDurationTicks() {
+        return Config.shatteredBoneDefaultStableDurationTicks;
+    }
+
+    @Override
+    public int getDecayIntervalTicks() {
+        return 0;
+    }
+
+    @Override
+    public int getDecayAmount() {
+        return 1;
+    }
+
+    @Override
     public MarkVisualData getVisualData() {
         return visualData;
     }
@@ -71,12 +92,12 @@ public class ShatteredBoneMarkType extends AbstractMarkType {
     private void applyShatteredBone(EntityLivingBase target, MarkInstance instance, MarkApplyContext context) {
         NBTTagCompound data = instance.getCustomData();
 
-        int durationTicks = context.getDurationTicks() > 0 ? context.getDurationTicks()
-            : Config.shatteredBoneDefaultIndependentDurationTicks;
+        int durationTicks = instance.getStableDurationTicks();
 
         if (durationTicks > 0 && !"fracture_maintenance".equals(context.getApplicationId())) {
             data.setBoolean("HasIndependentDuration", true);
             data.setLong("IndependentExpireWorldTime", context.getWorldTime() + durationTicks);
+            instance.setStableUntilWorldTime(context.getWorldTime() + durationTicks);
             if (context.getSourceUuid() != null) {
                 data.setLong(
                     "IndependentSourceUuidMost",
@@ -115,6 +136,7 @@ public class ShatteredBoneMarkType extends AbstractMarkType {
 
         if (hasIndependentDuration && now >= independentExpireWorldTime) {
             data.setBoolean("HasIndependentDuration", false);
+            instance.setStableUntilWorldTime(0);
             MarkManager.syncMark(target, instance, this, (byte) 4, 0, false);
         }
 

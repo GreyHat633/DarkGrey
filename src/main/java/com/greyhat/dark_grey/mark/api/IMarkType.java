@@ -10,6 +10,14 @@ public interface IMarkType {
 
     int getMaxStacks();
 
+    MarkDecayMode getDecayMode();
+
+    int getDefaultStableDurationTicks();
+
+    int getDecayIntervalTicks();
+
+    int getDecayAmount();
+
     boolean canApply(EntityLivingBase target, MarkInstance instance, MarkApplyContext context);
 
     void onFirstApplied(EntityLivingBase target, MarkInstance instance, MarkApplyContext context);

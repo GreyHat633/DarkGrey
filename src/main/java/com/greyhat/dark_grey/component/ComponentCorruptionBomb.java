@@ -20,6 +20,7 @@ public class ComponentCorruptionBomb implements IRPGComponent, IOnRightClick, IH
 
     private String markId = "poison";
     private int markStacks = 3;
+    private int markStableDurationTicks = 200;
     private float areaWidth = 5.0F;
     private float areaHeight = 5.0F;
     private String areaShape = "square";
@@ -45,6 +46,12 @@ public class ComponentCorruptionBomb implements IRPGComponent, IOnRightClick, IH
             Math.min(
                 100000,
                 params.get("markStacks")
+                    .getAsInt()));
+        if (params.has("markStableDurationTicks")) this.markStableDurationTicks = Math.max(
+            1,
+            Math.min(
+                720000,
+                params.get("markStableDurationTicks")
                     .getAsInt()));
         if (params.has("areaWidth")) this.areaWidth = Math.max(
             1.0F,
@@ -114,6 +121,7 @@ public class ComponentCorruptionBomb implements IRPGComponent, IOnRightClick, IH
             EntityCorruptionBomb bomb = new EntityCorruptionBomb(world, player);
             bomb.markId = this.markId;
             bomb.markStacks = this.markStacks;
+            bomb.markStableDurationTicks = this.markStableDurationTicks;
             bomb.areaWidth = this.areaWidth;
             bomb.areaHeight = this.areaHeight;
             bomb.areaShape = this.areaShape;

@@ -62,6 +62,7 @@ public class EntityItanisArrow extends EntityThrowable {
     private boolean isOwnerUsingBow = true;
     private final Set<Integer> hitEntityIds = new HashSet<>();
     private int launchedTicks = 0;
+    private double targetRange = 32.0D;
 
     public EntityItanisArrow(World world) {
         super(world);
@@ -149,6 +150,14 @@ public class EntityItanisArrow extends EntityThrowable {
         this.isOwnerUsingBow = using;
     }
 
+    public void setTargetRange(double range) {
+        this.targetRange = Math.max(1.0D, Math.min(128.0D, range));
+    }
+
+    public void setHoverRemainTicks(int ticks) {
+        this.hoverRemainTicks = Math.max(1, ticks);
+    }
+
     @Override
     protected float getGravityVelocity() {
         return 0.0F; // No gravity for Itanis magic arrows
@@ -159,6 +168,10 @@ public class EntityItanisArrow extends EntityThrowable {
         ArrowState state = getArrowState();
 
         if (!this.worldObj.isRemote) {
+            if (this.getThrower() == null) {
+                this.setDead();
+                return;
+            }
             if (state == ArrowState.HOVERING) {
                 // Hovering arrows live until hoverRemainTicks depletes or owner disconnects. Failsafe 1200 ticks.
                 if (this.ticksExisted > 1200) {
@@ -219,7 +232,7 @@ public class EntityItanisArrow extends EntityThrowable {
 
                 // Target search every 4 ticks
                 if (this.ticksExisted % 4 == 0) {
-                    EntityLivingBase target = searchTarget(owner, 32.0D);
+                    EntityLivingBase target = searchTarget(owner, this.targetRange);
                     if (target != null) {
                         setTargetEntityId(target.getEntityId());
                         setState(ArrowState.LAUNCHED);
@@ -283,7 +296,7 @@ public class EntityItanisArrow extends EntityThrowable {
 
         EntityLivingBase owner = getThrower();
         if (target == null && this.ticksExisted % 4 == 0 && owner != null) {
-            target = searchTarget(owner, 32.0D);
+            target = searchTarget(owner, this.targetRange);
             if (target != null) {
                 setTargetEntityId(target.getEntityId());
             }
@@ -382,11 +395,14 @@ public class EntityItanisArrow extends EntityThrowable {
                 Entity hit = mop.entityHit;
                 if (hit instanceof EntityLivingBase && !hitEntityIds.contains(hit.getEntityId())) {
                     EntityLivingBase living = (EntityLivingBase) hit;
-                    if (owner == null || CombatTargeting.canDamage(owner, living, false)) {
+                    if (owner != null && CombatTargeting.canDamage(owner, living, false)) {
                         hitEntityIds.add(hit.getEntityId());
-                        DamageSource source = owner != null ? RPGDamageSources.causeArrowDamage(this, owner)
-                            : DamageSource.causeThrownDamage(this, owner);
-                        living.attackEntityFrom(source, customDamage);
+                        DamageSource source = RPGDamageSources.causeArrowDamage(this, owner);
+                        boolean damaged = RPGDamageSources
+                            .dealIndependentProjectileDamage(living, source, customDamage);
+                        if (!damaged) {
+                            return;
+                        }
 
                         this.worldObj.playSoundEffect(
                             living.posX,
@@ -420,10 +436,9 @@ public class EntityItanisArrow extends EntityThrowable {
             // LAUNCHED state (Normal main & extra arrows, launch floating arrows)
             if (mop.entityHit != null && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase living = (EntityLivingBase) mop.entityHit;
-                if (owner == null || CombatTargeting.canDamage(owner, living, false)) {
-                    DamageSource source = owner != null ? RPGDamageSources.causeArrowDamage(this, owner)
-                        : DamageSource.causeThrownDamage(this, owner);
-                    living.attackEntityFrom(source, customDamage);
+                if (owner != null && CombatTargeting.canDamage(owner, living, false)) {
+                    DamageSource source = RPGDamageSources.causeArrowDamage(this, owner);
+                    RPGDamageSources.dealIndependentProjectileDamage(living, source, customDamage);
                 }
             }
             this.worldObj.playSoundEffect(this.posX, this.posY, this.posZ, "random.pop", 0.8F, 1.4F);
@@ -469,6 +484,7 @@ public class EntityItanisArrow extends EntityThrowable {
         nbt.setInteger("FormationTotal", formationTotal);
         nbt.setLong("FormationId", formationId);
         nbt.setInteger("HoverRemainTicks", hoverRemainTicks);
+        nbt.setDouble("TargetRange", targetRange);
     }
 
     @Override
@@ -480,5 +496,8 @@ public class EntityItanisArrow extends EntityThrowable {
         this.formationTotal = nbt.getInteger("FormationTotal");
         this.formationId = nbt.getLong("FormationId");
         this.hoverRemainTicks = nbt.getInteger("HoverRemainTicks");
+        if (nbt.hasKey("TargetRange")) {
+            this.setTargetRange(nbt.getDouble("TargetRange"));
+        }
     }
 }

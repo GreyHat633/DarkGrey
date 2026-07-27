@@ -190,16 +190,7 @@ public class SupernovaPlanetRenderer {
         "dark_grey",
         "textures/entity/ring_texture.png");
 
-    private static org.lwjgl.util.glu.Sphere sphereRenderer;
-
     private void drawStar(double x, double y, double z, float ticks, float animScale) {
-        if (sphereRenderer == null) {
-            sphereRenderer = new org.lwjgl.util.glu.Sphere();
-            sphereRenderer.setDrawStyle(org.lwjgl.util.glu.GLU.GLU_FILL);
-            sphereRenderer.setNormals(org.lwjgl.util.glu.GLU.GLU_SMOOTH);
-            sphereRenderer.setTextureFlag(true);
-        }
-
         GL11.glPushMatrix();
         GL11.glTranslated(x, y, z);
 
@@ -239,7 +230,7 @@ public class SupernovaPlanetRenderer {
         // Sphere needs to be rotated 90 degrees on X to align texture poles properly (GLU Sphere poles are on Z axis)
         GL11.glPushMatrix();
         GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        sphereRenderer.draw(sphereRadius, 32, 32);
+        SphereDisplayList.draw(sphereRadius);
         GL11.glPopMatrix();
 
         // Restore texture matrix

@@ -17,14 +17,17 @@ public final class MarkManager {
     private MarkManager() {}
 
     public static MarkApplyResult apply(EntityLivingBase target, String markId, int amount, EntityLivingBase source) {
-        MarkApplyContext context = new MarkApplyContext.Builder().source(source)
+        MarkApplyContext.Builder builder = new MarkApplyContext.Builder().source(source)
             .requestedStacks(amount)
             .worldTime(target != null ? target.worldObj.getTotalWorldTime() : 0)
             .applicationId("api")
             .refreshDuration(true)
-            .triggerImmediate(true)
-            .build();
-        return apply(target, markId, context);
+            .triggerImmediate(true);
+        IMarkType type = MarkRegistry.get(markId);
+        if (type != null) {
+            builder.stableDurationTicks(type.getDefaultStableDurationTicks());
+        }
+        return apply(target, markId, builder.build());
     }
 
     public static MarkApplyResult apply(EntityLivingBase target, String markId, MarkApplyContext context) {
@@ -79,6 +82,12 @@ public final class MarkManager {
                 "Unknown Mark");
         }
 
+        int stableDurationTicks = context.hasStableDurationTicks() ? context.getStableDurationTicks()
+            : type.getDefaultStableDurationTicks();
+        if (stableDurationTicks < 0) {
+            stableDurationTicks = 0;
+        }
+
         MarkContainer container = MarkContainer.get(target);
         if (container == null) {
             return new MarkApplyResult(
@@ -127,6 +136,7 @@ public final class MarkManager {
         boolean reachedMax = newStacks >= maxStacks;
 
         instance.setStacks(newStacks);
+        instance.setStableDurationTicks(stableDurationTicks);
         instance.setLastAppliedWorldTime(context.getWorldTime());
 
         if (context.getSourceUuid() != null) {
@@ -274,7 +284,9 @@ public final class MarkManager {
                     .applicationId("command")
                     .refreshDuration(false)
                     .triggerImmediate(false)
+                    .stableDurationTicks(type.getDefaultStableDurationTicks())
                     .build();
+                instance.setStableDurationTicks(type.getDefaultStableDurationTicks());
                 type.onFirstApplied(target, instance, context);
             }
             type.onStacksChanged(

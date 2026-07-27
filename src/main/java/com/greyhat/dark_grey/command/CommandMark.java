@@ -19,7 +19,7 @@ public class CommandMark {
             sender.addChatMessage(
                 new ChatComponentText(
                     EnumChatFormatting.RED
-                        + "Usage: /darkgrey mark <apply|set|remove|clear|list> <target> [markId] [amount] [durationTicks]"));
+                        + "Usage: /darkgrey mark <apply|set|remove|clear|list> <target> [markId] [amount] [stableDurationTicks]"));
             return;
         }
 
@@ -102,12 +102,15 @@ public class CommandMark {
         EntityLivingBase source = sender instanceof EntityLivingBase ? (EntityLivingBase) sender : null;
 
         if (action.equalsIgnoreCase("apply")) {
+            com.greyhat.dark_grey.mark.api.IMarkType markType = com.greyhat.dark_grey.mark.MarkRegistry.get(markId);
+            int effectiveStableDurationTicks = durationTicks > 0 ? durationTicks
+                : (markType != null ? markType.getDefaultStableDurationTicks() : 0);
             com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder builder = new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder()
                 .source(source)
                 .requestedStacks(amount)
                 .worldTime(target.worldObj.getTotalWorldTime());
-            if (durationTicks > 0) {
-                builder.durationTicks(durationTicks);
+            if (markType != null) {
+                builder.stableDurationTicks(effectiveStableDurationTicks);
             }
             MarkManager.apply(target, markId, builder.build());
             sender.addChatMessage(

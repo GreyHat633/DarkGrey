@@ -12,6 +12,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.RPGDamageSources;
@@ -50,6 +51,9 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     private float projectileUpwardBoost = 0.12F;
     private int projectileLifetime = 200;
     private int burnDurationTicks = 200;
+    private float burnSwitchDamage = 10.0F;
+    private float burnIncomingDamageMultiplier = 1.20F;
+    private boolean ignoreSwitchDamageHurtResistance = true;
 
     private float volumeShrinkRate = 0.05F;
     private float maxExplosionRadius = 25.0F;
@@ -69,6 +73,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     public EntityRedSunFireball(World world, EntityPlayer owner, int maxChargeTicks, float minSize, float maxSize,
         float minDamage, float maxDamage, float minProjectileSpeed, float maxProjectileSpeed, float projectileGravity,
         float projectileDrag, float projectileUpwardBoost, int projectileLifetime, int burnDurationTicks,
+        float burnSwitchDamage, float burnIncomingDamageMultiplier, boolean ignoreSwitchDamageHurtResistance,
         float volumeShrinkRate, float maxExplosionRadius) {
         this(world);
         this.ownerUuid = owner.getUniqueID();
@@ -87,6 +92,9 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         this.projectileUpwardBoost = projectileUpwardBoost;
         this.projectileLifetime = projectileLifetime;
         this.burnDurationTicks = burnDurationTicks;
+        this.burnSwitchDamage = burnSwitchDamage;
+        this.burnIncomingDamageMultiplier = burnIncomingDamageMultiplier;
+        this.ignoreSwitchDamageHurtResistance = ignoreSwitchDamageHurtResistance;
         this.volumeShrinkRate = volumeShrinkRate;
         this.maxExplosionRadius = maxExplosionRadius;
 
@@ -125,6 +133,11 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     public void onUpdate() {
         super.onUpdate();
 
+        if (!this.worldObj.isRemote && this.resolveOwnerLiving() == null) {
+            this.setDead();
+            return;
+        }
+
         if (!worldObj.isRemote) {
             this.dataWatcher.updateObject(16, this.state);
             this.dataWatcher.updateObject(17, this.ownerEntityId);
@@ -155,7 +168,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
     private void onChargingUpdate() {
         if (!worldObj.isRemote) {
-            Entity owner = worldObj.getEntityByID(ownerEntityId);
+            Entity owner = resolveOwnerLiving();
             if (owner instanceof EntityPlayer) {
                 EntityPlayer player = (EntityPlayer) owner;
                 if (!player.isEntityAlive() || player.isDead || !player.isUsingItem()) {
@@ -337,8 +350,11 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         AxisAlignedBB aoe = this.boundingBox.expand(0.5D, 0.0D, 0.5D);
         List<EntityLivingBase> targets = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, aoe);
 
-        Entity owner = worldObj.getEntityByID(ownerEntityId);
-        EntityLivingBase ownerLiving = owner instanceof EntityLivingBase ? (EntityLivingBase) owner : null;
+        EntityLivingBase ownerLiving = resolveOwnerLiving();
+        if (ownerLiving == null) {
+            this.setDead();
+            return;
+        }
         DamageSource ds = RPGDamageSources.causeRedSunFireballDamage(this, ownerLiving);
 
         for (EntityLivingBase target : targets) {
@@ -349,7 +365,13 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
             boolean damaged = target.attackEntityFrom(ds, currentDamage);
             if (damaged) {
-                if (ownerLiving != null) RedSunBurnData.apply(target, ownerLiving, burnDurationTicks);
+                RedSunBurnData.apply(
+                    target,
+                    ownerLiving,
+                    burnDurationTicks,
+                    burnSwitchDamage,
+                    burnIncomingDamageMultiplier,
+                    ignoreSwitchDamageHurtResistance);
                 // Knockback
                 Vec3 dir = Vec3.createVectorHelper(target.posX - this.posX, 0, target.posZ - this.posZ);
                 if (dir.lengthVector() > 0) dir = dir.normalize();
@@ -392,8 +414,11 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
                 this.posY + explosionRadius,
                 this.posZ + explosionRadius);
 
-            Entity owner = worldObj.getEntityByID(ownerEntityId);
-            EntityLivingBase ownerLiving = owner instanceof EntityLivingBase ? (EntityLivingBase) owner : null;
+            EntityLivingBase ownerLiving = resolveOwnerLiving();
+            if (ownerLiving == null) {
+                this.setDead();
+                return;
+            }
 
             List<EntityLivingBase> targets = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, aoe);
             DamageSource ds = RPGDamageSources.causeRedSunFireballDamage(this, ownerLiving);
@@ -412,7 +437,13 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
                 if (target.attackEntityFrom(ds, currentDamage)) {
                     if (ownerLiving != null) {
-                        RedSunBurnData.apply(target, ownerLiving, burnDurationTicks);
+                        RedSunBurnData.apply(
+                            target,
+                            ownerLiving,
+                            burnDurationTicks,
+                            burnSwitchDamage,
+                            burnIncomingDamageMultiplier,
+                            ignoreSwitchDamageHurtResistance);
                     }
                 }
             }
@@ -464,7 +495,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         chargeProgress = nbt.getFloat("ChargeProgress");
         currentSize = nbt.getFloat("CurrentSize");
         currentDamage = nbt.getFloat("CurrentDamage");
-        ownerEntityId = nbt.getInteger("OwnerEntityId");
+        ownerEntityId = -1;
         if (nbt.hasKey("OwnerUUIDMost") && nbt.hasKey("OwnerUUIDLeast")) {
             ownerUuid = new UUID(nbt.getLong("OwnerUUIDMost"), nbt.getLong("OwnerUUIDLeast"));
         }
@@ -483,9 +514,34 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         rollingTicks = nbt.getInteger("RollingTicks");
         stoppedTicks = nbt.getInteger("StoppedTicks");
         burnDurationTicks = nbt.getInteger("BurnDuration");
+        if (nbt.hasKey("BurnSwitchDamage")) burnSwitchDamage = nbt.getFloat("BurnSwitchDamage");
+        if (nbt.hasKey("BurnIncomingDamageMultiplier")) {
+            burnIncomingDamageMultiplier = nbt.getFloat("BurnIncomingDamageMultiplier");
+        }
+        if (nbt.hasKey("IgnoreSwitchDamageHurtResistance")) {
+            ignoreSwitchDamageHurtResistance = nbt.getBoolean("IgnoreSwitchDamageHurtResistance");
+        }
         volumeShrinkRate = nbt.getFloat("VolShrink");
         maxExplosionRadius = nbt.getFloat("MaxExpRad");
         playedMaxChargeSound = nbt.getBoolean("PlayedMaxDing");
+        this.dataWatcher.updateObject(17, -1);
+    }
+
+    private EntityLivingBase resolveOwnerLiving() {
+        Entity byId = this.ownerEntityId == -1 ? null : this.worldObj.getEntityByID(this.ownerEntityId);
+        if (byId instanceof EntityLivingBase && (this.ownerUuid == null || this.ownerUuid.equals(byId.getUniqueID()))
+            && byId.isEntityAlive()) {
+            return (EntityLivingBase) byId;
+        }
+        if (this.ownerUuid != null && this.worldObj instanceof WorldServer) {
+            EntityPlayer resolved = ((WorldServer) this.worldObj).func_152378_a(this.ownerUuid);
+            if (resolved != null && resolved.isEntityAlive()) {
+                this.ownerEntityId = resolved.getEntityId();
+                this.dataWatcher.updateObject(17, this.ownerEntityId);
+                return resolved;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -515,6 +571,9 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         nbt.setInteger("RollingTicks", rollingTicks);
         nbt.setInteger("StoppedTicks", stoppedTicks);
         nbt.setInteger("BurnDuration", burnDurationTicks);
+        nbt.setFloat("BurnSwitchDamage", burnSwitchDamage);
+        nbt.setFloat("BurnIncomingDamageMultiplier", burnIncomingDamageMultiplier);
+        nbt.setBoolean("IgnoreSwitchDamageHurtResistance", ignoreSwitchDamageHurtResistance);
         nbt.setFloat("VolShrink", volumeShrinkRate);
         nbt.setFloat("MaxExpRad", maxExplosionRadius);
         nbt.setBoolean("PlayedMaxDing", playedMaxChargeSound);

@@ -162,7 +162,13 @@ public class ComponentRedSun
     @Override
     public void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float actualDamage) {
         if (!attacker.worldObj.isRemote && actualDamage > 0) {
-            RedSunBurnData.apply(target, attacker, burnDurationTicks);
+            RedSunBurnData.apply(
+                target,
+                attacker,
+                burnDurationTicks,
+                burnSwitchDamage,
+                burnIncomingDamageMultiplier,
+                ignoreSwitchDamageHurtResistance);
         }
     }
 
@@ -203,6 +209,9 @@ public class ComponentRedSun
                 projectileUpwardBoost,
                 projectileLifetime,
                 burnDurationTicks,
+                burnSwitchDamage,
+                burnIncomingDamageMultiplier,
+                ignoreSwitchDamageHurtResistance,
                 volumeShrinkRate,
                 maxExplosionRadius);
             world.spawnEntityInWorld(fireball);

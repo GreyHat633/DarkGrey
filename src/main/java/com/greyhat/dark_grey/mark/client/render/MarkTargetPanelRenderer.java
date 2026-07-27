@@ -65,68 +65,73 @@ public class MarkTargetPanelRenderer {
             long now = mc.theWorld.getTotalWorldTime();
 
             int startY = y;
-            for (ClientMarkInstance instance : list) {
-                IMarkType type = MarkRegistry.get(instance.markId);
-                MarkVisualData visual = type.getVisualData();
-                String name = StatCollector.translateToLocal(visual.displayNameKey);
+            org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS);
+            try {
+                for (ClientMarkInstance instance : list) {
+                    IMarkType type = MarkRegistry.get(instance.markId);
+                    MarkVisualData visual = type.getVisualData();
+                    String name = StatCollector.translateToLocal(visual.displayNameKey);
 
-                String stateStr;
-                if (instance.markId.equals("shattered_bone")) {
-                    boolean maintainedByFracture = instance.customData != null
-                        && instance.customData.getBoolean("MaintainedByFracture");
-                    boolean hasIndependentDuration = instance.customData != null
-                        && instance.customData.getBoolean("HasIndependentDuration");
-                    if (maintainedByFracture) {
-                        stateStr = "维持: \u221E";
-                    } else if (hasIndependentDuration) {
-                        long expire = instance.customData.getLong("IndependentExpireWorldTime");
-                        double remaining = (expire - now) / 20.0;
-                        stateStr = "剩余: " + String.format("%.1f", Math.max(0, remaining)) + "s";
+                    String stateStr;
+                    if (instance.markId.equals("shattered_bone")) {
+                        boolean maintainedByFracture = instance.customData != null
+                            && instance.customData.getBoolean("MaintainedByFracture");
+                        boolean hasIndependentDuration = instance.customData != null
+                            && instance.customData.getBoolean("HasIndependentDuration");
+                        if (maintainedByFracture) {
+                            stateStr = "维持: \u221E";
+                        } else if (hasIndependentDuration) {
+                            long expire = instance.customData.getLong("IndependentExpireWorldTime");
+                            double remaining = (expire - now) / 20.0;
+                            stateStr = "剩余: " + String.format("%.1f", Math.max(0, remaining)) + "s";
+                        } else {
+                            stateStr = "消失中";
+                        }
+                    } else if (instance.decaying) {
+                        double nextDecay = (instance.nextDecayTriggerWorldTime - now) / 20.0;
+                        stateStr = "衰减中 (" + String.format("%.1f", Math.max(0, nextDecay)) + "s)";
                     } else {
-                        stateStr = "消失中";
+                        double stable = (instance.stableUntilWorldTime - now) / 20.0;
+                        stateStr = "稳定: " + String.format("%.1f", Math.max(0, stable)) + "s";
                     }
-                } else if (instance.decaying) {
-                    double nextDecay = (instance.nextDecayTriggerWorldTime - now) / 20.0;
-                    stateStr = "衰减中 (" + String.format("%.1f", Math.max(0, nextDecay)) + "s)";
-                } else {
-                    double stable = (instance.stableUntilWorldTime - now) / 20.0;
-                    stateStr = "稳定: " + String.format("%.1f", Math.max(0, stable)) + "s";
+
+                    String extraStr = "";
+                    if ("poison".equals(instance.markId)) {
+                        extraStr = " | 预计伤害: " + instance.stacks;
+                    } else if ("fracture".equals(instance.markId)) {
+                        extraStr = " | 减速: " + (instance.stacks * 10) + "%";
+                    }
+
+                    String line = name + " " + instance.stacks + "层 \u00A77| " + stateStr + extraStr;
+
+                    int color = instance.maxed ? visual.maxColor
+                        : (instance.decaying ? visual.decayColor : visual.primaryColor);
+
+                    // Draw Icon
+                    org.lwjgl.opengl.GL11.glPushMatrix();
+                    org.lwjgl.opengl.GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                    org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_BLEND);
+                    org.lwjgl.opengl.GL11
+                        .glBlendFunc(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
+                    mc.getTextureManager()
+                        .bindTexture(visual.icon);
+
+                    net.minecraft.client.renderer.Tessellator tessellator = net.minecraft.client.renderer.Tessellator.instance;
+                    tessellator.startDrawingQuads();
+                    tessellator.addVertexWithUV(x, startY + 12, 0, 0.0, 1.0);
+                    tessellator.addVertexWithUV(x + 12, startY + 12, 0, 1.0, 1.0);
+                    tessellator.addVertexWithUV(x + 12, startY, 0, 1.0, 0.0);
+                    tessellator.addVertexWithUV(x, startY, 0, 0.0, 0.0);
+                    tessellator.draw();
+                    org.lwjgl.opengl.GL11.glPopMatrix();
+
+                    // Draw Text
+                    fr.drawStringWithShadow(line, x + 16, startY + 2, color);
+
+                    startY += 16;
                 }
-
-                String extraStr = "";
-                if ("poison".equals(instance.markId)) {
-                    extraStr = " | 预计伤害: " + instance.stacks;
-                } else if ("fracture".equals(instance.markId)) {
-                    extraStr = " | 减速: " + (instance.stacks * 10) + "%";
-                }
-
-                String line = name + " " + instance.stacks + "层 \u00A77| " + stateStr + extraStr;
-
-                int color = instance.maxed ? visual.maxColor
-                    : (instance.decaying ? visual.decayColor : visual.primaryColor);
-
-                // Draw Icon
-                org.lwjgl.opengl.GL11.glPushMatrix();
-                org.lwjgl.opengl.GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_BLEND);
-                org.lwjgl.opengl.GL11
-                    .glBlendFunc(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
-                mc.getTextureManager()
-                    .bindTexture(visual.icon);
-
-                net.minecraft.client.renderer.Tessellator tessellator = net.minecraft.client.renderer.Tessellator.instance;
-                tessellator.startDrawingQuads();
-                tessellator.addVertexWithUV(x, startY + 12, 0, 0.0, 1.0);
-                tessellator.addVertexWithUV(x + 12, startY + 12, 0, 1.0, 1.0);
-                tessellator.addVertexWithUV(x + 12, startY, 0, 1.0, 0.0);
-                tessellator.addVertexWithUV(x, startY, 0, 0.0, 0.0);
-                tessellator.draw();
-                org.lwjgl.opengl.GL11.glPopMatrix();
-
-                // Draw Text
-                fr.drawStringWithShadow(line, x + 16, startY + 2, color);
-
-                startY += 16;
+            } finally {
+                org.lwjgl.opengl.GL11.glPopAttrib();
             }
         }
     }

@@ -6,11 +6,15 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
+import com.greyhat.dark_grey.api.CombatTargeting;
+
 public class EntityBoneFlask extends EntityThrowable {
 
     public float directDamage = 12.0F;
     public float lingeringDamage = 2.0F;
     public int fieldDuration = 1200;
+    public int fractureStableDurationTicks = 100;
+    public float projectileGravity = 0.05F;
 
     public EntityBoneFlask(World world) {
         super(world);
@@ -28,12 +32,12 @@ public class EntityBoneFlask extends EntityThrowable {
     protected void onImpact(MovingObjectPosition mop) {
         if (!this.worldObj.isRemote) {
             if (mop.entityHit != null && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase thrower = this.getThrower();
                 // If the thrower is not null, attribute damage to them
-                DamageSource source = this.getThrower() != null
-                    ? DamageSource.causeThrownDamage(this, this.getThrower())
-                    : DamageSource.causeThrownDamage(this, this);
-
-                mop.entityHit.attackEntityFrom(source, this.directDamage);
+                if (thrower != null && CombatTargeting.canDamage(thrower, (EntityLivingBase) mop.entityHit, false)) {
+                    DamageSource source = DamageSource.causeThrownDamage(this, thrower);
+                    mop.entityHit.attackEntityFrom(source, this.directDamage);
+                }
             }
 
             double spawnX = mop.hitVec.xCoord;
@@ -49,6 +53,7 @@ public class EntityBoneFlask extends EntityThrowable {
             field.setThrower(this.getThrower());
             field.lingeringDamage = this.lingeringDamage;
             field.fieldDuration = this.fieldDuration;
+            field.fractureStableDurationTicks = this.fractureStableDurationTicks;
 
             this.worldObj.spawnEntityInWorld(field);
 
@@ -70,6 +75,28 @@ public class EntityBoneFlask extends EntityThrowable {
 
     @Override
     protected float getGravityVelocity() {
-        return 0.05F; // similar to splash potion
+        return this.projectileGravity;
+    }
+
+    @Override
+    public void writeEntityToNBT(net.minecraft.nbt.NBTTagCompound nbt) {
+        super.writeEntityToNBT(nbt);
+        nbt.setFloat("DirectDamage", this.directDamage);
+        nbt.setFloat("LingeringDamage", this.lingeringDamage);
+        nbt.setInteger("FieldDuration", this.fieldDuration);
+        nbt.setInteger("FractureStableDurationTicks", this.fractureStableDurationTicks);
+        nbt.setFloat("ProjectileGravity", this.projectileGravity);
+    }
+
+    @Override
+    public void readEntityFromNBT(net.minecraft.nbt.NBTTagCompound nbt) {
+        super.readEntityFromNBT(nbt);
+        if (nbt.hasKey("DirectDamage")) this.directDamage = nbt.getFloat("DirectDamage");
+        if (nbt.hasKey("LingeringDamage")) this.lingeringDamage = nbt.getFloat("LingeringDamage");
+        if (nbt.hasKey("FieldDuration")) this.fieldDuration = nbt.getInteger("FieldDuration");
+        if (nbt.hasKey("FractureStableDurationTicks")) {
+            this.fractureStableDurationTicks = nbt.getInteger("FractureStableDurationTicks");
+        }
+        if (nbt.hasKey("ProjectileGravity")) this.projectileGravity = nbt.getFloat("ProjectileGravity");
     }
 }

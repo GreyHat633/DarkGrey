@@ -13,7 +13,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
-import com.greyhat.dark_grey.DarkGrey;
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
@@ -29,13 +28,15 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
     private int minRadius = 3;
     private int maxRadius = 7;
     private int radiusStep = 1;
-    private float verticalHalfHeight = 3.0F;
     private boolean respectWalls = false;
     private int cooldownTicks = 20;
     private int rangeResetDelayTicks = 200;
-    private int baseStacks = 1;
-    private float twoStackChance = 0.50F;
-    private float fiveStackChance = 0.25F;
+    private int baseStacks = 4;
+    private int markStableDurationTicks = 200;
+    private int bonusStacks1 = 6;
+    private float bonusChance1 = 0.75F;
+    private int bonusStacks2 = 7;
+    private float bonusChance2 = 0.40F;
     private boolean showRadiusMessage = true;
     private boolean showResetMessage = true;
     private boolean showAffectedTargetCount = true;
@@ -55,20 +56,35 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             .getAsInt();
         if (params.has("radiusStep")) radiusStep = params.get("radiusStep")
             .getAsInt();
-        if (params.has("verticalHalfHeight")) verticalHalfHeight = params.get("verticalHalfHeight")
-            .getAsFloat();
         if (params.has("respectWalls")) respectWalls = params.get("respectWalls")
             .getAsBoolean();
         if (params.has("cooldownTicks")) cooldownTicks = params.get("cooldownTicks")
             .getAsInt();
         if (params.has("rangeResetDelayTicks")) rangeResetDelayTicks = params.get("rangeResetDelayTicks")
             .getAsInt();
-        if (params.has("baseStacks")) baseStacks = params.get("baseStacks")
-            .getAsInt();
-        if (params.has("twoStackChance")) twoStackChance = params.get("twoStackChance")
-            .getAsFloat();
-        if (params.has("fiveStackChance")) fiveStackChance = params.get("fiveStackChance")
-            .getAsFloat();
+        if (params.has("baseStacks")) baseStacks = clampStacks(
+            params.get("baseStacks")
+                .getAsInt());
+        if (params.has("markStableDurationTicks")) markStableDurationTicks = Math.max(
+            1,
+            Math.min(
+                720000,
+                params.get("markStableDurationTicks")
+                    .getAsInt()));
+        if (params.has("bonusStacks1")) bonusStacks1 = clampStacks(
+            params.get("bonusStacks1")
+                .getAsInt());
+        if (params.has("bonusChance1")) bonusChance1 = clampChance(
+            params.get("bonusChance1")
+                .getAsFloat(),
+            0.75F);
+        if (params.has("bonusStacks2")) bonusStacks2 = clampStacks(
+            params.get("bonusStacks2")
+                .getAsInt());
+        if (params.has("bonusChance2")) bonusChance2 = clampChance(
+            params.get("bonusChance2")
+                .getAsFloat(),
+            0.40F);
         if (params.has("showRadiusMessage")) showRadiusMessage = params.get("showRadiusMessage")
             .getAsBoolean();
         if (params.has("showResetMessage")) showResetMessage = params.get("showResetMessage")
@@ -76,11 +92,6 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
         if (params.has("showAffectedTargetCount")) showAffectedTargetCount = params.get("showAffectedTargetCount")
             .getAsBoolean();
 
-        if (twoStackChance + fiveStackChance > 1.0f) {
-            DarkGrey.LOG.warn("ComponentErebus: twoStackChance + fiveStackChance > 1.0, resetting to defaults.");
-            twoStackChance = 0.50f;
-            fiveStackChance = 0.25f;
-        }
         if (maxRadius < minRadius) {
             maxRadius = minRadius;
         }
@@ -88,15 +99,14 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
 
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
-        float oneStackChance = 1.0f - twoStackChance - fiveStackChance;
         tooltip.add(net.minecraft.util.EnumChatFormatting.GOLD + "基础伤害：" + (int) 0);
         tooltip.add(net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "高举法杖施放深渊诅咒，为周围一定范围内的目标施加剧毒印记");
         tooltip.add("");
         tooltip.add(net.minecraft.util.EnumChatFormatting.YELLOW + "右键：施放深渊诅咒");
         tooltip.add("");
         tooltip.add(net.minecraft.util.EnumChatFormatting.GREEN + "深渊诅咒：");
-        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  对周围的生物随机施加剧毒印记");
-        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  初始范围半径 " + minRadius + " 格");
+        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  对球形范围内的生物随机施加剧毒印记");
+        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  初始球形范围半径 " + minRadius + " 格");
         tooltip.add(
             net.minecraft.util.EnumChatFormatting.GRAY + "  连续施放扩大半径（每次 +" + radiusStep + " 格，最大 " + maxRadius + " 格）");
         tooltip.add(
@@ -111,9 +121,20 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
                 + " 格");
         tooltip.add("");
         tooltip.add(net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "诅咒层数：");
-        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  " + (int) (fiveStackChance * 100) + "% 概率施加 5 层");
-        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  " + (int) (twoStackChance * 100) + "% 概率施加 2 层");
-        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  " + (int) (oneStackChance * 100) + "% 概率施加 1 层");
+        tooltip.add(net.minecraft.util.EnumChatFormatting.GRAY + "  必定施加 " + baseStacks + " 层");
+        tooltip.add(
+            net.minecraft.util.EnumChatFormatting.GRAY + "  "
+                + (int) (bonusChance1 * 100)
+                + "% 概率额外施加 "
+                + bonusStacks1
+                + " 层");
+        tooltip.add(
+            net.minecraft.util.EnumChatFormatting.GRAY + "  "
+                + (int) (bonusChance2 * 100)
+                + "% 概率再次额外施加 "
+                + bonusStacks2
+                + " 层");
+        tooltip.add(net.minecraft.util.EnumChatFormatting.DARK_GRAY + "  两次额外概率独立计算");
     }
 
     @Override
@@ -149,44 +170,39 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             ? entityData.getInteger("DarkGreyErebusNextRadius")
             : minRadius;
 
-        // Random Stacks
-        float roll = world.rand.nextFloat();
+        // Both bonus rolls are independent.
         int addedStacks = baseStacks;
-        if (roll < fiveStackChance) {
-            addedStacks = 5;
-        } else if (roll < fiveStackChance + twoStackChance) {
-            addedStacks = 2;
-        }
+        if (world.rand.nextFloat() < bonusChance1) addedStacks += bonusStacks1;
+        if (world.rand.nextFloat() < bonusChance2) addedStacks += bonusStacks2;
 
-        // Gather targets
+        // Gather targets from the sphere's bounding cube, then use an exact
+        // sphere-vs-entity-bounding-box test.
+        double playerCenterX = player.posX;
+        double playerCenterY = player.boundingBox.minY + player.height * 0.5D;
+        double playerCenterZ = player.posZ;
         AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(
-            player.posX - currentRadius,
-            player.posY - verticalHalfHeight,
-            player.posZ - currentRadius,
-            player.posX + currentRadius,
-            player.posY + verticalHalfHeight,
-            player.posZ + currentRadius);
+            playerCenterX - currentRadius,
+            playerCenterY - currentRadius,
+            playerCenterZ - currentRadius,
+            playerCenterX + currentRadius,
+            playerCenterY + currentRadius,
+            playerCenterZ + currentRadius);
 
         @SuppressWarnings("unchecked")
         List<EntityLivingBase> candidates = world.getEntitiesWithinAABB(EntityLivingBase.class, aabb);
 
         int affectedCount = 0;
-        double playerCenterY = player.posY + player.height * 0.5D;
         java.util.List<Integer> hitEntities = new java.util.ArrayList<>();
 
         for (EntityLivingBase target : candidates) {
             if (target == player || target.isDead || target.getHealth() <= 0) continue;
 
-            double dx = target.posX - player.posX;
-            double dz = target.posZ - player.posZ;
-            if (dx * dx + dz * dz > currentRadius * currentRadius) continue;
-
-            double targetCenterY = target.posY + target.height * 0.5D;
-            if (Math.abs(targetCenterY - playerCenterY) > verticalHalfHeight) continue;
+            if (!intersectsSphere(target, playerCenterX, playerCenterY, playerCenterZ, currentRadius)) continue;
 
             if (!CombatTargeting.canDamage(player, target, false)) continue;
 
             if (respectWalls) {
+                double targetCenterY = target.boundingBox.minY + target.height * 0.5D;
                 Vec3 pVec = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
                 Vec3 tVec = Vec3.createVectorHelper(target.posX, targetCenterY, target.posZ);
                 MovingObjectPosition mop = world.rayTraceBlocks(pVec, tVec);
@@ -202,6 +218,7 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
                     .applicationId("erebus")
                     .refreshDuration(true)
                     .triggerImmediate(true)
+                    .stableDurationTicks(markStableDurationTicks)
                     .build();
                 MarkApplyResult result = MarkManager.apply(target, markId, context);
                 if (result != null && result.success) {
@@ -245,6 +262,33 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
         world.playSoundAtEntity(player, "random.fizz", 1.0F, 1.2F);
 
         return weaponStack;
+    }
+
+    private static boolean intersectsSphere(EntityLivingBase target, double centerX, double centerY, double centerZ,
+        double radius) {
+        AxisAlignedBB box = target.boundingBox;
+        double nearestX = clamp(centerX, box.minX, box.maxX);
+        double nearestY = clamp(centerY, box.minY, box.maxY);
+        double nearestZ = clamp(centerZ, box.minZ, box.maxZ);
+        double dx = nearestX - centerX;
+        double dy = nearestY - centerY;
+        double dz = nearestZ - centerZ;
+        return dx * dx + dy * dy + dz * dz <= radius * radius;
+    }
+
+    private static double clamp(double value, double minimum, double maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
+    }
+
+    private static int clampStacks(int stacks) {
+        return Math.max(0, Math.min(10000, stacks));
+    }
+
+    private static float clampChance(float chance, float fallback) {
+        if (Float.isNaN(chance) || Float.isInfinite(chance)) {
+            return fallback;
+        }
+        return Math.max(0.0F, Math.min(1.0F, chance));
     }
 
     private void spawnCurseParticle(World world, double x, double y, double z, int count) {
