@@ -110,6 +110,12 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityStarBullet.class,
             new com.greyhat.dark_grey.client.render.RenderStarBullet());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityBoneFlask.class,
+            new com.greyhat.dark_grey.client.render.RenderBoneFlask());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityBoneSpikesField.class,
+            new com.greyhat.dark_grey.client.render.RenderInvisible());
 
         // Register Supernova planet renderer
         com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer planetRenderer = new com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer();

@@ -112,7 +112,10 @@ public class DarkGrey {
         ComponentRegistry
             .register("烈阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
         ComponentRegistry
-            .register("腐败炸弹", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentCorruptionBomb::new);
+            .register("腐败瓶", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentCorruptionBomb::new);
+        ComponentRegistry.register(
+            "碎骨瓶",
+            (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneFlask::new);
         ComponentRegistry.register("粉碎之骨", (Supplier<IRPGComponent>) ComponentBoneCrusher::new);
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.PoisonMarkType());
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.FractureMarkType());
@@ -202,6 +205,22 @@ public class DarkGrey {
             64,
             10,
             true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityBoneFlask.class,
+            "bone_flask",
+            11,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityBoneSpikesField.class,
+            "bone_spikes_field",
+            12,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            false);
         DarkGrey.LOG.info("======== DarkGrey Mod: 实体已注册 ========");
     }
 

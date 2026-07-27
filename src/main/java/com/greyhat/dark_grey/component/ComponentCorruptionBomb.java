@@ -33,7 +33,7 @@ public class ComponentCorruptionBomb implements IRPGComponent, IOnRightClick, IH
 
     @Override
     public String getComponentId() {
-        return "腐败炸弹";
+        return "腐败瓶";
     }
 
     @Override
@@ -147,7 +147,7 @@ public class ComponentCorruptionBomb implements IRPGComponent, IOnRightClick, IH
     @Override
     @SideOnly(Side.CLIENT)
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean showAdvanced) {
-        tooltipLines.add(net.minecraft.util.EnumChatFormatting.YELLOW + "右键：向前投掷一枚腐败炸弹");
+        tooltipLines.add(net.minecraft.util.EnumChatFormatting.YELLOW + "右键：向前投掷一枚腐败瓶");
         tooltipLines.add("");
         tooltipLines.add(net.minecraft.util.EnumChatFormatting.GREEN + "炸弹效果：");
 

@@ -1,6 +1,29 @@
 ﻿{
   "items": [
     {
+      "id": "bone_flask",
+      "type": "usable_item",
+      "displayName": {
+        "zh_CN": "碎骨瓶",
+        "en_US": "Bone Flask"
+      },
+      "texture": "dark_grey:bone_flask",
+      "maxStackSize": 4,
+      "components": [
+        {
+          "name": "碎骨瓶",
+          "params": {
+            "directDamage": 12.0,
+            "lingeringDamage": 2.0,
+            "fieldDuration": 1200,
+            "projectileVelocity": 0.75,
+            "projectileInaccuracy": 1.0,
+            "projectileGravity": 0.03
+          }
+        }
+      ]
+    },
+    {
       "id": "bone_crusher",
       "type": "剑",
       "displayName": {
@@ -439,7 +462,7 @@
       "id": "corruption_bomb",
       "type": "道具",
       "displayName": {
-        "zh_CN": "腐败炸弹",
+        "zh_CN": "腐败瓶",
         "en_US": "Corruption Bomb"
       },
       "texture": "dark_grey:corruption_bomb",
@@ -448,7 +471,7 @@
       "maxStackSize": 4,
       "components": [
         {
-          "name": "腐败炸弹",
+          "name": "腐败瓶",
           "params": {
             "markId": "poison",
             "markStacks": 3,
