@@ -75,6 +75,10 @@ public class MarkContainer implements IExtendedEntityProperties {
         NBTTagCompound marksNbt = new NBTTagCompound();
         NBTTagList list = new NBTTagList();
 
+        if (owner != null && (owner.isDead || owner.getHealth() <= 0.0F)) {
+            activeMarks.clear();
+        }
+
         for (MarkInstance instance : activeMarks.values()) {
             if (instance.getStacks() <= 0) continue;
 
@@ -93,6 +97,9 @@ public class MarkContainer implements IExtendedEntityProperties {
 
     @Override
     public void loadNBTData(NBTTagCompound compound) {
+        // IExtendedEntityProperties instances may be reused during player data
+        // transfer. Never merge saved data into stale in-memory marks.
+        activeMarks.clear();
         if (!compound.hasKey("DarkGreyMarks")) {
             return;
         }

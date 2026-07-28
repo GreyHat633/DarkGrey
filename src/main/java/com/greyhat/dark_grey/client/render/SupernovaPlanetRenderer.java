@@ -4,7 +4,10 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -15,6 +18,16 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class SupernovaPlanetRenderer {
+
+    private static final int STAR_RENDER_ATTRIB_MASK = GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT
+        | GL11.GL_CURRENT_BIT
+        | GL11.GL_DEPTH_BUFFER_BIT
+        | GL11.GL_TEXTURE_BIT
+        | GL11.GL_TRANSFORM_BIT;
+    private static final double FRUSTUM_MARGIN = 0.9D;
+
+    private final Frustrum renderFrustum = new Frustrum();
+    private World lastWorld;
 
     private static class PlanetState {
 
@@ -34,6 +47,7 @@ public class SupernovaPlanetRenderer {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             Minecraft mc = Minecraft.getMinecraft();
+            resetStateForWorld(mc.theWorld);
             if (mc.theWorld == null) return;
 
             for (Object obj : mc.theWorld.playerEntities) {
@@ -75,8 +89,6 @@ public class SupernovaPlanetRenderer {
                         }
 
                         double headY = player.boundingBox.minY + (player.isSneaking() ? 1.4 : 1.7);
-
-                        double yaw = Math.toRadians(player.renderYawOffset);
 
                         // Target positions: orbit around player
                         double distance = 1.0;
@@ -142,45 +154,77 @@ public class SupernovaPlanetRenderer {
     @SubscribeEvent
     public void onRenderWorldLast(net.minecraftforge.client.event.RenderWorldLastEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.theWorld == null) return;
+        resetStateForWorld(mc.theWorld);
+        if (mc.theWorld == null || states.isEmpty()) return;
         float pt = event.partialTicks;
 
-        for (Object obj : mc.theWorld.playerEntities) {
-            if (obj instanceof EntityPlayer) {
-                EntityPlayer player = (EntityPlayer) obj;
-                PlanetState state = states.get(player);
-                if (state != null && state.initialized) {
-                    double lx = state.prevLx + (state.lx - state.prevLx) * pt;
-                    double ly = state.prevLy + (state.ly - state.prevLy) * pt;
-                    double lz = state.prevLz + (state.lz - state.prevLz) * pt;
+        double tx = net.minecraft.client.renderer.entity.RenderManager.renderPosX;
+        double ty = net.minecraft.client.renderer.entity.RenderManager.renderPosY;
+        double tz = net.minecraft.client.renderer.entity.RenderManager.renderPosZ;
+        this.renderFrustum.setPosition(tx, ty, tz);
 
-                    double rx = state.prevRx + (state.rx - state.prevRx) * pt;
-                    double ry = state.prevRy + (state.ry - state.prevRy) * pt;
-                    double rz = state.prevRz + (state.rz - state.prevRz) * pt;
+        GL11.glPushAttrib(STAR_RENDER_ATTRIB_MASK);
+        GL11.glPushMatrix();
+        try {
+            GL11.glTranslated(-tx, -ty, -tz);
+            for (Object obj : mc.theWorld.playerEntities) {
+                if (obj instanceof EntityPlayer) {
+                    EntityPlayer player = (EntityPlayer) obj;
+                    PlanetState state = states.get(player);
+                    if (state != null && state.initialized) {
+                        double lx = state.prevLx + (state.lx - state.prevLx) * pt;
+                        double ly = state.prevLy + (state.ly - state.prevLy) * pt;
+                        double lz = state.prevLz + (state.lz - state.prevLz) * pt;
 
-                    double tx = net.minecraft.client.renderer.entity.RenderManager.renderPosX;
-                    double ty = net.minecraft.client.renderer.entity.RenderManager.renderPosY;
-                    double tz = net.minecraft.client.renderer.entity.RenderManager.renderPosZ;
+                        double rx = state.prevRx + (state.rx - state.prevRx) * pt;
+                        double ry = state.prevRy + (state.ry - state.prevRy) * pt;
+                        double rz = state.prevRz + (state.rz - state.prevRz) * pt;
 
-                    float drawScale = 1.0f;
-                    if (state.phase == 0) {
-                        drawScale = state.animTimer / 20.0f;
-                    } else if (state.phase == 2) {
-                        drawScale = 1.0f - (state.animTimer / 20.0f);
+                        boolean leftVisible = isVisible(lx, ly, lz);
+                        boolean rightVisible = isVisible(rx, ry, rz);
+                        if (!leftVisible && !rightVisible) {
+                            continue;
+                        }
+
+                        float drawScale = 1.0f;
+                        if (state.phase == 0) {
+                            drawScale = state.animTimer / 20.0f;
+                        } else if (state.phase == 2) {
+                            drawScale = 1.0f - (state.animTimer / 20.0f);
+                        }
+
+                        if (leftVisible) {
+                            drawStar(lx, ly, lz, player.ticksExisted + pt, drawScale);
+                        }
+                        if (rightVisible) {
+                            drawStar(rx, ry, rz, player.ticksExisted + pt, drawScale);
+                        }
                     }
-
-                    GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-                    GL11.glPushMatrix();
-                    GL11.glTranslated(-tx, -ty, -tz);
-
-                    drawStar(lx, ly, lz, player.ticksExisted + pt, drawScale);
-                    drawStar(rx, ry, rz, player.ticksExisted + pt, drawScale);
-
-                    GL11.glPopMatrix();
-                    GL11.glPopAttrib();
                 }
             }
+        } finally {
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
         }
+    }
+
+    private void resetStateForWorld(World world) {
+        if (this.lastWorld != world) {
+            states.clear();
+            this.lastWorld = world;
+        }
+    }
+
+    private boolean isVisible(double x, double y, double z) {
+        AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox(
+            x - FRUSTUM_MARGIN,
+            y - FRUSTUM_MARGIN,
+            z - FRUSTUM_MARGIN,
+            x + FRUSTUM_MARGIN,
+            y + FRUSTUM_MARGIN,
+            z + FRUSTUM_MARGIN);
+        return this.renderFrustum.isBoundingBoxInFrustum(bounds);
     }
 
     private static final net.minecraft.util.ResourceLocation SPHERE_TEXTURE = new net.minecraft.util.ResourceLocation(

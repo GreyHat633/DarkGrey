@@ -34,6 +34,7 @@ import com.greyhat.dark_grey.api.capability.IOnUnequip;
 import com.greyhat.dark_grey.api.capability.IOnWornTick;
 
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -55,6 +56,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer {
     public ItemRPGArmor(final String id, final ItemArmor.ArmorMaterial material, final int renderIndex,
         final int armorType, final List<IRPGComponent> components) {
         super(material, renderIndex, armorType);
+        this.setMaxDamage(0);
         this.rpgItemId = id;
         this.allComponents = Collections.unmodifiableList((List<? extends IRPGComponent>) components);
         this.wornTickHandlers = IRPGComponent.filterByCapability(components, IOnWornTick.class);
@@ -83,6 +85,7 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer {
     public void rebuildComponents() {
         final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
             .getConfig(this.rpgItemId);
+        refreshConfiguredArmor(config);
         if (config == null || config.componentsJson == null) {
             return;
         }
@@ -140,13 +143,24 @@ public class ItemRPGArmor extends ItemArmor implements IRPGItemContainer {
         return attributeMap;
     }
 
-    public int getMaxDamage(final ItemStack stack) {
-        final RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
-            .getConfig(this.rpgItemId);
-        if (config != null && config.durability > 0) {
-            return config.durability;
+    private void refreshConfiguredArmor(final RPGItemDataManager.ItemConfig config) {
+        if (config == null) return;
+        try {
+            ObfuscationReflectionHelper.setPrivateValue(
+                ItemArmor.class,
+                this,
+                Integer.valueOf(config.armor),
+                "damageReduceAmount",
+                "field_77879_b");
+        } catch (RuntimeException e) {
+            FMLLog.warning(
+                "[DarkGrey] Failed to hot-reload armor value for '%s': %s",
+                new Object[] { this.rpgItemId, e.getMessage() });
         }
-        return super.getMaxDamage(stack);
+    }
+
+    public int getMaxDamage(final ItemStack stack) {
+        return 0;
     }
 
     public void func_77663_a(final ItemStack stack, final World world, final Entity entity, final int itemSlot,

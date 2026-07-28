@@ -152,6 +152,7 @@ public class ItemRPGTool extends ItemTool implements IRPGItemContainer {
      */
     public ItemRPGTool(String id, ToolMaterial material, String toolClass, List<IRPGComponent> components) {
         super(getDefaultAttackDamageBonus(toolClass), material, getEffectiveBlocksForType(toolClass));
+        this.setMaxDamage(0);
         this.rpgItemId = id;
         this.toolClass = toolClass;
         this.setHarvestLevel(toolClass, material.getHarvestLevel());
@@ -292,12 +293,7 @@ public class ItemRPGTool extends ItemTool implements IRPGItemContainer {
      */
     @Override
     public int getMaxDamage(ItemStack stack) {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
-            .getConfig(rpgItemId);
-        if (config != null && config.durability > 0) {
-            return config.durability;
-        }
-        return super.getMaxDamage(stack);
+        return 0;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

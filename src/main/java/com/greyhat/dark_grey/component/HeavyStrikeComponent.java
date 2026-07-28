@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IModifyMeleeDamage;
@@ -23,7 +24,8 @@ import com.greyhat.dark_grey.api.capability.IOnHeldTick;
 /** Adds a configurable weapon-attack-scaled burst to an eligible direct melee hit. */
 public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, IOnHeldTick, IHasTooltip {
 
-    private static final String LAST_TRIGGER_TICK = "darkgrey_heavy_strike_last_tick";
+    private static final String LEGACY_LAST_TRIGGER_TICK = "darkgrey_heavy_strike_last_tick";
+    private static final String COOLDOWN_END_MILLIS = "darkgrey_heavy_strike_cooldown_end_millis";
     private static final String READY_NOTIFIED = "darkgrey_heavy_strike_ready_notified";
     private static final float MAX_INTERVAL_SECONDS = 3600.0F;
     private static final float MAX_MULTIPLIER = 1000000.0F;
@@ -85,9 +87,9 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
         }
         return applyScaledBonus(
             tag,
-            LAST_TRIGGER_TICK,
+            COOLDOWN_END_MILLIS,
+            LEGACY_LAST_TRIGGER_TICK,
             READY_NOTIFIED,
-            attacker.worldObj.getTotalWorldTime(),
             this.intervalSeconds,
             weaponAttackDamage,
             this.multiplier,
@@ -143,30 +145,22 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
         return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 
-    public static boolean isReady(NBTTagCompound state, String lastTriggerKey, long now, float intervalSeconds) {
-        if (state == null) return true;
-        long intervalTicks = Math.max(0L, Math.round(intervalSeconds * 20.0F));
-        if (state.hasKey(lastTriggerKey)) {
-            long lastTrigger = state.getLong(lastTriggerKey);
-            if (now >= lastTrigger && now - lastTrigger < intervalTicks) {
-                return false;
-            }
-        }
-        return true;
+    public static boolean isReady(NBTTagCompound state, String cooldownEndMillisKey, String legacyLastTriggerKey,
+        float intervalSeconds) {
+        long intervalMillis = CooldownHelper.secondsToMillis(intervalSeconds);
+        return CooldownHelper.isReady(state, cooldownEndMillisKey, intervalMillis, legacyLastTriggerKey);
     }
 
-    public static float applyScaledBonus(NBTTagCompound state, String lastTriggerKey, String readyNotifiedKey, long now,
-        float intervalSeconds, float weaponAttackDamage, float multiplier, float currentDamage) {
+    public static float applyScaledBonus(NBTTagCompound state, String cooldownEndMillisKey, String legacyLastTriggerKey,
+        String readyNotifiedKey, float intervalSeconds, float weaponAttackDamage, float multiplier,
+        float currentDamage) {
         if (state == null || weaponAttackDamage <= 0.0F || multiplier <= 0.0F) {
             return currentDamage;
         }
 
-        long intervalTicks = Math.max(0L, Math.round(intervalSeconds * 20.0F));
-        if (state.hasKey(lastTriggerKey)) {
-            long lastTrigger = state.getLong(lastTriggerKey);
-            if (now >= lastTrigger && now - lastTrigger < intervalTicks) {
-                return currentDamage;
-            }
+        long intervalMillis = CooldownHelper.secondsToMillis(intervalSeconds);
+        if (!CooldownHelper.isReady(state, cooldownEndMillisKey, intervalMillis, legacyLastTriggerKey)) {
+            return currentDamage;
         }
 
         double bonusDamage = (double) weaponAttackDamage * multiplier;
@@ -174,20 +168,21 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
         if (!isFinite(bonusDamage) || bonusDamage <= 0.0D || Double.isNaN(modified)) {
             return currentDamage;
         }
-        state.setLong(lastTriggerKey, now);
+        CooldownHelper.start(state, cooldownEndMillisKey, intervalMillis, legacyLastTriggerKey);
         state.setBoolean(readyNotifiedKey, false);
         return modified >= Float.MAX_VALUE ? Float.MAX_VALUE : (float) modified;
     }
 
-    static void notifyWhenReady(NBTTagCompound state, String lastTriggerKey, String readyNotifiedKey, long now,
-        float intervalSeconds, EntityPlayer player, String displayName) {
-        if (state == null || player == null || state.getBoolean(readyNotifiedKey) || !state.hasKey(lastTriggerKey)) {
+    static void notifyWhenReady(NBTTagCompound state, String cooldownEndMillisKey, String legacyLastTriggerKey,
+        String readyNotifiedKey, float intervalSeconds, EntityPlayer player, String displayName) {
+        if (state == null || player == null
+            || state.getBoolean(readyNotifiedKey)
+            || !state.hasKey(cooldownEndMillisKey)) {
             return;
         }
 
-        long lastTrigger = state.getLong(lastTriggerKey);
-        long intervalTicks = Math.max(0L, Math.round(intervalSeconds * 20.0F));
-        if (now >= lastTrigger && now - lastTrigger < intervalTicks) {
+        long intervalMillis = CooldownHelper.secondsToMillis(intervalSeconds);
+        if (!CooldownHelper.isReady(state, cooldownEndMillisKey, intervalMillis, legacyLastTriggerKey)) {
             return;
         }
 
@@ -205,9 +200,9 @@ public class HeavyStrikeComponent implements IRPGComponent, IModifyMeleeDamage, 
         }
         notifyWhenReady(
             weaponStack.getTagCompound(),
-            LAST_TRIGGER_TICK,
+            COOLDOWN_END_MILLIS,
+            LEGACY_LAST_TRIGGER_TICK,
             READY_NOTIFIED,
-            world.getTotalWorldTime(),
             this.intervalSeconds,
             player,
             "\u91CD\u51FB");

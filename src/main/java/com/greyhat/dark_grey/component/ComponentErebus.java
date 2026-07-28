@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
@@ -23,6 +24,13 @@ import com.greyhat.dark_grey.mark.api.MarkApplyContext;
 import com.greyhat.dark_grey.mark.api.MarkApplyResult;
 
 public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasTooltip {
+
+    public static final String LEGACY_COOLDOWN_END_KEY = "DarkGreyErebusCooldownEnd";
+    public static final String COOLDOWN_END_MILLIS_KEY = "DarkGreyErebusCooldownEndMillis";
+    public static final String LEGACY_RESET_AT_KEY = "DarkGreyErebusResetAt";
+    public static final String RESET_AT_MILLIS_KEY = "DarkGreyErebusResetAtMillis";
+    private static final String LEGACY_LAST_MESSAGE_KEY = "DarkGreyErebusLastMsgTick";
+    private static final String MESSAGE_COOLDOWN_END_MILLIS_KEY = "DarkGreyErebusMessageCooldownEndMillis";
 
     private String markId = "poison";
     private int minRadius = 3;
@@ -58,10 +66,18 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             .getAsInt();
         if (params.has("respectWalls")) respectWalls = params.get("respectWalls")
             .getAsBoolean();
-        if (params.has("cooldownTicks")) cooldownTicks = params.get("cooldownTicks")
-            .getAsInt();
-        if (params.has("rangeResetDelayTicks")) rangeResetDelayTicks = params.get("rangeResetDelayTicks")
-            .getAsInt();
+        if (params.has("cooldownTicks")) cooldownTicks = Math.max(
+            0,
+            Math.min(
+                72000,
+                params.get("cooldownTicks")
+                    .getAsInt()));
+        if (params.has("rangeResetDelayTicks")) rangeResetDelayTicks = Math.max(
+            1,
+            Math.min(
+                72000,
+                params.get("rangeResetDelayTicks")
+                    .getAsInt()));
         if (params.has("baseStacks")) baseStacks = clampStacks(
             params.get("baseStacks")
                 .getAsInt());
@@ -148,20 +164,20 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
         }
 
         NBTTagCompound entityData = player.getEntityData();
-        long now = world.getTotalWorldTime();
-
-        long cooldownEndTick = entityData.getLong("DarkGreyErebusCooldownEnd");
-        if (now < cooldownEndTick) {
-            long lastMsgTick = entityData.getLong("DarkGreyErebusLastMsgTick");
-            if (now - lastMsgTick >= 20) {
-                if (!world.isRemote) {
-                    float remainingSeconds = (cooldownEndTick - now) / 20.0f;
-                    player.addChatMessage(
-                        new ChatComponentTranslation(
-                            "message.erebus.cooldown",
-                            String.format("%.1f", remainingSeconds)));
-                }
-                entityData.setLong("DarkGreyErebusLastMsgTick", now);
+        long markWorldTime = world.getTotalWorldTime();
+        long cooldownDurationMillis = CooldownHelper.ticksToMillis(cooldownTicks);
+        long remainingCooldownMillis = CooldownHelper
+            .getRemainingMillis(entityData, COOLDOWN_END_MILLIS_KEY, cooldownDurationMillis, LEGACY_COOLDOWN_END_KEY);
+        if (remainingCooldownMillis > 0L) {
+            long messageCooldownMillis = CooldownHelper.ticksToMillis(20L);
+            if (!world.isRemote && CooldownHelper
+                .isReady(entityData, MESSAGE_COOLDOWN_END_MILLIS_KEY, messageCooldownMillis, LEGACY_LAST_MESSAGE_KEY)) {
+                player.addChatMessage(
+                    new ChatComponentTranslation(
+                        "message.erebus.cooldown",
+                        String.format("%.1f", remainingCooldownMillis / 1000.0D)));
+                CooldownHelper
+                    .start(entityData, MESSAGE_COOLDOWN_END_MILLIS_KEY, messageCooldownMillis, LEGACY_LAST_MESSAGE_KEY);
             }
             return weaponStack;
         }
@@ -214,7 +230,7 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             if (!world.isRemote) {
                 MarkApplyContext context = new MarkApplyContext.Builder().source(player)
                     .requestedStacks(addedStacks)
-                    .worldTime(now)
+                    .worldTime(markWorldTime)
                     .applicationId("erebus")
                     .refreshDuration(true)
                     .triggerImmediate(true)
@@ -242,8 +258,12 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
         }
 
         // Set state for next use
-        entityData.setLong("DarkGreyErebusCooldownEnd", now + cooldownTicks);
-        entityData.setLong("DarkGreyErebusResetAt", now + rangeResetDelayTicks);
+        CooldownHelper.start(entityData, COOLDOWN_END_MILLIS_KEY, cooldownDurationMillis, LEGACY_COOLDOWN_END_KEY);
+        CooldownHelper.start(
+            entityData,
+            RESET_AT_MILLIS_KEY,
+            CooldownHelper.ticksToMillis(rangeResetDelayTicks),
+            LEGACY_RESET_AT_KEY);
         entityData.setBoolean("DarkGreyErebusRangeActive", true);
 
         int nextRadius = Math.min(maxRadius, currentRadius + radiusStep);

@@ -9,6 +9,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
+import com.greyhat.dark_grey.api.WorldTimeRebaseHelper;
+
 public class RedSunBurnData implements IExtendedEntityProperties {
 
     public static final String PROP_NAME = "dark_grey:red_sun_burn";
@@ -71,6 +73,12 @@ public class RedSunBurnData implements IExtendedEntityProperties {
         this.active = false;
         this.sourceUuid = null;
         this.expireWorldTime = 0;
+    }
+
+    public void rebaseWorldTimes(long delta) {
+        if (!active || delta == 0L) return;
+        expireWorldTime = WorldTimeRebaseHelper.shiftPositiveTimestamp(expireWorldTime, delta);
+        lastSwitchDamageTick = WorldTimeRebaseHelper.shiftPositiveTimestamp(lastSwitchDamageTick, delta);
     }
 
     public UUID getSourceUuid() {

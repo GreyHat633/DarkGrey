@@ -41,6 +41,7 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
     private List<com.greyhat.dark_grey.api.capability.IOnLeftClick> leftClickHandlers;
 
     public ItemRPGBow(String id, List<IRPGComponent> components) {
+        this.setMaxDamage(0);
         this.rpgItemId = id;
         this.allComponents = Collections.unmodifiableList(components);
 
@@ -142,12 +143,7 @@ public class ItemRPGBow extends ItemBow implements IRPGItemContainer {
 
     @Override
     public int getMaxDamage(ItemStack stack) {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
-            .getConfig(rpgItemId);
-        if (config != null && config.durability > 0) {
-            return config.durability;
-        }
-        return super.getMaxDamage(stack);
+        return 0;
     }
 
     @Override

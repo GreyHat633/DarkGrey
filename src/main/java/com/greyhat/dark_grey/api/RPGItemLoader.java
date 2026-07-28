@@ -61,8 +61,11 @@ public class RPGItemLoader {
 
                 Item.ToolMaterial toolMaterial = EnumHelper
                     .addToolMaterial("CUSTOM_" + id.toUpperCase(), 0, 100, 2.0F, 0.0F, 15);
-                ArmorMaterial armorMaterial = EnumHelper
-                    .addArmorMaterial("CUSTOM_" + id.toUpperCase(), 10, new int[] { 0, 0, 0, 0 }, 15);
+                ArmorMaterial armorMaterial = EnumHelper.addArmorMaterial(
+                    "CUSTOM_" + id.toUpperCase(),
+                    10,
+                    createArmorReductionAmounts(type, config.armor),
+                    15);
 
                 // Build components from JSON
                 List<IRPGComponent> components = buildComponents(id, config);
@@ -209,6 +212,25 @@ public class RPGItemLoader {
             default:
                 return null;
         }
+    }
+
+    private static int[] createArmorReductionAmounts(String type, int armor) {
+        int[] amounts = new int[] { 0, 0, 0, 0 };
+        int armorType = getArmorType(type);
+        if (armorType >= 0) {
+            amounts[armorType] = Math.max(0, Math.min(20, armor));
+        }
+        return amounts;
+    }
+
+    private static int getArmorType(String type) {
+        if (type == null) return -1;
+        if ("\u5934\u76D4".equals(type) || "helmet".equals(type) || "Armor".equals(type) || "armor".equals(type))
+            return 0;
+        if ("\u80F8\u7532".equals(type) || "chestplate".equals(type)) return 1;
+        if ("\u62A4\u817F".equals(type) || "leggings".equals(type)) return 2;
+        if ("\u9774\u5B50".equals(type) || "boots".equals(type)) return 3;
+        return -1;
     }
 
     /**

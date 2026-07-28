@@ -10,6 +10,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 import com.greyhat.dark_grey.api.RPGDamageSources;
 import com.greyhat.dark_grey.api.RedSunFireballManager;
+import com.greyhat.dark_grey.api.WorldTimeRebaseHelper;
 import com.greyhat.dark_grey.status.RedSunBurnData;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
@@ -126,6 +127,10 @@ public class RedSunBurnHandler {
     @SubscribeEvent
     public void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!event.player.worldObj.isRemote) {
+            RedSunBurnData data = RedSunBurnData.get(event.player);
+            if (data != null) {
+                data.rebaseWorldTimes(WorldTimeRebaseHelper.getDimensionTimeDelta(event.player, event.fromDim));
+            }
             RedSunFireballManager.removeChargingFireball(event.player);
         }
     }

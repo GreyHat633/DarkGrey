@@ -151,6 +151,12 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
         this.orbitSpeed = v;
     }
 
+    public double getOrbitAngleRadians(float partialTicks) {
+        double orbitTicks = (double) this.worldObj.getTotalWorldTime() + partialTicks;
+        double angleDegrees = orbitTicks * (double) this.orbitSpeed + this.formationSlot * 120.0D;
+        return Math.toRadians(angleDegrees % 360.0D);
+    }
+
     public void launch(Vec3 direction) {
         this.orbState = STATE_FLYING;
         this.dataWatcher.updateObject(10, STATE_FLYING);
@@ -190,10 +196,7 @@ public class EntityUndergroundSunOrb extends Entity implements IEntityAdditional
             if (owner != null && owner.isEntityAlive()) {
                 this.ownerMissingTicks = 0;
 
-                double baseAngle = this.ticksExisted * orbitSpeed; // use ticksExisted to avoid jumping when world time
-                                                                   // changes abruptly
-                double angleDegrees = baseAngle + formationSlot * 120.0D;
-                double angle = Math.toRadians(angleDegrees);
+                double angle = this.getOrbitAngleRadians(0.0F);
 
                 double targetX = owner.posX + Math.cos(angle) * orbitRadius;
                 double targetZ = owner.posZ + Math.sin(angle) * orbitRadius;

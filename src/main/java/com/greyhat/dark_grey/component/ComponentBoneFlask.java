@@ -17,7 +17,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasTooltip {
 
-    private float directDamage = 12.0F;
+    private float directDamage = 8.0F;
     private float lingeringDamage = 2.0F;
     private int fieldDuration = 1200; // 60s
     private int fractureStableDurationTicks = 100;
@@ -38,7 +38,7 @@ public class ComponentBoneFlask implements IRPGComponent, IOnRightClick, IHasToo
                     .getAsFloat(),
                 0.0F,
                 1000000.0F,
-                12.0F);
+                8.0F);
         }
         if (params.has("lingeringDamage")) {
             this.lingeringDamage = clampFinite(

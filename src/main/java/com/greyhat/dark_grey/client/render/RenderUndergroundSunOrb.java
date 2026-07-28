@@ -29,8 +29,7 @@ public class RenderUndergroundSunOrb extends Render {
             Entity owner = orb.getOwnerEntity();
             if (owner != null) {
                 long time = orb.worldObj.getTotalWorldTime();
-                float angle = ((time + partialTicks) * orb.getOrbitSpeed()) + (orb.getFormationSlot() * 120.0F);
-                double rad = Math.toRadians(angle);
+                double rad = orb.getOrbitAngleRadians(partialTicks);
 
                 double offsetX = Math.cos(rad) * orb.getOrbitRadius();
                 double offsetZ = Math.sin(rad) * orb.getOrbitRadius();

@@ -102,6 +102,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      */
     public ItemRPGHoe(String id, ToolMaterial material, List<IRPGComponent> components) {
         super(material);
+        this.setMaxDamage(0);
         this.rpgItemId = id;
 
         this.allComponents = Collections.unmodifiableList(components);
@@ -195,12 +196,7 @@ public class ItemRPGHoe extends ItemHoe implements IRPGItemContainer {
      */
     @Override
     public int getMaxDamage(ItemStack stack) {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
-            .getConfig(rpgItemId);
-        if (config != null && config.durability > 0) {
-            return config.durability;
-        }
-        return super.getMaxDamage(stack);
+        return 0;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

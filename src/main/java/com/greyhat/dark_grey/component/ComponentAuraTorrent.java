@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnHeldTick;
@@ -18,6 +19,9 @@ import com.greyhat.dark_grey.entity.EntityAuraTorrent;
 
 public class ComponentAuraTorrent
     implements IRPGComponent, IOnRightClick, IOnHeldTick, IHasTooltip, IOnWeaponUsingTick, IOnPlayerStoppedUsing {
+
+    private static final String LEGACY_COOLDOWN_KEY = "LastAuraTorrentTime";
+    private static final String COOLDOWN_END_MILLIS_KEY = "AuraTorrentCooldownEndMillis";
 
     private float radius = 5.0f;
     private float dotDamage = 250.0f;
@@ -90,28 +94,25 @@ public class ComponentAuraTorrent
 
     @Override
     public ItemStack onRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        long currentTime = world.getTotalWorldTime();
-        long lastTime = 0;
-
-        if (itemStack.hasTagCompound() && itemStack.getTagCompound()
-            .hasKey("LastAuraTorrentTime")) {
-            lastTime = itemStack.getTagCompound()
-                .getLong("LastAuraTorrentTime");
-        }
-
-        if (currentTime - lastTime < this.cooldownTicks) {
-            if (!world.isRemote) {
-                long remaining_ticks = this.cooldownTicks - (currentTime - lastTime);
-                float remaining_seconds = remaining_ticks / 20.0f;
+        if (!world.isRemote) {
+            if (!itemStack.hasTagCompound()) {
+                itemStack.setTagCompound(new NBTTagCompound());
+            }
+            long cooldownMillis = CooldownHelper.ticksToMillis(this.cooldownTicks);
+            long remainingMillis = CooldownHelper.getRemainingMillis(
+                itemStack.getTagCompound(),
+                COOLDOWN_END_MILLIS_KEY,
+                cooldownMillis,
+                LEGACY_COOLDOWN_KEY);
+            if (remainingMillis > 0L) {
                 player.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
                         net.minecraft.util.EnumChatFormatting.RED + "【灵气洪流】技能冷却中，还需等待 "
-                            + String.format("%.1f", remaining_seconds)
+                            + String.format("%.1f", remainingMillis / 1000.0D)
                             + " 秒。"));
+                player.clearItemInUse();
+                return itemStack;
             }
-            // Clear item in use so the player doesn't start charging if it is on cooldown
-            player.clearItemInUse();
-            return itemStack;
         }
 
         // Just let them start using the item
@@ -204,8 +205,11 @@ public class ComponentAuraTorrent
             if (!stack.hasTagCompound()) {
                 stack.setTagCompound(new NBTTagCompound());
             }
-            stack.getTagCompound()
-                .setLong("LastAuraTorrentTime", world.getTotalWorldTime());
+            CooldownHelper.start(
+                stack.getTagCompound(),
+                COOLDOWN_END_MILLIS_KEY,
+                CooldownHelper.ticksToMillis(this.cooldownTicks),
+                LEGACY_COOLDOWN_KEY);
         }
     }
 

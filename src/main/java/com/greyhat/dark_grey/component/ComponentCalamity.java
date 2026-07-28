@@ -8,6 +8,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
@@ -16,6 +17,8 @@ import com.greyhat.dark_grey.entity.EntityScythe;
 public class ComponentCalamity implements IRPGComponent, IOnRightClick, IHasTooltip {
 
     private static final int COOLDOWN_TICKS = 60; // 3 seconds
+    private static final String LEGACY_COOLDOWN_KEY = "calamity_last_used";
+    private static final String COOLDOWN_END_MILLIS_KEY = "calamity_cooldown_end_millis";
 
     @Override
     public String getComponentId() {
@@ -34,32 +37,26 @@ public class ComponentCalamity implements IRPGComponent, IOnRightClick, IHasTool
             return weaponStack;
         }
 
-        long current_time = world.getTotalWorldTime();
-        long last_used_time = 0;
-
-        if (weaponStack.hasTagCompound() && weaponStack.getTagCompound()
-            .hasKey("calamity_last_used")) {
-            last_used_time = weaponStack.getTagCompound()
-                .getLong("calamity_last_used");
-        }
-
-        if (current_time - last_used_time < COOLDOWN_TICKS) {
-            if (!world.isRemote) {
-                long remaining_ticks = COOLDOWN_TICKS - (current_time - last_used_time);
-                float remaining_seconds = remaining_ticks / 20.0f;
-                player.addChatMessage(
-                    new ChatComponentText(
-                        EnumChatFormatting.RED + "【劫难】技能冷却中，还需等待 " + String.format("%.1f", remaining_seconds) + " 秒。"));
-            }
-            return weaponStack;
-        }
-
-        // Set the cooldown
         if (!weaponStack.hasTagCompound()) {
             weaponStack.setTagCompound(new net.minecraft.nbt.NBTTagCompound());
         }
-        weaponStack.getTagCompound()
-            .setLong("calamity_last_used", current_time);
+        long cooldownMillis = CooldownHelper.ticksToMillis(COOLDOWN_TICKS);
+        long remainingMillis = CooldownHelper.getRemainingMillis(
+            weaponStack.getTagCompound(),
+            COOLDOWN_END_MILLIS_KEY,
+            cooldownMillis,
+            LEGACY_COOLDOWN_KEY);
+        if (remainingMillis > 0L) {
+            player.addChatMessage(
+                new ChatComponentText(
+                    EnumChatFormatting.RED + "【劫难】技能冷却中，还需等待 "
+                        + String.format("%.1f", remainingMillis / 1000.0D)
+                        + " 秒。"));
+            return weaponStack;
+        }
+
+        CooldownHelper
+            .start(weaponStack.getTagCompound(), COOLDOWN_END_MILLIS_KEY, cooldownMillis, LEGACY_COOLDOWN_KEY);
 
         // Spawn the scythe entity
         EntityScythe scythe_entity = new EntityScythe(world, player);

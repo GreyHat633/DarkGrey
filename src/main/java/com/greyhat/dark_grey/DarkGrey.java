@@ -244,6 +244,9 @@ public class DarkGrey {
 
         com.greyhat.dark_grey.mark.MarkEventHandler markEventHandler = new com.greyhat.dark_grey.mark.MarkEventHandler();
         MinecraftForge.EVENT_BUS.register((Object) markEventHandler);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) markEventHandler);
 
         com.greyhat.dark_grey.mark.MarkTrackingHandler markTrackingHandler = new com.greyhat.dark_grey.mark.MarkTrackingHandler();
         MinecraftForge.EVENT_BUS.register((Object) markTrackingHandler);

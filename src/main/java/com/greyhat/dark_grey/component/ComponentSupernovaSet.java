@@ -18,7 +18,8 @@ import com.greyhat.dark_grey.api.capability.ISetComponent;
 
 public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
 
-    private static final String LAST_TRIGGER_TICK = "darkgrey_supernova_heavy_strike_last_tick";
+    private static final String LEGACY_LAST_TRIGGER_TICK = "darkgrey_supernova_heavy_strike_last_tick";
+    private static final String COOLDOWN_END_MILLIS = "darkgrey_supernova_heavy_strike_cooldown_end_millis";
     private static final String READY_NOTIFIED = "darkgrey_supernova_heavy_strike_ready_notified";
 
     private float intervalSeconds;
@@ -91,8 +92,8 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
                 boolean isHeavyStrikeReady = com.greyhat.dark_grey.util.DirectAttackClassifier.isDirectAttack(source)
                     && HeavyStrikeComponent.isReady(
                         attacker.getEntityData(),
-                        LAST_TRIGGER_TICK,
-                        attacker.worldObj.getTotalWorldTime(),
+                        COOLDOWN_END_MILLIS,
+                        LEGACY_LAST_TRIGGER_TICK,
                         this.intervalSeconds);
 
                 float bulletDamage = weaponAttackDamage > 0 ? weaponAttackDamage * 1.25f : rawDamage * 1.25f;
@@ -127,9 +128,9 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
             NBTTagCompound state = attacker.getEntityData();
             return HeavyStrikeComponent.applyScaledBonus(
                 state,
-                LAST_TRIGGER_TICK,
+                COOLDOWN_END_MILLIS,
+                LEGACY_LAST_TRIGGER_TICK,
                 READY_NOTIFIED,
-                attacker.worldObj.getTotalWorldTime(),
                 this.intervalSeconds,
                 weaponAttackDamage,
                 this.multiplier,
@@ -145,9 +146,9 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
         }
         HeavyStrikeComponent.notifyWhenReady(
             player.getEntityData(),
-            LAST_TRIGGER_TICK,
+            COOLDOWN_END_MILLIS,
+            LEGACY_LAST_TRIGGER_TICK,
             READY_NOTIFIED,
-            player.worldObj.getTotalWorldTime(),
             this.intervalSeconds,
             player,
             "\u8D85\u65B0\u661F\u91CD\u51FB");

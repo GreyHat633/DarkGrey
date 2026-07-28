@@ -10,7 +10,7 @@ import com.greyhat.dark_grey.api.CombatTargeting;
 
 public class EntityBoneFlask extends EntityThrowable {
 
-    public float directDamage = 12.0F;
+    public float directDamage = 8.0F;
     public float lingeringDamage = 2.0F;
     public int fieldDuration = 1200;
     public int fractureStableDurationTicks = 100;

@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.greyhat.dark_grey.api.WorldTimeRebaseHelper;
+
 public class MarkInstance {
 
     private String markId;
@@ -137,6 +139,22 @@ public class MarkInstance {
 
     public void setCustomData(NBTTagCompound customData) {
         this.customData = customData;
+    }
+
+    public void rebaseWorldTimes(long delta) {
+        firstAppliedWorldTime = WorldTimeRebaseHelper.shiftPositiveTimestamp(firstAppliedWorldTime, delta);
+        lastAppliedWorldTime = WorldTimeRebaseHelper.shiftPositiveTimestamp(lastAppliedWorldTime, delta);
+        stableUntilWorldTime = WorldTimeRebaseHelper.shiftPositiveTimestamp(stableUntilWorldTime, delta);
+        nextPeriodicTriggerWorldTime = WorldTimeRebaseHelper
+            .shiftPositiveTimestamp(nextPeriodicTriggerWorldTime, delta);
+        nextDecayTriggerWorldTime = WorldTimeRebaseHelper.shiftPositiveTimestamp(nextDecayTriggerWorldTime, delta);
+        lastPeriodicTriggerWorldTime = WorldTimeRebaseHelper
+            .shiftPositiveTimestamp(lastPeriodicTriggerWorldTime, delta);
+        if (customData != null && customData.hasKey("IndependentExpireWorldTime")) {
+            customData.setLong(
+                "IndependentExpireWorldTime",
+                WorldTimeRebaseHelper.shiftPositiveTimestamp(customData.getLong("IndependentExpireWorldTime"), delta));
+        }
     }
 
     public void writeToNBT(NBTTagCompound nbt) {

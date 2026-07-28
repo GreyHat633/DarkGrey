@@ -11,6 +11,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.DarkGrey;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
 import com.greyhat.dark_grey.api.RPGItemDataManager;
@@ -24,6 +26,10 @@ import com.greyhat.dark_grey.entity.EntityUndergroundSunOrb;
 
 public class ComponentUndergroundSun
     implements IRPGComponent, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IOnLeftClick, IHasTooltip {
+
+    private static final String LEGACY_LAUNCH_COOLDOWN_KEY = "DarkGreyUndergroundSunLastLaunch";
+    private static final String LAUNCH_COOLDOWN_END_MILLIS_KEY = "DarkGreyUndergroundSunLaunchCooldownEndMillis";
+    private static final String NO_ORB_MESSAGE_END_MILLIS_KEY = "DarkGreyUndergroundSunNoOrbMessageEndMillis";
 
     private int chargeTicks = 40;
     private int maxStoredOrbs = 3;
@@ -138,11 +144,19 @@ public class ComponentUndergroundSun
         return stack.getTagCompound();
     }
 
+    private void clearChargeState(ItemStack stack) {
+        if (stack == null || !stack.hasTagCompound()) return;
+        NBTTagCompound nbt = stack.getTagCompound();
+        nbt.removeTag("UndergroundSunCharging");
+        nbt.removeTag("UndergroundSunChargeCompleted");
+        nbt.removeTag("UndergroundSunChargeStartTime");
+    }
+
     @Override
     public ItemStack onRightClick(ItemStack stack, World world, EntityPlayer player) {
         if (player == null || stack == null || !player.isEntityAlive()) return stack;
         if (player.getCurrentEquippedItem() != stack) return stack;
-        if (player.getItemInUse() != null) return stack;
+        if (player.isUsingItem()) return stack;
 
         if (!world.isRemote) {
             int currentOrbs = UndergroundSunOrbManager.countFollowingOrbs(player);
@@ -196,39 +210,64 @@ public class ComponentUndergroundSun
                     int slot = UndergroundSunOrbManager.findFreeSlot(player);
                     float damage = getBaseDamage(stack) * damageMultiplier;
 
-                    EntityUndergroundSunOrb orb = new EntityUndergroundSunOrb(world, player);
-                    orb.setPosition(player.posX, player.posY + player.getEyeHeight(), player.posZ);
-                    orb.setExplosionDamage(damage);
-                    orb.setExplosionRadius(explosionRadius);
-                    orb.setExplosionHalfHeight(explosionHalfHeight);
-                    orb.setProjectileSpeed(projectileSpeed);
-                    orb.setProjectileLifetime(projectileLifetime);
-                    orb.setIgnoreHurtResistance(ignoreHurtResistance);
-                    orb.setRespectWalls(respectWalls);
-                    orb.setOrbitRadius(orbitRadius);
-                    orb.setOrbitHeight(orbitHeight);
-                    orb.setOrbitSpeed(orbitSpeed);
-                    orb.setFormationSlot(slot);
+                    EntityUndergroundSunOrb orb = null;
+                    try {
+                        orb = new EntityUndergroundSunOrb(world, player);
+                        orb.setPosition(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+                        orb.setExplosionDamage(damage);
+                        orb.setExplosionRadius(explosionRadius);
+                        orb.setExplosionHalfHeight(explosionHalfHeight);
+                        orb.setProjectileSpeed(projectileSpeed);
+                        orb.setProjectileLifetime(projectileLifetime);
+                        orb.setIgnoreHurtResistance(ignoreHurtResistance);
+                        orb.setRespectWalls(respectWalls);
+                        orb.setOrbitRadius(orbitRadius);
+                        orb.setOrbitHeight(orbitHeight);
+                        orb.setOrbitSpeed(orbitSpeed);
+                        orb.setFormationSlot(slot);
 
-                    world.spawnEntityInWorld(orb);
-                    world.playSoundEffect(player.posX, player.posY, player.posZ, "random.orb", 1.0F, 1.5F);
+                        if (world.spawnEntityInWorld(orb)) {
+                            world.playSoundEffect(player.posX, player.posY, player.posZ, "random.orb", 1.0F, 1.5F);
+                        } else {
+                            orb.setDead();
+                            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "地底太阳：光球生成失败，请稍后重试"));
+                            DarkGrey.LOG.error(
+                                "Underground Sun orb spawn returned false for player {} in dimension {}",
+                                player.getCommandSenderName(),
+                                world.provider.dimensionId);
+                        }
+                    } catch (RuntimeException e) {
+                        if (orb != null) orb.setDead();
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "地底太阳：光球生成异常，已安全中止"));
+                        DarkGrey.LOG.error(
+                            "Underground Sun orb spawn failed for player " + player.getCommandSenderName()
+                                + " in dimension "
+                                + world.provider.dimensionId,
+                            e);
+                    } catch (LinkageError e) {
+                        if (orb != null) orb.setDead();
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "地底太阳：光球生成不兼容，已安全中止"));
+                        DarkGrey.LOG.error(
+                            "Underground Sun orb spawn linkage failure for player " + player.getCommandSenderName()
+                                + " in dimension "
+                                + world.provider.dimensionId,
+                            e);
+                    }
                 } else {
                     nbt.setBoolean("UndergroundSunChargeCompleted", true);
                     player.addChatMessage(
                         new ChatComponentText(
                             EnumChatFormatting.RED + "地底太阳：光球数量已达到上限 " + currentOrbs + "/" + maxStoredOrbs));
                 }
-                player.stopUsingItem();
+                clearChargeState(stack);
+                player.clearItemInUse();
             }
         }
     }
 
     @Override
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int timeLeft) {
-        NBTTagCompound nbt = getOrCreateTag(stack);
-        nbt.removeTag("UndergroundSunCharging");
-        nbt.removeTag("UndergroundSunChargeCompleted");
-        nbt.removeTag("UndergroundSunChargeStartTime");
+        clearChargeState(stack);
     }
 
     @Override
@@ -241,23 +280,25 @@ public class ComponentUndergroundSun
         }
 
         NBTTagCompound nbt = getOrCreateTag(stack);
-        if (nbt.getBoolean("UndergroundSunCharging") && player.getItemInUse() == stack) {
+        if (nbt.getBoolean("UndergroundSunCharging") && player.isUsingItem()) {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "地底太阳正在蓄力"));
             return true;
         }
 
-        long now = world.getTotalWorldTime();
-        long lastLaunch = player.getEntityData()
-            .getLong("DarkGreyUndergroundSunLastLaunch");
-        if (now - lastLaunch < launchCooldownTicks) {
+        NBTTagCompound playerData = player.getEntityData();
+        long launchCooldownMillis = CooldownHelper.ticksToMillis(launchCooldownTicks);
+        if (!CooldownHelper
+            .isReady(playerData, LAUNCH_COOLDOWN_END_MILLIS_KEY, launchCooldownMillis, LEGACY_LAUNCH_COOLDOWN_KEY)) {
             return true;
         }
 
         EntityUndergroundSunOrb oldestOrb = UndergroundSunOrbManager.findOldestFollowingOrb(player);
         if (oldestOrb == null) {
-            player.getEntityData()
-                .setLong("DarkGreyUndergroundSunLastLaunch", now + 20); // cooldown for msg
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "地底太阳：当前没有可发射的光球"));
+            long messageCooldownMillis = CooldownHelper.ticksToMillis(20L);
+            if (CooldownHelper.isReady(playerData, NO_ORB_MESSAGE_END_MILLIS_KEY, messageCooldownMillis)) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "地底太阳：当前没有可发射的光球"));
+                CooldownHelper.start(playerData, NO_ORB_MESSAGE_END_MILLIS_KEY, messageCooldownMillis);
+            }
             return true;
         }
 
@@ -265,8 +306,8 @@ public class ComponentUndergroundSun
         if (look != null) {
             look = look.normalize();
             oldestOrb.launch(look);
-            player.getEntityData()
-                .setLong("DarkGreyUndergroundSunLastLaunch", now);
+            CooldownHelper
+                .start(playerData, LAUNCH_COOLDOWN_END_MILLIS_KEY, launchCooldownMillis, LEGACY_LAUNCH_COOLDOWN_KEY);
         }
         return true;
     }

@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
 import com.greyhat.dark_grey.api.CombatTargeting;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.RPGItemDataManager;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
@@ -32,6 +33,9 @@ import com.greyhat.dark_grey.entity.EntityItanisArrow.ArrowState;
 
 public class ComponentItanis
     implements IRPGComponent, IOnRightClick, IOnBowUsingTick, IOnBowShoot, IHasTooltip, IOnLeftClick, IOnHeldTick {
+
+    private static final String LEGACY_MODE_SWITCH_COOLDOWN_KEY = "ItanisModeSwitchCooldown";
+    private static final String MODE_SWITCH_COOLDOWN_END_MILLIS_KEY = "ItanisModeSwitchCooldownEndMillis";
 
     private int normalDrawTicks = 20;
     private float bonusChance1 = 0.85F;
@@ -180,14 +184,13 @@ public class ComponentItanis
         }
 
         NBTTagCompound nbt = getOrCreateNBT(stack);
-        long now = player.worldObj.getTotalWorldTime();
-        long lastSwitch = nbt.getLong("ItanisModeSwitchCooldown");
-
-        if (now - lastSwitch < 5) {
+        long cooldownMillis = CooldownHelper.ticksToMillis(5L);
+        if (!CooldownHelper
+            .isReady(nbt, MODE_SWITCH_COOLDOWN_END_MILLIS_KEY, cooldownMillis, LEGACY_MODE_SWITCH_COOLDOWN_KEY)) {
             return true; // Cooldown anti-spam
         }
 
-        nbt.setLong("ItanisModeSwitchCooldown", now);
+        CooldownHelper.start(nbt, MODE_SWITCH_COOLDOWN_END_MILLIS_KEY, cooldownMillis, LEGACY_MODE_SWITCH_COOLDOWN_KEY);
         boolean currentMode = nbt.getBoolean("ItanisChargeMode");
         boolean newMode = !currentMode;
         nbt.setBoolean("ItanisChargeMode", newMode);

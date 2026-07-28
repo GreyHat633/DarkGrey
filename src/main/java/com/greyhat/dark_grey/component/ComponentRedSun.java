@@ -9,6 +9,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
+import com.greyhat.dark_grey.api.CooldownHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.RedSunFireballManager;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
@@ -21,6 +22,9 @@ import com.greyhat.dark_grey.status.RedSunBurnData;
 
 public class ComponentRedSun
     implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IHasTooltip {
+
+    private static final String LEGACY_COOLDOWN_END_TICK_KEY = "DarkGreyRedSunCooldownEnd";
+    private static final String COOLDOWN_END_MILLIS_KEY = "DarkGreyRedSunCooldownEndMillis";
 
     private int maxChargeTicks = 180;
     private float minFireballSize = 1.0F;
@@ -172,18 +176,33 @@ public class ComponentRedSun
         }
     }
 
+    private long getRemainingCooldownMillis(EntityPlayer player) {
+        return CooldownHelper.getRemainingMillis(
+            player.getEntityData(),
+            COOLDOWN_END_MILLIS_KEY,
+            CooldownHelper.ticksToMillis(cooldownTicks),
+            LEGACY_COOLDOWN_END_TICK_KEY);
+    }
+
+    private void startCooldown(EntityPlayer player) {
+        CooldownHelper.start(
+            player.getEntityData(),
+            COOLDOWN_END_MILLIS_KEY,
+            CooldownHelper.ticksToMillis(cooldownTicks),
+            LEGACY_COOLDOWN_END_TICK_KEY);
+    }
+
     @Override
     public ItemStack onRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        long cooldownEnd = player.getEntityData()
-            .getLong("DarkGreyRedSunCooldownEnd");
-        if (world.getTotalWorldTime() < cooldownEnd) {
-            if (!world.isRemote) {
-                double secs = (cooldownEnd - world.getTotalWorldTime()) / 20.0;
+        if (!world.isRemote) {
+            long remainingCooldownMillis = getRemainingCooldownMillis(player);
+            if (remainingCooldownMillis > 0L) {
+                double secs = remainingCooldownMillis / 1000.0D;
                 player.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
                         EnumChatFormatting.RED + String.format("技能冷却中：%.1f 秒", secs)));
+                return itemStack;
             }
-            return itemStack;
         }
 
         EntityRedSunFireball existing = RedSunFireballManager.findChargingFireball(player);
@@ -228,8 +247,7 @@ public class ComponentRedSun
             EntityRedSunFireball fireball = RedSunFireballManager.findChargingFireball(player);
             if (fireball != null) {
                 fireball.launch(player.getLookVec());
-                player.getEntityData()
-                    .setLong("DarkGreyRedSunCooldownEnd", world.getTotalWorldTime() + cooldownTicks);
+                startCooldown(player);
                 world.playSoundAtEntity(player, "mob.ghast.fireball", 1.0F, 1.0F);
             }
         }
@@ -265,11 +283,9 @@ public class ComponentRedSun
         tooltip.add(EnumChatFormatting.RED + "【烧伤】异常：");
         tooltip.add(EnumChatFormatting.GRAY + "  玩家每次切换物品时扣除 10 点生命值，并减少 20% 防御力");
 
-        long cooldownEnd = player.getEntityData()
-            .getLong("DarkGreyRedSunCooldownEnd");
-        long now = player.worldObj.getTotalWorldTime();
-        if (cooldownEnd > now) {
-            double secs = (cooldownEnd - now) / 20.0;
+        long remainingCooldownMillis = getRemainingCooldownMillis(player);
+        if (remainingCooldownMillis > 0L) {
+            double secs = remainingCooldownMillis / 1000.0D;
             tooltip.add(EnumChatFormatting.RED + String.format("冷却中：%.1f 秒", secs));
         }
     }

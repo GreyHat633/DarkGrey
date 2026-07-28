@@ -98,7 +98,20 @@ public class EntityStarBullet extends EntityThrowable {
                     && CombatTargeting.canDamage(shooter, (EntityLivingBase) mop.entityHit, false)) {
                     EntityLivingBase target = (EntityLivingBase) mop.entityHit;
                     DamageSource source = RPGDamageSources.causeArrowDamage(this, shooter);
-                    RPGDamageSources.dealDamageWithoutInvulnerability(target, source, this.customDamage);
+                    double originalMotionX = target.motionX;
+                    double originalMotionY = target.motionY;
+                    double originalMotionZ = target.motionZ;
+                    boolean originalIsAirBorne = target.isAirBorne;
+                    boolean originalVelocityChanged = target.velocityChanged;
+                    try {
+                        RPGDamageSources.dealDamageWithoutInvulnerability(target, source, this.customDamage);
+                    } finally {
+                        target.motionX = originalMotionX;
+                        target.motionY = originalMotionY;
+                        target.motionZ = originalMotionZ;
+                        target.isAirBorne = originalIsAirBorne;
+                        target.velocityChanged = originalVelocityChanged;
+                    }
                 }
             }
 

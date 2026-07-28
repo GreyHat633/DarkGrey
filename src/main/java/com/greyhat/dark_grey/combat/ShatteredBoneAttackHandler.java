@@ -23,12 +23,12 @@ public class ShatteredBoneAttackHandler {
     private static class MovementData {
 
         double lastX, lastZ;
-        long nextDamageTick;
+        int damageCooldownTicks;
 
         MovementData(double x, double z) {
             this.lastX = x;
             this.lastZ = z;
-            this.nextDamageTick = 0;
+            this.damageCooldownTicks = 0;
         }
     }
 
@@ -59,6 +59,9 @@ public class ShatteredBoneAttackHandler {
             this.tracking.put(uuid, new MovementData(entity.posX, entity.posZ));
             return;
         }
+        if (data.damageCooldownTicks > 0) {
+            data.damageCooldownTicks--;
+        }
 
         double dx = entity.posX - data.lastX;
         double dz = entity.posZ - data.lastZ;
@@ -71,11 +74,10 @@ public class ShatteredBoneAttackHandler {
         }
 
         if (distSq >= 0.01) {
-            long now = world.getTotalWorldTime();
-            if (now >= data.nextDamageTick) {
+            if (data.damageCooldownTicks <= 0) {
                 com.greyhat.dark_grey.api.RPGDamageSources
                     .dealDamageWithoutInvulnerability(entity, ShatteredBoneDamageSources.causeMovementDamage(), 5.0F);
-                data.nextDamageTick = now + 5;
+                data.damageCooldownTicks = 5;
             }
         }
 

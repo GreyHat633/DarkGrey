@@ -52,6 +52,7 @@ public class ItemRPGWeapon extends ItemSword implements IRPGItemContainer {
 
     public ItemRPGWeapon(String id, ToolMaterial material, List<IRPGComponent> components) {
         super(material);
+        this.setMaxDamage(0);
         this.rpgItemId = id;
         this.allComponents = Collections.unmodifiableList(components);
         this.hitHandlers = IRPGComponent.filterByCapability(components, IOnHit.class);
@@ -201,12 +202,7 @@ public class ItemRPGWeapon extends ItemSword implements IRPGItemContainer {
 
     @Override
     public int getMaxDamage(ItemStack stack) {
-        RPGItemDataManager.ItemConfig config = RPGItemDataManager.getInstance()
-            .getConfig(rpgItemId);
-        if (config != null && config.durability > 0) {
-            return config.durability;
-        }
-        return super.getMaxDamage(stack);
+        return 0;
     }
 
     @Override
