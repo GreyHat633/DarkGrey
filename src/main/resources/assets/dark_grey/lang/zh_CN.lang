@@ -57,6 +57,8 @@ mark.dark_grey.fracture.name=骨折
 mark.dark_grey.fracture.description=每层降低 10% 移动速度。在5层时，将会诱发严重的碎骨，导致移动受损。骨折达到满层之前不会自然衰减，满层后会持续脱落。
 mark.dark_grey.shattered_bone.name=碎骨
 mark.dark_grey.shattered_bone.description=由严重的骨折引发。碎骨导致携带者进行任何移动都会承受巨大的伤害。此外，受到物理攻击时，骨骼碎片会向外溅射，对周围单位造成穿甲伤害并扩散碎骨状态。
+mark.dark_grey.scorch.name=灼痕
+mark.dark_grey.scorch.description=处于灼痕状态的实体受到的伤害提升。玩家在灼痕状态下切换快捷栏将会承受额外的生命值扣除。
 
 mark.fracture.ui.speed_reduction=移动速度降低%s%%
 mark.fracture.ui.next_decay=下一次减少：%s秒
@@ -69,3 +71,26 @@ mark.fracture.floating.refresh=骨折持续刷新
 item.bone_crusher.name=粉碎之骨
 component.dark_grey.bone_crusher.name=粉碎之骨
 component.dark_grey.bone_crusher.desc=每有效近战命中 %s 次，施加 %s 层骨折印记
+
+item.dark_grey:shattered_bone_staff.name=碎骨权杖
+item.dark_grey:hardened_bone_marrow.name=硬化骨髓
+
+tooltip.shattered_bone_staff.damage=基础攻击力：%s
+tooltip.shattered_bone_staff.charge=长按右键蓄力%s秒
+tooltip.shattered_bone_staff.cost=蓄力完成后消耗%s个硬化骨髓
+tooltip.shattered_bone_staff.circle=在脚下展开半径%s格的碎骨法阵
+tooltip.shattered_bone_staff.duration=施法最多持续%s秒
+tooltip.shattered_bone_staff.root=施法期间无法移动
+tooltip.shattered_bone_staff.slow=法阵内敌人获得缓慢II
+tooltip.shattered_bone_staff.damage_tick=每%s秒受到一次等同于权杖攻击力的伤害
+tooltip.shattered_bone_staff.fracture=每受到%s次法阵伤害获得%s层骨折
+tooltip.shattered_bone_staff.release=松开右键会提前终止法术
+
+tooltip.hardened_bone_marrow.description=不知何人的骨髓，摸上去比想象中坚硬
+tooltip.hardened_bone_marrow.no_recipe=暂无合成配方
+
+message.shattered_bone_staff.no_material=缺少施法材料：硬化骨髓
+message.shattered_bone_staff.not_on_ground=必须在地面上才能绘制法阵
+message.shattered_bone_staff.cast_cancelled=碎骨权杖施法已中断
+item.bone_cannon.name=骸骨大炮
+item.dark_grey_bone_cannon.name=骸骨大炮

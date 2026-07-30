@@ -5,8 +5,12 @@
 package com.greyhat.dark_grey.component;
 
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -21,9 +25,12 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
     private static final String LEGACY_LAST_TRIGGER_TICK = "darkgrey_supernova_heavy_strike_last_tick";
     private static final String COOLDOWN_END_MILLIS = "darkgrey_supernova_heavy_strike_cooldown_end_millis";
     private static final String READY_NOTIFIED = "darkgrey_supernova_heavy_strike_ready_notified";
+    private static final UUID MOVEMENT_SPEED_MODIFIER_UUID = UUID.fromString("8f7aeb9c-2a26-4dd4-b1f8-841ba1e7c245");
+    private static final String MOVEMENT_SPEED_MODIFIER_NAME = "darkgrey.supernova_set.movement_speed";
 
     private float intervalSeconds;
     private float multiplier;
+    private float movementSpeedBonus;
     private int buffDuration;
     private int buffId;
     private int buffAmplifier;
@@ -31,6 +38,7 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
     public ComponentSupernovaSet() {
         this.intervalSeconds = 5.0f;
         this.multiplier = 4.0f;
+        this.movementSpeedBonus = 0.80f;
         this.buffDuration = 200;
         this.buffId = 5;
         this.buffAmplifier = 1;
@@ -53,6 +61,14 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
                 0.0F,
                 1000000.0F,
                 4.0F);
+        }
+        if (params.has("movementSpeedBonus")) {
+            this.movementSpeedBonus = HeavyStrikeComponent.clampFinite(
+                params.get("movementSpeedBonus")
+                    .getAsFloat(),
+                0.0F,
+                4.0F,
+                0.80F);
         }
         if (params.has("buffDuration")) {
             this.buffDuration = params.get("buffDuration")
@@ -141,7 +157,11 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
 
     @Override
     public void onSetTick(final EntityPlayer player, final int pieceCount) {
-        if (pieceCount < 2 || player.worldObj == null || player.worldObj.isRemote) {
+        if (player == null || player.worldObj == null || player.worldObj.isRemote) {
+            return;
+        }
+        this.updateMovementSpeed(player, pieceCount >= 2 ? this.movementSpeedBonus : 0.0F);
+        if (pieceCount < 2) {
             return;
         }
         HeavyStrikeComponent.notifyWhenReady(
@@ -152,6 +172,30 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
             this.intervalSeconds,
             player,
             "\u8D85\u65B0\u661F\u91CD\u51FB");
+    }
+
+    private void updateMovementSpeed(final EntityPlayer player, final float bonus) {
+        IAttributeInstance movementSpeed = player.getEntityAttribute(SharedMonsterAttributes.movementSpeed);
+        if (movementSpeed == null) {
+            return;
+        }
+
+        AttributeModifier existing = movementSpeed.getModifier(MOVEMENT_SPEED_MODIFIER_UUID);
+        if (existing != null && (bonus <= 0.0F || Math.abs(existing.getAmount() - bonus) > 0.000001D)) {
+            movementSpeed.removeModifier(existing);
+            existing = null;
+        }
+        if (bonus <= 0.0F || existing != null) {
+            return;
+        }
+
+        AttributeModifier modifier = new AttributeModifier(
+            MOVEMENT_SPEED_MODIFIER_UUID,
+            MOVEMENT_SPEED_MODIFIER_NAME,
+            bonus,
+            2);
+        modifier.setSaved(false);
+        movementSpeed.applyModifier(modifier);
     }
 
     @Override
@@ -178,6 +222,12 @@ public class ComponentSupernovaSet implements ISetComponent, IHasTooltip {
                 + " \u79d2\uff0c\u4e0b\u4e00\u6b21\u8fd1\u6218\u547d\u4e2d\u989d\u5916\u9020\u6210\u5f53\u524d\u624b\u6301\u6b66\u5668\u653b\u51fb\u529b\u7684 \u00A7c"
                 + String.format("%.1f", this.multiplier)
                 + " \u00A77\u500d\u4f24\u5bb3");
+        tooltipLines.add(
+            "    " + color2
+                + "\u540c\u65f6\u63d0\u9ad8\u79fb\u52a8\u901f\u5ea6\uff1a"
+                + (activeCount >= 2 ? "\u00A7b" : "\u00A78")
+                + Math.round(this.movementSpeedBonus * 100.0F)
+                + "%");
         final String color3 = (activeCount >= 4) ? "\u00A7a" : "\u00A78";
         final String prefix3 = (activeCount >= 4) ? "\u00A7a\u2714 " : "\u00A78\u2716 ";
         tooltipLines.add(

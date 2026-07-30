@@ -131,7 +131,17 @@ public final class MarkManager {
         int maxStacks = type.getMaxStacks();
         boolean wasAlreadyMax = oldStacks >= maxStacks;
 
-        int newStacks = Math.min(oldStacks + context.getRequestedStacks(), maxStacks);
+        int effectiveRequestedStacks = context.getRequestedStacks();
+        if (context.getSource() instanceof net.minecraft.entity.player.EntityPlayer) {
+            effectiveRequestedStacks = com.greyhat.dark_grey.api.SetBonusManager.modifyMarkRequestedStacks(
+                (net.minecraft.entity.player.EntityPlayer) context.getSource(),
+                target,
+                markId,
+                context,
+                effectiveRequestedStacks);
+        }
+
+        int newStacks = Math.min(oldStacks + effectiveRequestedStacks, maxStacks);
         int actualAddedStacks = newStacks - oldStacks;
         boolean reachedMax = newStacks >= maxStacks;
 
@@ -153,7 +163,7 @@ public final class MarkManager {
             if (firstApplication) {
                 type.onFirstApplied(target, instance, context);
             }
-            type.onApplied(target, instance, context, context.getRequestedStacks(), actualAddedStacks);
+            type.onApplied(target, instance, context, effectiveRequestedStacks, actualAddedStacks);
         } catch (Exception e) {
             DarkGrey.LOG.error("Error during mark apply logic for " + markId, e);
         }
@@ -172,7 +182,7 @@ public final class MarkManager {
             reachedMax,
             wasAlreadyMax,
             oldStacks,
-            context.getRequestedStacks(),
+            effectiveRequestedStacks,
             actualAddedStacks,
             newStacks,
             null);

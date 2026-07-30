@@ -152,7 +152,8 @@
             "multiplier": 4,
             "buffDuration": 200,
             "buffId": 5,
-            "buffAmplifier": 1
+            "buffAmplifier": 1,
+            "movementSpeedBonus": 0.8
           }
         }
       ],
@@ -177,7 +178,8 @@
             "multiplier": 4,
             "buffDuration": 200,
             "buffId": 5,
-            "buffAmplifier": 1
+            "buffAmplifier": 1,
+            "movementSpeedBonus": 0.8
           }
         }
       ],
@@ -202,7 +204,8 @@
             "multiplier": 4,
             "buffDuration": 200,
             "buffId": 5,
-            "buffAmplifier": 1
+            "buffAmplifier": 1,
+            "movementSpeedBonus": 0.8
           }
         }
       ],
@@ -227,7 +230,8 @@
             "multiplier": 4,
             "buffDuration": 200,
             "buffId": 5,
-            "buffAmplifier": 1
+            "buffAmplifier": 1,
+            "movementSpeedBonus": 0.8
           }
         }
       ],
@@ -507,6 +511,155 @@
         }
       ],
       "maxStackSize": 1,
+      "enchantments": ""
+    },
+    {
+      "id": "shattered_bone_staff",
+      "type": "法杖",
+      "displayName": {
+        "zh_CN": "碎骨权杖",
+        "en_US": "Shattered Bone Staff"
+      },
+      "texture": "dark_grey:shattered_bone_staff",
+      "durability": 0,
+      "damage": 4,
+      "components": [
+        {
+          "name": "碎骨权杖",
+          "params": {
+            "chargeTicks": 60,
+            "maxCastTicks": 160,
+            "circleRadius": 10.0,
+            "verticalHalfHeight": 2.5,
+            "pulseIntervalTicks": 10,
+            "fractureMarkId": "fracture",
+            "hitsPerFracture": 2,
+            "fractureStacksPerTrigger": 1,
+            "slownessAmplifier": 1,
+            "slownessRefreshTicks": 15,
+            "materialItemId": "hardened_bone_marrow",
+            "materialCost": 1,
+            "consumeInCreative": false,
+            "requireMaterialInCreative": false,
+            "lockCasterPosition": true,
+            "teleportCancelThreshold": 4.0
+          }
+        }
+      ],
+      "enchantments": ""
+    },
+    {
+      "id": "hardened_bone_marrow",
+      "type": "道具",
+      "displayName": {
+        "zh_CN": "硬化骨髓",
+        "en_US": "Hardened Bone Marrow"
+      },
+      "texture": "dark_grey:hardened_bone_marrow",
+      "durability": 0,
+      "damage": 0,
+      "components": [],
+      "enchantments": ""
+    },
+    {
+      "id": "bone_cannon",
+      "type": "铳",
+      "displayName": {
+        "zh_CN": "骸骨大炮",
+        "en_US": "Bone Cannon"
+      },
+      "texture": "dark_grey:bone_cannon",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "骸骨大炮",
+          "params": {
+            "loadTicksRequired": 50,
+            "slownessAmplifier": 2,
+            "projectileDamage": 23.0,
+            "projectileSpeed": 1.5
+          }
+        }
+      ],
+      "armor": 0,
+      "maxStackSize": 1,
+      "enchantments": ""
+    },
+    {
+      "id": "shattered_skeleton_helmet",
+      "type": "头盔",
+      "displayName": {
+        "zh_CN": "粉碎骸骨战盔",
+        "en_US": "Shattered Skeleton Helmet"
+      },
+      "texture": "dark_grey:shattered_skeleton_helmet",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "粉碎骸骨",
+          "params": {}
+        }
+      ],
+      "armor": 3,
+      "enchantments": ""
+    },
+    {
+      "id": "shattered_skeleton_chestplate",
+      "type": "胸甲",
+      "displayName": {
+        "zh_CN": "粉碎骸骨胸甲",
+        "en_US": "Shattered Skeleton Chestplate"
+      },
+      "texture": "dark_grey:shattered_skeleton_chestplate",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "粉碎骸骨",
+          "params": {}
+        }
+      ],
+      "armor": 8,
+      "enchantments": ""
+    },
+    {
+      "id": "shattered_skeleton_leggings",
+      "type": "护腿",
+      "displayName": {
+        "zh_CN": "粉碎骸骨护腿",
+        "en_US": "Shattered Skeleton Leggings"
+      },
+      "texture": "dark_grey:shattered_skeleton_leggings",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "粉碎骸骨",
+          "params": {}
+        }
+      ],
+      "armor": 6,
+      "enchantments": ""
+    },
+    {
+      "id": "shattered_skeleton_boots",
+      "type": "靴子",
+      "displayName": {
+        "zh_CN": "粉碎骸骨战靴",
+        "en_US": "Shattered Skeleton Boots"
+      },
+      "texture": "dark_grey:shattered_skeleton_boots",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "粉碎骸骨",
+          "params": {}
+        }
+      ],
+      "armor": 3,
       "enchantments": ""
     }
   ]

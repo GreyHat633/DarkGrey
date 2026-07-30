@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 
 import com.greyhat.dark_grey.api.capability.ISetComponent;
 import com.greyhat.dark_grey.item.ItemRPGArmor;
+import com.greyhat.dark_grey.mark.api.MarkApplyContext;
 
 public class SetBonusManager {
 
@@ -24,6 +25,7 @@ public class SetBonusManager {
         if (player.worldObj.isRemote) {
             return;
         }
+        final Map<String, SetInfo> previousSets = SetBonusManager.ACTIVE_SETS.get(player);
         final Map<String, ISetComponent> representativeInstances = new HashMap<String, ISetComponent>();
         final Map<String, Integer> counts = new HashMap<String, Integer>();
         for (int slot = 0; slot < 4; ++slot) {
@@ -46,7 +48,34 @@ public class SetBonusManager {
                 }
             }
         }
+        java.util.Set<String> allSetIds = new java.util.HashSet<String>();
+        if (previousSets != null) {
+            allSetIds.addAll(previousSets.keySet());
+        }
+        allSetIds.addAll(counts.keySet());
+
+        for (String setId : allSetIds) {
+            int oldPieceCount = (previousSets != null && previousSets.containsKey(setId))
+                ? previousSets.get(setId).pieceCount
+                : 0;
+            int newPieceCount = counts.getOrDefault(setId, 0);
+
+            if (oldPieceCount != newPieceCount) {
+                ISetComponent instanceToUse = null;
+                if (newPieceCount > 0) {
+                    instanceToUse = representativeInstances.get(setId);
+                } else if (previousSets != null && previousSets.containsKey(setId)) {
+                    instanceToUse = previousSets.get(setId).instance;
+                }
+
+                if (instanceToUse != null) {
+                    instanceToUse.onSetPieceCountChanged(player, oldPieceCount, newPieceCount);
+                }
+            }
+        }
+
         if (counts.isEmpty()) {
+            notifyRemovedSets(player, previousSets, null);
             SetBonusManager.ACTIVE_SETS.remove(player);
         } else {
             final Map<String, SetInfo> playerSets = new HashMap<String, SetInfo>();
@@ -54,7 +83,20 @@ public class SetBonusManager {
                 final String setId2 = entry.getKey();
                 playerSets.put(setId2, new SetInfo(entry.getValue(), representativeInstances.get(setId2)));
             }
+            notifyRemovedSets(player, previousSets, playerSets);
             SetBonusManager.ACTIVE_SETS.put(player, playerSets);
+        }
+    }
+
+    private static void notifyRemovedSets(final EntityPlayer player, final Map<String, SetInfo> previousSets,
+        final Map<String, SetInfo> currentSets) {
+        if (previousSets == null || previousSets.isEmpty()) {
+            return;
+        }
+        for (final Map.Entry<String, SetInfo> entry : previousSets.entrySet()) {
+            if (currentSets == null || !currentSets.containsKey(entry.getKey())) {
+                entry.getValue().instance.onSetTick(player, 0);
+            }
         }
     }
 
@@ -114,6 +156,20 @@ public class SetBonusManager {
         for (final SetInfo info : playerSets.values()) {
             info.instance.onSetTick(player, info.pieceCount);
         }
+    }
+
+    public static int modifyMarkRequestedStacks(EntityPlayer applier, EntityLivingBase target, String markId,
+        MarkApplyContext context, int requestedStacks) {
+        final Map<String, SetInfo> playerSets = SetBonusManager.ACTIVE_SETS.get(applier);
+        if (playerSets == null || playerSets.isEmpty()) {
+            return requestedStacks;
+        }
+        int current = requestedStacks;
+        for (final SetInfo info : playerSets.values()) {
+            current = info.instance
+                .modifyMarkRequestedStacks(applier, target, markId, context, current, info.pieceCount);
+        }
+        return Math.max(0, current);
     }
 
     static {

@@ -17,6 +17,7 @@ import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
 import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 import com.greyhat.dark_grey.api.SetBonusManager;
 import com.greyhat.dark_grey.api.capability.IModifyMeleeDamage;
 import com.greyhat.dark_grey.api.capability.IOnEquip;
@@ -66,6 +67,9 @@ public class RPGCoreEventHandler {
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
         if (event.entity.worldObj.isRemote) {
+            return;
+        }
+        if (RPGDamageSources.isFoolsHangingDamage(event.source)) {
             return;
         }
 
@@ -202,6 +206,9 @@ public class RPGCoreEventHandler {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onMeleeDamageModify(LivingHurtEvent event) {
         if (event.entity.worldObj.isRemote || event.isCanceled()) {
+            return;
+        }
+        if (RPGDamageSources.isFoolsHangingDamage(event.source)) {
             return;
         }
 

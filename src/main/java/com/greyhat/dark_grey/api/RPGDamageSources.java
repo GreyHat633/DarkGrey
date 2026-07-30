@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 
 /** Central factory for DarkGrey damage sources that must retain their owner. */
@@ -38,6 +39,24 @@ public final class RPGDamageSources {
             return DamageSource.causeMobDamage(caster);
         }
         return null;
+    }
+
+    /**
+     * Creates the absolute player-owned damage used by Suspended Clockhand's
+     * "Fool's Hanging" skill.
+     *
+     * <p>
+     * Keeping the vanilla {@code player} damage type and the real player as the
+     * source preserves loot, experience and NPC death attribution. The dedicated
+     * subtype lets DarkGrey exclude this skill from its own weapon/set proc chain.
+     * </p>
+     */
+    public static DamageSource causeFoolsHangingDamage(EntityPlayer player) {
+        return new FoolsHangingDamageSource(player);
+    }
+
+    public static boolean isFoolsHangingDamage(DamageSource source) {
+        return source instanceof FoolsHangingDamageSource;
     }
 
     /** Creates indirect magic damage for Underground Sun. */
@@ -124,6 +143,16 @@ public final class RPGDamageSources {
         } finally {
             target.hurtResistantTime = Math.max(oldHurtResistantTime, target.hurtResistantTime);
             target.hurtTime = Math.max(oldHurtTime, target.hurtTime);
+        }
+    }
+
+    private static final class FoolsHangingDamageSource extends EntityDamageSource {
+
+        private FoolsHangingDamageSource(EntityPlayer player) {
+            super("player", player);
+            this.setDamageBypassesArmor();
+            this.setDamageIsAbsolute();
+            this.setDamageAllowedInCreativeMode();
         }
     }
 }

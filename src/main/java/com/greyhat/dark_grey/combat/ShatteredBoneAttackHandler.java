@@ -243,6 +243,17 @@ public class ShatteredBoneAttackHandler {
                     }
                 }
             }
+
+            if (attacker instanceof net.minecraft.entity.player.EntityPlayer) {
+                if (com.greyhat.dark_grey.api.SetBonusManager
+                    .getActiveSetCount((net.minecraft.entity.player.EntityPlayer) attacker, "shattered_skeleton")
+                    >= 4) {
+                    com.greyhat.dark_grey.api.RPGDamageSources.dealDamageWithoutInvulnerability(
+                        target,
+                        ShatteredBoneDamageSources.causeSplashDamage(attacker),
+                        splashDamage);
+                }
+            }
         } finally {
             com.greyhat.dark_grey.util.SplashRecursionGuard.setProcessingSplash(false);
         }

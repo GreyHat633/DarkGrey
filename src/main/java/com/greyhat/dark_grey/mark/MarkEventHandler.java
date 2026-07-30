@@ -40,15 +40,25 @@ public class MarkEventHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerClone(PlayerEvent.Clone event) {
-        if (!event.wasDeath || event.entityPlayer.worldObj.isRemote) {
+        if (event.entityPlayer.worldObj.isRemote) {
             return;
         }
 
         MarkContainer original = MarkContainer.get(event.original);
-        if (original != null) {
-            original.clear();
+        MarkContainer current = MarkContainer.get(event.entityPlayer);
+
+        if (event.wasDeath) {
+            if (original != null) {
+                original.clear();
+            }
+            MarkManager.clearAll(event.entityPlayer, MarkRemovalReason.ENTITY_DEATH);
+        } else {
+            if (original != null && current != null) {
+                net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
+                original.saveNBTData(tag);
+                current.loadNBTData(tag);
+            }
         }
-        MarkManager.clearAll(event.entityPlayer, MarkRemovalReason.ENTITY_DEATH);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

@@ -56,4 +56,14 @@ public class CommandDarkGrey extends CommandBase {
     public int getRequiredPermissionLevel() {
         return 2; // OP required
     }
+
+    @Override
+    public java.util.List addTabCompletionOptions(ICommandSender sender, String[] args) {
+        if (args.length == 1) {
+            return getListOfStringsMatchingLastWord(args, "fillsoul", "mark");
+        } else if (args.length > 1 && args[0].equalsIgnoreCase("mark")) {
+            return com.greyhat.dark_grey.command.CommandMark.addTabCompletionOptions(sender, args);
+        }
+        return null;
+    }
 }

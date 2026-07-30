@@ -15,6 +15,7 @@ import com.greyhat.dark_grey.item.ItemRPGAccessory;
 import com.greyhat.dark_grey.item.ItemRPGAmmo;
 import com.greyhat.dark_grey.item.ItemRPGArmor;
 import com.greyhat.dark_grey.item.ItemRPGBow;
+import com.greyhat.dark_grey.item.ItemRPGGun;
 import com.greyhat.dark_grey.item.ItemRPGHoe;
 import com.greyhat.dark_grey.item.ItemRPGLance;
 import com.greyhat.dark_grey.item.ItemRPGScythe;
@@ -182,6 +183,11 @@ public class RPGItemLoader {
             case "bow":
                 return new ItemRPGBow(id, components);
 
+            // —— Gun (铳) ——
+            case "\u94F3": // 铳
+            case "gun":
+                return new ItemRPGGun(id, toolMaterial, components);
+
             // —— Ammo ——
             case "\u7BAD": // 箭
             case "arrow":
@@ -266,6 +272,12 @@ public class RPGItemLoader {
             DarkGrey.proxy.registerBowRenderer(rpgItem);
             DarkGrey.LOG.info("Bound custom bow renderer for " + id);
             return; // Don't use normal RPGItemRenderer for bows!
+        }
+
+        if (rpgItem instanceof ItemRPGGun) {
+            DarkGrey.proxy.registerGunRenderer(rpgItem, id, texture);
+            DarkGrey.LOG.info("Bound custom gun renderer for " + id);
+            return; // Don't use normal RPGItemRenderer for guns!
         }
 
         if (!(rpgItem instanceof ItemRPGWeapon || rpgItem instanceof ItemRPGTool || rpgItem instanceof ItemRPGHoe)) {

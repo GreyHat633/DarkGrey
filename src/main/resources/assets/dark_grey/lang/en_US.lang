@@ -58,3 +58,25 @@ mark.fracture.floating.refresh=Fracture Refreshed
 item.bone_crusher.name=Bone Crusher
 component.dark_grey.bone_crusher.name=Bone Crusher
 component.dark_grey.bone_crusher.desc=Every %s valid melee hits applies %s stacks of Fracture
+
+item.dark_grey:shattered_bone_staff.name=Shattered Bone Staff
+item.dark_grey:hardened_bone_marrow.name=Hardened Bone Marrow
+
+tooltip.shattered_bone_staff.damage=Base Damage: %s
+tooltip.shattered_bone_staff.charge=Hold right-click to charge for %s seconds
+tooltip.shattered_bone_staff.cost=Consumes %s Hardened Bone Marrow upon charge completion
+tooltip.shattered_bone_staff.circle=Creates a bone-shattering magic circle with a %s-block radius at your feet
+tooltip.shattered_bone_staff.duration=Casting lasts up to %s seconds
+tooltip.shattered_bone_staff.root=Cannot move while casting
+tooltip.shattered_bone_staff.slow=Enemies in the circle receive Slowness II
+tooltip.shattered_bone_staff.damage_tick=Takes damage equal to the staff's damage every %s seconds
+tooltip.shattered_bone_staff.fracture=Gains %s stack(s) of Fracture every %s magic circle hits
+tooltip.shattered_bone_staff.release=Releasing right-click will terminate the spell early
+
+tooltip.hardened_bone_marrow.description=Casting material for Shattered Bone Staff
+tooltip.hardened_bone_marrow.no_recipe=No crafting recipe available
+
+message.shattered_bone_staff.no_material=Missing casting material: Hardened Bone Marrow
+message.shattered_bone_staff.cast_cancelled=Shattered Bone Staff casting interrupted
+item.bone_cannon.name=Bone Cannon
+item.dark_grey_bone_cannon.name=Bone Cannon

@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
 import com.greyhat.dark_grey.api.IRPGComponent;
+import com.greyhat.dark_grey.mark.api.MarkApplyContext;
 
 public interface ISetComponent extends IRPGComponent {
 
@@ -25,4 +26,11 @@ public interface ISetComponent extends IRPGComponent {
     default void onSetTick(final EntityPlayer player, final int pieceCount) {}
 
     default void onSetKill(final EntityPlayer killer, final EntityLivingBase victim, final int pieceCount) {}
+
+    default void onSetPieceCountChanged(final EntityPlayer player, final int oldPieceCount, final int newPieceCount) {}
+
+    default int modifyMarkRequestedStacks(final EntityPlayer applier, final EntityLivingBase target,
+        final String markId, final MarkApplyContext context, final int requestedStacks, final int pieceCount) {
+        return requestedStacks;
+    }
 }

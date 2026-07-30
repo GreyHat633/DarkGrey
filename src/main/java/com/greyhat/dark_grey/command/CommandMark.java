@@ -152,4 +152,22 @@ public class CommandMark {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown mark action: " + action));
         }
     }
+
+    public static java.util.List addTabCompletionOptions(ICommandSender sender, String[] args) {
+        if (args.length == 2) {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "apply", "set", "remove", "clear", "list");
+        } else if (args.length == 3) {
+            return CommandBase.getListOfStringsMatchingLastWord(
+                args,
+                net.minecraft.server.MinecraftServer.getServer()
+                    .getAllUsernames());
+        } else if (args.length == 4) {
+            java.util.List<String> marks = new java.util.ArrayList<String>();
+            for (com.greyhat.dark_grey.mark.api.IMarkType t : com.greyhat.dark_grey.mark.MarkRegistry.getAll()) {
+                marks.add(t.getId());
+            }
+            return CommandBase.getListOfStringsMatchingLastWord(args, marks.toArray(new String[0]));
+        }
+        return null;
+    }
 }

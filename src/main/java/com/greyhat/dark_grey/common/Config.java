@@ -40,6 +40,11 @@ public class Config {
     public static double fractureSpeedReductionPerStack = 0.10;
     public static int fractureDefaultStableDurationTicks = 100;
 
+    // --- Scorch ---
+    public static int scorchDefaultStableDurationTicks = 200;
+    public static float scorchSwitchDamage = 10.0f;
+    public static float scorchIncomingDamageMultiplier = 1.2f;
+
     // --- Shattered Bone ---
     public static int shatteredBoneDefaultStableDurationTicks = 60; // 3 seconds
     public static double shatteredBoneMovementThresholdSq = 0.01; // 0.1 blocks per tick
@@ -106,6 +111,13 @@ public class Config {
             1,
             720000,
             "Default stable duration used when an application does not provide one.");
+
+        scorchDefaultStableDurationTicks = configuration
+            .getInt("defaultStableDurationTicks", "marks.scorch", 200, 1, 720000, "");
+        scorchSwitchDamage = configuration.getFloat("switchDamage", "marks.scorch", 10.0f, 0.0f, 10000.0f, "");
+        scorchIncomingDamageMultiplier = configuration
+            .getFloat("incomingDamageMultiplier", "marks.scorch", 1.2f, 1.0f, 100.0f, "");
+
         if (configuration.hasChanged()) {
             configuration.save();
         }

@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.IRPGComponent;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnHeldTick;
 import com.greyhat.dark_grey.api.capability.IOnHit;
@@ -51,6 +52,15 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
     @Override
     public void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float damage) {
         int soul = getSoulValue(weaponStack);
+        if (soul <= 0) {
+            weaponStack.stackSize = 0;
+            if (attacker instanceof EntityPlayer) {
+                ((EntityPlayer) attacker).inventory.markDirty();
+            }
+            attacker.worldObj.playSoundEffect(attacker.posX, attacker.posY, attacker.posZ, "random.glass", 1.0F, 1.0F);
+            return;
+        }
+
         soul -= 1;
 
         if (target.getHealth() <= 0.0F || target.isDead) {
@@ -127,11 +137,12 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
 
                 List<Entity> entities = world
                     .getEntitiesWithinAABBExcludingEntity(player, player.boundingBox.expand(8.0D, 8.0D, 8.0D));
+                DamageSource damageSource = RPGDamageSources.causeFoolsHangingDamage(player);
                 for (Entity entity : entities) {
                     if (entity instanceof EntityLivingBase) {
                         EntityLivingBase target = (EntityLivingBase) entity;
                         if (CombatTargeting.canDamage(player, target, true)) {
-                            target.attackEntityFrom(DamageSource.outOfWorld, Float.MAX_VALUE);
+                            target.attackEntityFrom(damageSource, Float.MAX_VALUE);
                         }
                     }
                 }
@@ -190,14 +201,34 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
         int soulValue = getSoulValue(itemStack);
         float currentBonusDamage = soulValue / 4.0F;
 
-        tooltipLines.add("§4=========================");
-        tooltipLines.add("§c[被动技能: 灵魂汲取]");
-        tooltipLines.add("§7攻击时汲取灵魂，将灵魂转化为真实的破坏力");
-        tooltipLines.add("§c灵魂附加伤害: +" + String.format("%.1f", currentBonusDamage));
-        tooltipLines.add("§b当前灵魂值: " + soulValue + " / " + MAX_SOUL_VALUE);
-        tooltipLines.add("§4=========================");
-        tooltipLines.add("§e[主动技能: 愚人的倒悬]");
-        tooltipLines.add("§7长按右键蓄力释放，秒杀周围一切生物");
+        tooltipLines.add(EnumChatFormatting.AQUA + "灵魂即倒悬时针的生命与锋芒");
+        tooltipLines.add("");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "攻击：消耗 1 点灵魂");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：蓄力愚者的倒悬");
+        tooltipLines.add("");
+        tooltipLines.add(EnumChatFormatting.GREEN + "灵魂刻度：");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  每 4 点灵魂转化为 1 点额外伤害");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  击杀目标恢复 2 点灵魂，最高 2048 点");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  灵魂归零后再次攻击，倒悬时针必定破碎");
+        tooltipLines.add("");
+        tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "愚者的倒悬：");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  满 2048 点灵魂时，蓄力 5 秒释放");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  对周围 8 格内所有合法目标降下绝对毁灭");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  释放后灵魂降至 1 点");
+        tooltipLines.add(EnumChatFormatting.DARK_RED + "  下一击若未能夺取灵魂，武器将濒临破碎");
+        tooltipLines.add("");
+        tooltipLines.add(
+            EnumChatFormatting.WHITE + "当前灵魂："
+                + EnumChatFormatting.AQUA
+                + soulValue
+                + EnumChatFormatting.GRAY
+                + " / "
+                + MAX_SOUL_VALUE);
+        tooltipLines.add(
+            EnumChatFormatting.WHITE + "当前额外伤害："
+                + EnumChatFormatting.RED
+                + "+"
+                + String.format("%.1f", currentBonusDamage));
     }
 
     private int getSoulValue(ItemStack stack) {

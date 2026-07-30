@@ -80,9 +80,6 @@ public class MarkSelfHudRenderer {
             int col = i / maxPerColumn;
             int row = i % maxPerColumn;
 
-            int x = 10 + col * 94; // 120 * 0.75 = 90 + 4 spacing
-            int y = 10 + row * 26; // 32 * 0.75 = 24 + 2 spacing
-
             IMarkType type = MarkRegistry.get(instance.markId);
             MarkVisualData visual = type.getVisualData();
 
@@ -92,9 +89,9 @@ public class MarkSelfHudRenderer {
             GL11.glPushMatrix();
             GL11.glScalef(0.75F, 0.75F, 1.0F);
 
-            // Adjust coordinates to maintain roughly the same screen position
-            int renderX = (int) (x / 0.75F);
-            int renderY = (int) (y / 0.75F);
+            // Define coordinates uniformly in the scaled space to avoid truncation gaps
+            int renderX = 14 + col * 126;
+            int renderY = 14 + row * 36;
 
             // Draw Background and Borders (Solid background)
             int bgColor = 0xFF222222; // Completely opaque

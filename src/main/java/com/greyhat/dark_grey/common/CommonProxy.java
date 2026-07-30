@@ -41,6 +41,8 @@ public class CommonProxy {
 
     public void registerScytheRenderer(Item item, String equippedTextureName) {}
 
+    public void registerGunRenderer(Item item, String id, String texture) {}
+
     public void registerNetworkHandlers() {
         DarkGrey.NETWORK.registerMessage(
             com.greyhat.dark_grey.network.ConfigSyncHandler.class,
@@ -92,6 +94,16 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage.class,
             9,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.ShatteredBoneStaffCastStartHandler.class,
+            com.greyhat.dark_grey.network.ShatteredBoneStaffCastStartMessage.class,
+            10,
+            cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndHandler.class,
+            com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndMessage.class,
+            11,
+            cpw.mods.fml.relauncher.Side.CLIENT);
     }
 
     public void scheduleConfigApply(String json) {}
@@ -111,4 +123,9 @@ public class CommonProxy {
     public void scheduleUndergroundSunExplosion(com.greyhat.dark_grey.network.UndergroundSunExplosionMessage message) {}
 
     public void scheduleShatteredBoneParticles(com.greyhat.dark_grey.network.ShatteredBoneParticlesMessage message) {}
+
+    public void scheduleShatteredBoneCastStart(
+        com.greyhat.dark_grey.network.ShatteredBoneStaffCastStartMessage message) {}
+
+    public void scheduleShatteredBoneCastEnd(com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndMessage message) {}
 }

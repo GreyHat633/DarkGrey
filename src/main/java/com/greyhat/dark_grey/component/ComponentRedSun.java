@@ -18,7 +18,9 @@ import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
 import com.greyhat.dark_grey.entity.EntityRedSunFireball;
-import com.greyhat.dark_grey.status.RedSunBurnData;
+import com.greyhat.dark_grey.mark.MarkManager;
+import com.greyhat.dark_grey.mark.api.MarkApplyContext;
+import com.greyhat.dark_grey.mark.type.ScorchMarkType;
 
 public class ComponentRedSun
     implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IHasTooltip {
@@ -41,9 +43,6 @@ public class ComponentRedSun
     private float projectileUpwardBoost = 0.12F;
     private int projectileLifetime = 200;
     private int burnDurationTicks = 200;
-    private float burnSwitchDamage = 10.0F;
-    private float burnIncomingDamageMultiplier = 1.20F;
-    private boolean ignoreSwitchDamageHurtResistance = true;
 
     private float volumeShrinkRate = 0.05F;
     private float maxExplosionRadius = 25.0F;
@@ -133,21 +132,6 @@ public class ComponentRedSun
                 72000,
                 params.get("burnDurationTicks")
                     .getAsInt()));
-        if (params.has("burnSwitchDamage")) burnSwitchDamage = Math.max(
-            0.0F,
-            Math.min(
-                1000.0F,
-                params.get("burnSwitchDamage")
-                    .getAsFloat()));
-        if (params.has("burnIncomingDamageMultiplier")) burnIncomingDamageMultiplier = Math.max(
-            1.0F,
-            Math.min(
-                10.0F,
-                params.get("burnIncomingDamageMultiplier")
-                    .getAsFloat()));
-        if (params.has("ignoreSwitchDamageHurtResistance"))
-            ignoreSwitchDamageHurtResistance = params.get("ignoreSwitchDamageHurtResistance")
-                .getAsBoolean();
 
         if (params.has("volumeShrinkRate")) volumeShrinkRate = Math.max(
             0.001F,
@@ -166,13 +150,14 @@ public class ComponentRedSun
     @Override
     public void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float actualDamage) {
         if (!attacker.worldObj.isRemote && actualDamage > 0) {
-            RedSunBurnData.apply(
+            MarkManager.apply(
                 target,
-                attacker,
-                burnDurationTicks,
-                burnSwitchDamage,
-                burnIncomingDamageMultiplier,
-                ignoreSwitchDamageHurtResistance);
+                ScorchMarkType.ID,
+                new MarkApplyContext.Builder().source(attacker)
+                    .requestedStacks(1)
+                    .stableDurationTicks(burnDurationTicks)
+                    .worldTime(target.worldObj.getTotalWorldTime())
+                    .build());
         }
     }
 
@@ -228,9 +213,6 @@ public class ComponentRedSun
                 projectileUpwardBoost,
                 projectileLifetime,
                 burnDurationTicks,
-                burnSwitchDamage,
-                burnIncomingDamageMultiplier,
-                ignoreSwitchDamageHurtResistance,
                 volumeShrinkRate,
                 maxExplosionRadius);
             world.spawnEntityInWorld(fireball);
@@ -256,7 +238,7 @@ public class ComponentRedSun
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
         tooltip.add(EnumChatFormatting.GOLD + "范围伤害：" + (int) minFireballDamage + " ~ " + (int) maxFireballDamage);
-        tooltip.add(EnumChatFormatting.AQUA + "所有攻击附带【烧伤】异常状态");
+        tooltip.add(EnumChatFormatting.AQUA + "所有攻击附带 1 层【灼痕】印记");
         tooltip.add("");
         tooltip.add(EnumChatFormatting.YELLOW + "长按右键：蓄力烈阳");
         tooltip.add(EnumChatFormatting.YELLOW + "松开右键：发射烈阳");
@@ -279,9 +261,6 @@ public class ComponentRedSun
         tooltip.add(EnumChatFormatting.GRAY + "  火球无视实体障碍物，对接触的实体造成碾压伤害并击飞");
         tooltip.add(EnumChatFormatting.GRAY + "  直到撞击墙壁或动能耗尽停滞时才会发生大规模爆炸");
         tooltip.add(EnumChatFormatting.GRAY + String.format("  技能冷却时间：%.1f 秒", cooldownTicks / 20.0F));
-        tooltip.add("");
-        tooltip.add(EnumChatFormatting.RED + "【烧伤】异常：");
-        tooltip.add(EnumChatFormatting.GRAY + "  玩家每次切换物品时扣除 10 点生命值，并减少 20% 防御力");
 
         long remainingCooldownMillis = getRemainingCooldownMillis(player);
         if (remainingCooldownMillis > 0L) {

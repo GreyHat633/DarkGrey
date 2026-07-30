@@ -135,6 +135,14 @@ public class ItemRPGUsableItem extends Item implements IRPGItemContainer {
         for (IHasTooltip handler : tooltipHandlers) {
             handler.addTooltipLines(stack, player, tooltipLines, showAdvanced);
         }
+
+        // Generic tooltips for items without tooltip components
+        if (net.minecraft.util.StatCollector.canTranslate("tooltip." + rpgItemId + ".description")) {
+            tooltipLines.add(
+                net.minecraft.util.EnumChatFormatting.DARK_PURPLE + ""
+                    + net.minecraft.util.EnumChatFormatting.ITALIC
+                    + net.minecraft.util.StatCollector.translateToLocal("tooltip." + rpgItemId + ".description"));
+        }
     }
 
     @Override

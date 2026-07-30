@@ -18,6 +18,13 @@ public class ClientProxy extends CommonProxy {
         net.minecraftforge.common.MinecraftForge.EVENT_BUS
             .register(new com.greyhat.dark_grey.mark.client.render.MarkEntityOverlayRenderer());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer());
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(com.greyhat.dark_grey.client.event.ClientInputEventHandler.INSTANCE);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
             .register(new com.greyhat.dark_grey.mark.client.render.MarkTargetPanelRenderer());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS
             .register(new com.greyhat.dark_grey.mark.client.render.MarkSelfHudRenderer());
@@ -196,6 +203,35 @@ public class ClientProxy extends CommonProxy {
         });
     }
 
+    public void scheduleShatteredBoneCastStart(
+        final com.greyhat.dark_grey.network.ShatteredBoneStaffCastStartMessage message) {
+        runOnClientThread(new Runnable() {
+
+            @Override
+            public void run() {
+                com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE.addCast(
+                    message.casterEntityId,
+                    message.anchorX,
+                    message.anchorY,
+                    message.anchorZ,
+                    message.radius,
+                    message.castEndWorldTime);
+            }
+        });
+    }
+
+    public void scheduleShatteredBoneCastEnd(
+        final com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndMessage message) {
+        runOnClientThread(new Runnable() {
+
+            @Override
+            public void run() {
+                com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE
+                    .removeCast(message.casterEntityId);
+            }
+        });
+    }
+
     private static void runOnClientThread(Runnable runnable) {
         net.minecraft.client.Minecraft.getMinecraft()
             .func_152344_a(runnable);
@@ -291,6 +327,9 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityBoneSpikesField.class,
             new com.greyhat.dark_grey.client.render.RenderInvisible());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityBoneMarrowProjectile.class,
+            new com.greyhat.dark_grey.client.render.RenderBoneMarrowProjectile());
 
         // Register Supernova planet renderer
         com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer planetRenderer = new com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer();
@@ -298,6 +337,14 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register(planetRenderer);
+
+        // Register Shattered Bone Circle Renderer
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE);
+
+        // Register Gun HUD Renderer
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(com.greyhat.dark_grey.client.render.GunHudRenderer.INSTANCE);
     }
 
     @Override
@@ -328,6 +375,36 @@ public class ClientProxy extends CommonProxy {
     public void registerLanceRenderer(Item item, String equippedTextureName) {
         net.minecraftforge.client.MinecraftForgeClient
             .registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderRPGLance(equippedTextureName));
+    }
+
+    @Override
+    public void registerGunRenderer(Item item, String id, String texture) {
+        // Check for an _equipped texture to use the high-res path
+        String prefix = id;
+        if (texture != null && !texture.isEmpty() && texture.contains(":")) {
+            prefix = texture.substring(texture.indexOf(":") + 1);
+        } else if (texture != null && !texture.isEmpty()) {
+            prefix = texture;
+        }
+
+        String equippedName = prefix + "_equipped";
+        String resourcePath = "/assets/dark_grey/textures/items/" + equippedName + ".png";
+        boolean textureExists = getClass().getResource(resourcePath) != null;
+        if (!textureExists) {
+            java.io.File devFile = new java.io.File("src/main/resources" + resourcePath);
+            if (devFile.exists()) {
+                textureExists = true;
+            }
+        }
+
+        if (textureExists) {
+            net.minecraftforge.client.MinecraftForgeClient
+                .registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderRPGGun(equippedName));
+        } else {
+            // Fallback: use atlas icon-based rendering with shake effect
+            net.minecraftforge.client.MinecraftForgeClient
+                .registerItemRenderer(item, new com.greyhat.dark_grey.client.render.RenderRPGGun());
+        }
     }
 
     public void registerAnimatedItemRenderer(Item item, String equippedTextureName, int frames, int frameTimeMs) {

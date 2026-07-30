@@ -16,7 +16,9 @@ import net.minecraft.world.WorldServer;
 
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.RPGDamageSources;
-import com.greyhat.dark_grey.status.RedSunBurnData;
+import com.greyhat.dark_grey.mark.MarkManager;
+import com.greyhat.dark_grey.mark.api.MarkApplyContext;
+import com.greyhat.dark_grey.mark.type.ScorchMarkType;
 
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
@@ -51,10 +53,6 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     private float projectileUpwardBoost = 0.12F;
     private int projectileLifetime = 200;
     private int burnDurationTicks = 200;
-    private float burnSwitchDamage = 10.0F;
-    private float burnIncomingDamageMultiplier = 1.20F;
-    private boolean ignoreSwitchDamageHurtResistance = true;
-
     private float volumeShrinkRate = 0.05F;
     private float maxExplosionRadius = 25.0F;
 
@@ -73,7 +71,6 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
     public EntityRedSunFireball(World world, EntityPlayer owner, int maxChargeTicks, float minSize, float maxSize,
         float minDamage, float maxDamage, float minProjectileSpeed, float maxProjectileSpeed, float projectileGravity,
         float projectileDrag, float projectileUpwardBoost, int projectileLifetime, int burnDurationTicks,
-        float burnSwitchDamage, float burnIncomingDamageMultiplier, boolean ignoreSwitchDamageHurtResistance,
         float volumeShrinkRate, float maxExplosionRadius) {
         this(world);
         this.ownerUuid = owner.getUniqueID();
@@ -92,9 +89,6 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         this.projectileUpwardBoost = projectileUpwardBoost;
         this.projectileLifetime = projectileLifetime;
         this.burnDurationTicks = burnDurationTicks;
-        this.burnSwitchDamage = burnSwitchDamage;
-        this.burnIncomingDamageMultiplier = burnIncomingDamageMultiplier;
-        this.ignoreSwitchDamageHurtResistance = ignoreSwitchDamageHurtResistance;
         this.volumeShrinkRate = volumeShrinkRate;
         this.maxExplosionRadius = maxExplosionRadius;
 
@@ -365,13 +359,14 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
             boolean damaged = target.attackEntityFrom(ds, currentDamage);
             if (damaged) {
-                RedSunBurnData.apply(
+                MarkManager.apply(
                     target,
-                    ownerLiving,
-                    burnDurationTicks,
-                    burnSwitchDamage,
-                    burnIncomingDamageMultiplier,
-                    ignoreSwitchDamageHurtResistance);
+                    ScorchMarkType.ID,
+                    new MarkApplyContext.Builder().source(ownerLiving)
+                        .requestedStacks(1)
+                        .stableDurationTicks(burnDurationTicks)
+                        .worldTime(target.worldObj.getTotalWorldTime())
+                        .build());
                 // Knockback
                 Vec3 dir = Vec3.createVectorHelper(target.posX - this.posX, 0, target.posZ - this.posZ);
                 if (dir.lengthVector() > 0) dir = dir.normalize();
@@ -437,13 +432,14 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
                 if (target.attackEntityFrom(ds, currentDamage)) {
                     if (ownerLiving != null) {
-                        RedSunBurnData.apply(
+                        MarkManager.apply(
                             target,
-                            ownerLiving,
-                            burnDurationTicks,
-                            burnSwitchDamage,
-                            burnIncomingDamageMultiplier,
-                            ignoreSwitchDamageHurtResistance);
+                            ScorchMarkType.ID,
+                            new MarkApplyContext.Builder().source(ownerLiving)
+                                .requestedStacks(1)
+                                .stableDurationTicks(burnDurationTicks)
+                                .worldTime(target.worldObj.getTotalWorldTime())
+                                .build());
                     }
                 }
             }
@@ -514,13 +510,6 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         rollingTicks = nbt.getInteger("RollingTicks");
         stoppedTicks = nbt.getInteger("StoppedTicks");
         burnDurationTicks = nbt.getInteger("BurnDuration");
-        if (nbt.hasKey("BurnSwitchDamage")) burnSwitchDamage = nbt.getFloat("BurnSwitchDamage");
-        if (nbt.hasKey("BurnIncomingDamageMultiplier")) {
-            burnIncomingDamageMultiplier = nbt.getFloat("BurnIncomingDamageMultiplier");
-        }
-        if (nbt.hasKey("IgnoreSwitchDamageHurtResistance")) {
-            ignoreSwitchDamageHurtResistance = nbt.getBoolean("IgnoreSwitchDamageHurtResistance");
-        }
         volumeShrinkRate = nbt.getFloat("VolShrink");
         maxExplosionRadius = nbt.getFloat("MaxExpRad");
         playedMaxChargeSound = nbt.getBoolean("PlayedMaxDing");
@@ -571,9 +560,6 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
         nbt.setInteger("RollingTicks", rollingTicks);
         nbt.setInteger("StoppedTicks", stoppedTicks);
         nbt.setInteger("BurnDuration", burnDurationTicks);
-        nbt.setFloat("BurnSwitchDamage", burnSwitchDamage);
-        nbt.setFloat("BurnIncomingDamageMultiplier", burnIncomingDamageMultiplier);
-        nbt.setBoolean("IgnoreSwitchDamageHurtResistance", ignoreSwitchDamageHurtResistance);
         nbt.setFloat("VolShrink", volumeShrinkRate);
         nbt.setFloat("MaxExpRad", maxExplosionRadius);
         nbt.setBoolean("PlayedMaxDing", playedMaxChargeSound);
