@@ -104,6 +104,11 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndMessage.class,
             11,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.BeyondStarSatelliteSyncMessage.Handler.class,
+            com.greyhat.dark_grey.network.BeyondStarSatelliteSyncMessage.class,
+            12,
+            cpw.mods.fml.relauncher.Side.CLIENT);
     }
 
     public void scheduleConfigApply(String json) {}

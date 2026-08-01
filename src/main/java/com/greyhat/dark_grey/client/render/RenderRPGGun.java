@@ -144,11 +144,26 @@ public class RenderRPGGun implements IItemRenderer {
                 }
             }
 
+            // Third-person specific flip around the barrel axis
+            if (type == ItemRenderType.EQUIPPED) {
+                // Rotate 180 degrees around the diagonal axis (1, -1, 0)
+                // This swaps the top-left (scope) and bottom-right (trigger)
+                // while preserving the grip and muzzle positions.
+                GL11.glTranslatef(0.5f, 0.5f, 0.0625f / 2.0f);
+                GL11.glRotatef(180.0f, 1.0f, -1.0f, 0.0f);
+                GL11.glTranslatef(-0.5f, -0.5f, -0.0625f / 2.0f);
+            }
+
             // Turn the extruded sprite around its true center so the muzzle points outward while preserving its top.
             if (type == ItemRenderType.EQUIPPED_FIRST_PERSON) {
                 GL11.glTranslatef(0.5f, 0.5f, -0.03125f);
                 GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
                 GL11.glTranslatef(-0.5f, -0.5f, 0.03125f);
+            }
+
+            // Apply third-person translation towards player at the very bottom of the transform stack.
+            if (type == ItemRenderType.EQUIPPED) {
+                GL11.glTranslatef(-0.12f, 0.0f, 0.0f);
             }
 
             // Render the item sprite

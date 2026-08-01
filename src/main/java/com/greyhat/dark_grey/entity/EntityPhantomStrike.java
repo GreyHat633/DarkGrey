@@ -163,7 +163,13 @@ public class EntityPhantomStrike extends Entity implements IEntityAdditionalSpaw
                     }
 
                     // Apply Scorched Mark to tracking system
-                    com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);
+                    com.greyhat.dark_grey.mark.MarkManager.apply(
+                        target,
+                        com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
+                        new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder().source(this.thrower)
+                            .requestedStacks(1)
+                            .worldTime(worldObj.getTotalWorldTime())
+                            .build());
                 }
             }
         }

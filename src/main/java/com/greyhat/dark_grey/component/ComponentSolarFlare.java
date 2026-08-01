@@ -38,7 +38,7 @@ public class ComponentSolarFlare
         tooltipLines.add("§6[主动技能: 耀斑冲锋]");
         tooltipLines.add("§7长按右键进行冲锋突进，跨越地形障碍");
         tooltipLines.add("§7撞击敌人时自动触发残影贯穿，造成额外 §c600% §7伤害");
-        tooltipLines.add("§7并为目标施加持续5秒的 [焦灼印记]");
+        tooltipLines.add("§7并为目标施加持续10秒的 [灼痕印记]");
         tooltipLines.add("§8(撞击墙壁会中断冲锋)");
         tooltipLines.add("");
         tooltipLines.add("§e[连击: 耀斑引爆]");
@@ -168,7 +168,13 @@ public class ComponentSolarFlare
                 }
 
                 // Apply Scorched Mark only after the hit was accepted.
-                com.greyhat.dark_grey.event.ScorchedMarkTracker.mark(target, 100);
+                com.greyhat.dark_grey.mark.MarkManager.apply(
+                    target,
+                    com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
+                    new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder().source(player)
+                        .requestedStacks(1)
+                        .worldTime(world.getTotalWorldTime())
+                        .build());
 
                 // Knockback target
                 target.addVelocity(look.xCoord * 1.5, 0.5, look.zCoord * 1.5);

@@ -32,6 +32,10 @@ public class ComponentBoneCannon
     private float projectileDamage = 23.0f;
     private float projectileSpeed = 3.5f;
 
+    public int getLoadTicksRequired() {
+        return this.loadTicksRequired;
+    }
+
     @Override
     public String getComponentId() {
         return "骸骨大炮";

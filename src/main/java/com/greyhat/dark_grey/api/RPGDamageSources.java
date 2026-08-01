@@ -77,6 +77,16 @@ public final class RPGDamageSources {
             .setMagicDamage();
     }
 
+    public static DamageSource causeBeyondStarSatelliteDamage(Entity projectile, EntityLivingBase owner) {
+        return new EntityDamageSourceIndirect("beyond_star_satellite", projectile, owner).setProjectile()
+            .setMagicDamage();
+    }
+
+    public static DamageSource causeBoneMeteorDamage(Entity projectile, EntityLivingBase owner) {
+        return new EntityDamageSourceIndirect("bone_meteor", projectile, owner).setProjectile()
+            .setMagicDamage();
+    }
+
     public static boolean isSwitchDamage(DamageSource source) {
         return "red_sun_burn_switch".equals(source.damageType);
     }

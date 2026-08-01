@@ -1,9 +1,11 @@
 package com.greyhat.dark_grey.mark.type;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 
 import com.greyhat.dark_grey.DarkGrey;
+import com.greyhat.dark_grey.api.RPGDamageSources;
 import com.greyhat.dark_grey.common.Config;
 import com.greyhat.dark_grey.mark.MarkInstance;
 import com.greyhat.dark_grey.mark.MarkManager;
@@ -132,5 +134,29 @@ public class ScorchMarkType extends AbstractMarkType {
     private int getStableDurationTicks(MarkInstance instance) {
         int duration = instance.getStableDurationTicks();
         return duration > 0 ? duration : getDefaultStableDurationTicks();
+    }
+
+    public void detonate(EntityLivingBase target, EntityLivingBase detonator, boolean preserveMark) {
+        if (target == null || target.worldObj.isRemote) return;
+
+        MarkManager.consume(target, ID, preserveMark ? 0 : 1);
+
+        DamageSource ds = RPGDamageSources.causeMarkDamage(ID, detonator);
+        if (com.greyhat.dark_grey.api.RPGDamageSources
+            .dealIndependentProjectileDamage(target, ds, Config.scorchSwitchDamage)) {
+            target.worldObj.playSoundEffect(target.posX, target.posY, target.posZ, "random.fizz", 1.0F, 1.0F);
+            if (target.worldObj instanceof net.minecraft.world.WorldServer) {
+                ((net.minecraft.world.WorldServer) target.worldObj).func_147487_a(
+                    "lava",
+                    target.posX,
+                    target.posY + target.height / 2.0,
+                    target.posZ,
+                    15,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.1);
+            }
+        }
     }
 }

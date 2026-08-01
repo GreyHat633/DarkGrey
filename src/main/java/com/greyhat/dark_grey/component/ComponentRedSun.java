@@ -18,9 +18,6 @@ import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
 import com.greyhat.dark_grey.entity.EntityRedSunFireball;
-import com.greyhat.dark_grey.mark.MarkManager;
-import com.greyhat.dark_grey.mark.api.MarkApplyContext;
-import com.greyhat.dark_grey.mark.type.ScorchMarkType;
 
 public class ComponentRedSun
     implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IHasTooltip {
@@ -150,14 +147,7 @@ public class ComponentRedSun
     @Override
     public void onHit(ItemStack weaponStack, EntityLivingBase attacker, EntityLivingBase target, float actualDamage) {
         if (!attacker.worldObj.isRemote && actualDamage > 0) {
-            MarkManager.apply(
-                target,
-                ScorchMarkType.ID,
-                new MarkApplyContext.Builder().source(attacker)
-                    .requestedStacks(1)
-                    .stableDurationTicks(burnDurationTicks)
-                    .worldTime(target.worldObj.getTotalWorldTime())
-                    .build());
+            com.greyhat.dark_grey.event.RedSunBurnTracker.mark(target, attacker, burnDurationTicks);
         }
     }
 
@@ -238,7 +228,9 @@ public class ComponentRedSun
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
         tooltip.add(EnumChatFormatting.GOLD + "范围伤害：" + (int) minFireballDamage + " ~ " + (int) maxFireballDamage);
-        tooltip.add(EnumChatFormatting.AQUA + "所有攻击附带 1 层【灼痕】印记");
+        tooltip.add(EnumChatFormatting.AQUA + "所有攻击附带【烧伤】效果");
+        tooltip.add(EnumChatFormatting.GRAY + "  处于烧伤状态的敌人切换物品时会受到真实伤害");
+        tooltip.add(EnumChatFormatting.GRAY + "  并且受到的所有最终伤害都会增加");
         tooltip.add("");
         tooltip.add(EnumChatFormatting.YELLOW + "长按右键：蓄力烈阳");
         tooltip.add(EnumChatFormatting.YELLOW + "松开右键：发射烈阳");

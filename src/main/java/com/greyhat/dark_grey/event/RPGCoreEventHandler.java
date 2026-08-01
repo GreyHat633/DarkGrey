@@ -76,11 +76,14 @@ public class RPGCoreEventHandler {
         EntityLivingBase hurtEntity = event.entityLiving;
 
         // Scorched Mark Explosion Logic
-        if (ScorchedMarkTracker.getTimer(hurtEntity) > 0) {
+        if (com.greyhat.dark_grey.mark.MarkManager.has(hurtEntity, com.greyhat.dark_grey.mark.type.ScorchMarkType.ID)) {
             if (event.source.getEntity() instanceof EntityPlayer && !event.source.isMagicDamage()
                 && !event.source.isExplosion()) {
                 EntityPlayer player = (EntityPlayer) event.source.getEntity();
-                ScorchedMarkTracker.clear(hurtEntity);
+                com.greyhat.dark_grey.mark.MarkManager.remove(
+                    hurtEntity,
+                    com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
+                    com.greyhat.dark_grey.mark.api.MarkRemovalReason.CONSUMED);
 
                 float baseDmg = 1.0f;
                 if (player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage) != null) {
@@ -445,7 +448,6 @@ public class RPGCoreEventHandler {
                 com.greyhat.dark_grey.api.RPGItemDataManager.getInstance()
                     .reload(true);
             }
-            ScorchedMarkTracker.tick();
         } else {
             MadokaVolleyDamageManager.flushExpired();
         }

@@ -168,8 +168,10 @@ public class RPGItemLoader {
             case "shovel":
                 return new ItemRPGTool(id, toolMaterial, "shovel", components);
 
-            // —— Usable Item ——
+            // —— Usable Item / Material ——
             case "道具":
+            case "材料": // material
+            case "material":
             case "usable_item":
                 return new com.greyhat.dark_grey.item.ItemRPGUsableItem(id, components);
 

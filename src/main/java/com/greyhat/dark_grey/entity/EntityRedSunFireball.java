@@ -16,9 +16,7 @@ import net.minecraft.world.WorldServer;
 
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.RPGDamageSources;
-import com.greyhat.dark_grey.mark.MarkManager;
-import com.greyhat.dark_grey.mark.api.MarkApplyContext;
-import com.greyhat.dark_grey.mark.type.ScorchMarkType;
+import com.greyhat.dark_grey.event.RedSunBurnTracker;
 
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import io.netty.buffer.ByteBuf;
@@ -359,14 +357,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
 
             boolean damaged = target.attackEntityFrom(ds, currentDamage);
             if (damaged) {
-                MarkManager.apply(
-                    target,
-                    ScorchMarkType.ID,
-                    new MarkApplyContext.Builder().source(ownerLiving)
-                        .requestedStacks(1)
-                        .stableDurationTicks(burnDurationTicks)
-                        .worldTime(target.worldObj.getTotalWorldTime())
-                        .build());
+                RedSunBurnTracker.mark(target, ownerLiving, this.burnDurationTicks);
                 // Knockback
                 Vec3 dir = Vec3.createVectorHelper(target.posX - this.posX, 0, target.posZ - this.posZ);
                 if (dir.lengthVector() > 0) dir = dir.normalize();
@@ -431,16 +422,7 @@ public class EntityRedSunFireball extends Entity implements IEntityAdditionalSpa
                 }
 
                 if (target.attackEntityFrom(ds, currentDamage)) {
-                    if (ownerLiving != null) {
-                        MarkManager.apply(
-                            target,
-                            ScorchMarkType.ID,
-                            new MarkApplyContext.Builder().source(ownerLiving)
-                                .requestedStacks(1)
-                                .stableDurationTicks(burnDurationTicks)
-                                .worldTime(target.worldObj.getTotalWorldTime())
-                                .build());
-                    }
+                    RedSunBurnTracker.mark(target, ownerLiving, this.burnDurationTicks);
                 }
             }
 

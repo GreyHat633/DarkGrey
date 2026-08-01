@@ -58,7 +58,7 @@ mark.dark_grey.fracture.description=每层降低 10% 移动速度。在5层时�
 mark.dark_grey.shattered_bone.name=碎骨
 mark.dark_grey.shattered_bone.description=由严重的骨折引发。碎骨导致携带者进行任何移动都会承受巨大的伤害。此外，受到物理攻击时，骨骼碎片会向外溅射，对周围单位造成穿甲伤害并扩散碎骨状态。
 mark.dark_grey.scorch.name=灼痕
-mark.dark_grey.scorch.description=处于灼痕状态的实体受到的伤害提升。玩家在灼痕状态下切换快捷栏将会承受额外的生命值扣除。
+mark.dark_grey.scorch.description=遭受攻击时，会引发剧烈爆炸造成额外范围伤害，并消耗该印记。
 
 mark.fracture.ui.speed_reduction=移动速度降低%s%%
 mark.fracture.ui.next_decay=下一次减少：%s秒

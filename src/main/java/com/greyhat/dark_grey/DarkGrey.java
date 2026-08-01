@@ -113,6 +113,10 @@ public class DarkGrey {
             .register("烈阳", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentRedSun::new);
         ComponentRegistry
             .register("腐败瓶", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentCorruptionBomb::new);
+        ComponentRegistry
+            .register("彼方之星", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentBeyondStar::new);
+        ComponentRegistry
+            .register("陨骨星", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneMeteorStar::new);
         ComponentRegistry.register(
             "碎骨瓶",
             (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneFlask::new);
@@ -122,6 +126,8 @@ public class DarkGrey {
             (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentShatteredBoneStaff::new);
         ComponentRegistry
             .register("骸骨大炮", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneCannon::new);
+        ComponentRegistry
+            .register("碎骨喷溅者", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneSplasher::new);
         ComponentRegistry.register(
             "粉碎骸骨",
             (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentShatteredSkeletonSet::new);
@@ -238,6 +244,22 @@ public class DarkGrey {
             64,
             10,
             true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityBeyondStarSatellite.class,
+            "beyond_star_satellite",
+            14,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityBoneMeteor.class,
+            "bone_meteor",
+            15,
+            (Object) DarkGrey.instance,
+            64,
+            4,
+            true);
         DarkGrey.LOG.info("======== DarkGrey Mod: 实体已注册 ========");
     }
 
@@ -271,11 +293,11 @@ public class DarkGrey {
             .bus()
             .register((Object) markTrackingHandler);
 
-        com.greyhat.dark_grey.event.ScorchMarkEventHandler scorchHandler = new com.greyhat.dark_grey.event.ScorchMarkEventHandler();
-        MinecraftForge.EVENT_BUS.register((Object) scorchHandler);
+        com.greyhat.dark_grey.event.RedSunBurnTracker redSunHandler = new com.greyhat.dark_grey.event.RedSunBurnTracker();
+        MinecraftForge.EVENT_BUS.register((Object) redSunHandler);
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
-            .register((Object) scorchHandler);
+            .register((Object) redSunHandler);
 
         com.greyhat.dark_grey.event.ErebusStateHandler erebusHandler = new com.greyhat.dark_grey.event.ErebusStateHandler();
         MinecraftForge.EVENT_BUS.register(erebusHandler);
@@ -292,6 +314,7 @@ public class DarkGrey {
             .register((Object) new com.greyhat.dark_grey.event.ServerLeftClickHandler());
 
         com.greyhat.dark_grey.combat.ShatteredBoneStaffCastManager.init();
+        com.greyhat.dark_grey.api.BeyondStarSatelliteManager.register();
 
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");
     }

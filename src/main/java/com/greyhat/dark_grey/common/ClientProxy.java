@@ -330,6 +330,19 @@ public class ClientProxy extends CommonProxy {
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityBoneMarrowProjectile.class,
             new com.greyhat.dark_grey.client.render.RenderBoneMarrowProjectile());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityBeyondStarSatellite.class,
+            new com.greyhat.dark_grey.client.render.RenderBeyondStarSatellite());
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityBoneMeteor.class,
+            new com.greyhat.dark_grey.client.render.RenderBoneMeteor());
+
+        // Register BeyondStarOrbitRenderer
+        com.greyhat.dark_grey.client.render.BeyondStarOrbitRenderer beyondStarRenderer = new com.greyhat.dark_grey.client.render.BeyondStarOrbitRenderer();
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(beyondStarRenderer);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(beyondStarRenderer);
 
         // Register Supernova planet renderer
         com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer planetRenderer = new com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer();

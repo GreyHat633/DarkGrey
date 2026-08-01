@@ -28,7 +28,7 @@ public final class DirectAttackClassifier {
         String type = source.damageType;
         if (type == null) return false;
 
-        if (type.startsWith("mark_") || type.startsWith("shattered_bone_")) {
+        if (type.startsWith("mark_") || type.startsWith("shattered_bone_") || type.equals("bone_meteor")) {
             return false;
         }
 
