@@ -198,7 +198,7 @@
     },
     {
       "id": "arrow_of_light",
-      "type": "箭",
+      "type": "弹药",
       "displayName": {
         "zh_CN": "光之矢",
         "en_US": "Arrow of Light"
@@ -583,7 +583,7 @@
     },
     {
       "id": "hardened_bone_marrow",
-      "type": "材料",
+      "type": "弹药",
       "displayName": {
         "zh_CN": "硬化骨髓",
         "en_US": "Hardened Bone Marrow"
@@ -754,6 +754,42 @@
         }
       ],
       "maxStackSize": 3,
+      "enchantments": ""
+    },
+    {
+      "id": "wolfsbane_m271",
+      "type": "铳",
+      "displayName": {
+        "zh_CN": "狼毒M271",
+        "en_US": "Wolfsbane M271"
+      },
+      "texture": "dark_grey:wolfsbane_m271",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "狼毒M271",
+          "params": {
+            "loadTicksRequired": 50,
+            "baseDamage": 100.0,
+            "magazineCapacity": 6
+          }
+        }
+      ],
+      "enchantments": ""
+    },
+    {
+      "id": "judgment_dice",
+      "type": "弹药",
+      "displayName": {
+        "zh_CN": "审判骰",
+        "en_US": "Judgment Dice"
+      },
+      "texture": "dark_grey:judgment_dice",
+      "durability": 0,
+      "damage": 0,
+      "components": [],
+      "maxStackSize": 64,
       "enchantments": ""
     }
   ]

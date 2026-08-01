@@ -14,6 +14,7 @@ import com.greyhat.dark_grey.api.GunMagazineHelper;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.component.ComponentBoneCannon;
 import com.greyhat.dark_grey.component.ComponentBoneSplasher;
+import com.greyhat.dark_grey.component.ComponentWolfsbaneM271;
 import com.greyhat.dark_grey.item.ItemRPGGun;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -60,6 +61,12 @@ public class GunHudRenderer {
                 capacity = 1;
                 // Legacy loaded state mapping
                 if (legacyBoneCannonLoaded) loadedAmmo = 1;
+                hasMagazine = true;
+                break;
+            } else if (comp instanceof ComponentWolfsbaneM271) {
+                ComponentWolfsbaneM271 wolfsbane = (ComponentWolfsbaneM271) comp;
+                reloadTicks = wolfsbane.getLoadTicksRequired();
+                capacity = wolfsbane.getMagazineCapacity();
                 hasMagazine = true;
                 break;
             }

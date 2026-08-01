@@ -352,11 +352,9 @@ public class ComponentBoneSplasher
         tooltipLines.add(EnumChatFormatting.GREEN + "使用指南");
         tooltipLines.add(EnumChatFormatting.YELLOW + "  [左键] 轰击：发射碎骨霰弹。");
         tooltipLines.add(
-            EnumChatFormatting.YELLOW + "  [长按右键] 供弹：消耗 "
-                + this.ammoPerReload
-                + " 个硬化骨髓，持续 "
+            EnumChatFormatting.YELLOW + "  [长按右键] 供弹：使用[硬化骨髓]进行装填 ("
                 + String.format("%.1f", this.reloadTicks / 20.0f)
-                + " 秒装填。");
+                + " 秒)");
         tooltipLines.add("");
 
         int loaded = GunMagazineHelper.getLoadedAmmo(stack);

@@ -21,6 +21,7 @@ import com.greyhat.dark_grey.api.capability.IOnHit;
 import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
+import com.greyhat.dark_grey.api.death.AbsoluteDeathService;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -142,7 +143,17 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                     if (entity instanceof EntityLivingBase) {
                         EntityLivingBase target = (EntityLivingBase) entity;
                         if (CombatTargeting.canDamage(player, target, true)) {
-                            target.attackEntityFrom(damageSource, Float.MAX_VALUE);
+                            if (target instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                                AbsoluteDeathService.requestAbsoluteDeath(
+                                    (net.minecraft.entity.player.EntityPlayerMP) target,
+                                    com.greyhat.dark_grey.api.death.AbsoluteDeathReason.FOOLS_HANGING);
+                            } else {
+                                target.attackEntityFrom(
+                                    new com.greyhat.dark_grey.api.death.AbsoluteDeathSource(
+                                        com.greyhat.dark_grey.api.death.AbsoluteDeathReason.FOOLS_HANGING,
+                                        player),
+                                    Float.MAX_VALUE);
+                            }
                         }
                     }
                 }
@@ -211,9 +222,9 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
         tooltipLines.add(EnumChatFormatting.GRAY + "  击杀目标恢复 2 点灵魂，最高 2048 点");
         tooltipLines.add(EnumChatFormatting.GRAY + "  灵魂归零后再次攻击，倒悬时针必定破碎");
         tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "愚者的倒悬：");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  满 2048 点灵魂时，蓄力 5 秒释放");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  对周围 8 格内所有合法目标降下绝对毁灭");
+        tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "愚者的倒悬");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  长按 2048 灵魂时持续 5 秒释放");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  对周围 8 格内合法目标赋予绝对死亡");
         tooltipLines.add(EnumChatFormatting.GRAY + "  释放后灵魂降至 1 点");
         tooltipLines.add(EnumChatFormatting.DARK_RED + "  下一击若未能夺取灵魂，武器将濒临破碎");
         tooltipLines.add("");

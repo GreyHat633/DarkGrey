@@ -193,6 +193,8 @@ public class RPGItemLoader {
             // —— Ammo ——
             case "\u7BAD": // 箭
             case "arrow":
+            case "\u5F39\u836F": // 弹药
+            case "ammo":
                 return new ItemRPGAmmo(id, components);
 
             // —— Armor —— (renderIndex: helmet/boots=0, chest/legs=1)

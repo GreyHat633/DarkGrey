@@ -121,6 +121,8 @@ public class DarkGrey {
             "碎骨瓶",
             (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneFlask::new);
         ComponentRegistry.register("粉碎之骨", (Supplier<IRPGComponent>) ComponentBoneCrusher::new);
+        com.greyhat.dark_grey.api.ComponentRegistry
+            .register("狼毒M271", () -> new com.greyhat.dark_grey.component.ComponentWolfsbaneM271());
         ComponentRegistry.register(
             "碎骨权杖",
             (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentShatteredBoneStaff::new);
@@ -266,6 +268,14 @@ public class DarkGrey {
     @Mod.EventHandler
     public void init(final FMLInitializationEvent event) {
         DarkGrey.LOG.info("======== DarkGrey Mod: Init 阶段开始 ========");
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityWolfsbaneBullet.class,
+            "wolfsbane_bullet",
+            16,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            true);
         DarkGrey.proxy.registerRenderers();
         DarkGrey.proxy.init(event);
         DarkGrey.LOG.info("======== DarkGrey Mod: Init 阶段完成 ========");
@@ -312,6 +322,13 @@ public class DarkGrey {
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register((Object) new com.greyhat.dark_grey.event.ServerLeftClickHandler());
+
+        com.greyhat.dark_grey.api.death.AbsoluteDeathService absoluteDeathService = new com.greyhat.dark_grey.api.death.AbsoluteDeathService();
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(absoluteDeathService);
+        com.greyhat.dark_grey.api.death.AbsoluteDeathEventHandler absoluteDeathEventHandler = new com.greyhat.dark_grey.api.death.AbsoluteDeathEventHandler();
+        MinecraftForge.EVENT_BUS.register(absoluteDeathEventHandler);
 
         com.greyhat.dark_grey.combat.ShatteredBoneStaffCastManager.init();
         com.greyhat.dark_grey.api.BeyondStarSatelliteManager.register();

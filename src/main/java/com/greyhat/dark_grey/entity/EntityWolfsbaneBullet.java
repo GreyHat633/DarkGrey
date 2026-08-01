@@ -10,22 +10,23 @@ import net.minecraft.world.World;
 import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.RPGDamageSources;
 
-public class EntityStarBullet extends EntityThrowable {
+public class EntityWolfsbaneBullet extends EntityThrowable {
 
     private float customDamage;
     private boolean isHeavyStrike;
-    private EntityLivingBase homingTarget;
 
-    public EntityStarBullet(World world) {
+    public EntityWolfsbaneBullet(World world) {
         super(world);
         this.customDamage = 1.0f;
         this.isHeavyStrike = false;
     }
 
-    public EntityStarBullet(World world, EntityLivingBase shooter, EntityLivingBase target, float damage,
-        boolean isHeavyStrike) {
+    public boolean isHeavyStrike() {
+        return this.isHeavyStrike;
+    }
+
+    public EntityWolfsbaneBullet(World world, EntityLivingBase shooter, float damage, boolean isHeavyStrike) {
         super(world, shooter);
-        this.homingTarget = target;
         this.customDamage = damage;
         this.isHeavyStrike = isHeavyStrike;
         this.dataWatcher.updateObject(20, Byte.valueOf((byte) (isHeavyStrike ? 1 : 0)));
@@ -49,33 +50,15 @@ public class EntityStarBullet extends EntityThrowable {
             return;
         }
 
-        if (!this.worldObj.isRemote) {
-            // Homing logic (fixed target)
-            if (this.homingTarget != null && !this.homingTarget.isDead) {
-                double targetX = this.homingTarget.posX;
-                double targetY = this.homingTarget.boundingBox.minY + (this.homingTarget.height / 2.0F);
-                double targetZ = this.homingTarget.posZ;
-
-                double dx = targetX - this.posX;
-                double dy = targetY - this.posY;
-                double dz = targetZ - this.posZ;
-
-                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                if (dist > 0) {
-                    double speed = 1.2;
-                    this.motionX = (dx / dist) * speed;
-                    this.motionY = (dy / dist) * speed;
-                    this.motionZ = (dz / dist) * speed;
-                }
-            }
-        } else {
+        if (this.worldObj.isRemote) {
             // Spawn particles
             for (int i = 0; i < 3; i++) {
                 double px = this.posX + (this.rand.nextDouble() - 0.5) * 0.3;
                 double py = this.posY + (this.rand.nextDouble() - 0.5) * 0.3;
                 double pz = this.posZ + (this.rand.nextDouble() - 0.5) * 0.3;
                 if (this.isHeavyStrike) {
-                    this.worldObj.spawnParticle("reddust", px, py, pz, 1.0, 0.2, 0.2);
+                    this.worldObj.spawnParticle("reddust", px, py, pz, 1.0, 0.1, 0.1);
+                    this.worldObj.spawnParticle("largesmoke", px, py, pz, 0.0, 0.0, 0.0);
                 } else {
                     this.worldObj.spawnParticle("magicCrit", px, py, pz, 0.0, 0.0, 0.0);
                     this.worldObj.spawnParticle("fireworksSpark", px, py, pz, 0.0, 0.0, 0.0);
@@ -92,12 +75,26 @@ public class EntityStarBullet extends EntityThrowable {
     @Override
     protected void onImpact(MovingObjectPosition mop) {
         if (!this.worldObj.isRemote) {
-            if (mop.entityHit != null) {
-                EntityLivingBase shooter = this.getThrower();
-                if (mop.entityHit instanceof EntityLivingBase && shooter != null
-                    && CombatTargeting.canDamage(shooter, (EntityLivingBase) mop.entityHit, false)) {
-                    EntityLivingBase target = (EntityLivingBase) mop.entityHit;
-                    DamageSource source = RPGDamageSources.causeArrowDamage(this, shooter);
+            EntityLivingBase shooter = this.getThrower();
+            if (this.isHeavyStrike) {
+                double radius = 2.5;
+                net.minecraft.util.AxisAlignedBB aabb = net.minecraft.util.AxisAlignedBB.getBoundingBox(
+                    this.posX - radius,
+                    this.posY - radius,
+                    this.posZ - radius,
+                    this.posX + radius,
+                    this.posY + radius,
+                    this.posZ + radius);
+
+                java.util.List<EntityLivingBase> targets = this.worldObj
+                    .getEntitiesWithinAABB(EntityLivingBase.class, aabb);
+                DamageSource source = RPGDamageSources.causeArrowDamage(this, shooter);
+
+                for (EntityLivingBase target : targets) {
+                    if (target == shooter && shooter != null) continue;
+                    if (shooter != null && !CombatTargeting.canDamage(shooter, target, false)) continue;
+                    if (shooter == null && target instanceof net.minecraft.entity.player.EntityPlayer) continue;
+
                     double originalMotionX = target.motionX;
                     double originalMotionY = target.motionY;
                     double originalMotionZ = target.motionZ;
@@ -111,6 +108,28 @@ public class EntityStarBullet extends EntityThrowable {
                         target.motionZ = originalMotionZ;
                         target.isAirBorne = originalIsAirBorne;
                         target.velocityChanged = originalVelocityChanged;
+                    }
+                }
+            } else {
+                if (mop.entityHit != null) {
+                    if (mop.entityHit instanceof EntityLivingBase && shooter != null
+                        && CombatTargeting.canDamage(shooter, (EntityLivingBase) mop.entityHit, false)) {
+                        EntityLivingBase target = (EntityLivingBase) mop.entityHit;
+                        DamageSource source = RPGDamageSources.causeArrowDamage(this, shooter);
+                        double originalMotionX = target.motionX;
+                        double originalMotionY = target.motionY;
+                        double originalMotionZ = target.motionZ;
+                        boolean originalIsAirBorne = target.isAirBorne;
+                        boolean originalVelocityChanged = target.velocityChanged;
+                        try {
+                            RPGDamageSources.dealDamageWithoutInvulnerability(target, source, this.customDamage);
+                        } finally {
+                            target.motionX = originalMotionX;
+                            target.motionY = originalMotionY;
+                            target.motionZ = originalMotionZ;
+                            target.isAirBorne = originalIsAirBorne;
+                            target.velocityChanged = originalVelocityChanged;
+                        }
                     }
                 }
             }
@@ -141,15 +160,15 @@ public class EntityStarBullet extends EntityThrowable {
             return;
         } else if (state == 18) {
             this.worldObj.spawnParticle("hugeexplosion", this.posX, this.posY, this.posZ, 1.0, 1.0, 1.0);
-            for (int i = 0; i < 15; ++i) {
+            for (int i = 0; i < 40; ++i) {
                 this.worldObj.spawnParticle(
                     "flame",
-                    this.posX + (this.rand.nextDouble() - 0.5) * 2.0,
-                    this.posY + (this.rand.nextDouble() - 0.5) * 2.0,
-                    this.posZ + (this.rand.nextDouble() - 0.5) * 2.0,
-                    this.rand.nextGaussian() * 0.2,
-                    this.rand.nextGaussian() * 0.2,
-                    this.rand.nextGaussian() * 0.2);
+                    this.posX + (this.rand.nextDouble() - 0.5) * 5.0,
+                    this.posY + (this.rand.nextDouble() - 0.5) * 5.0,
+                    this.posZ + (this.rand.nextDouble() - 0.5) * 5.0,
+                    this.rand.nextGaussian() * 0.05,
+                    this.rand.nextGaussian() * 0.05,
+                    this.rand.nextGaussian() * 0.05);
             }
             return;
         }
@@ -169,9 +188,5 @@ public class EntityStarBullet extends EntityThrowable {
         this.customDamage = nbt.getFloat("CustomDamage");
         this.isHeavyStrike = nbt.getBoolean("IsHeavyStrike");
         this.dataWatcher.updateObject(20, Byte.valueOf((byte) (this.isHeavyStrike ? 1 : 0)));
-        if (!this.worldObj.isRemote) {
-            // The fixed homing target cannot be reconstructed safely after a chunk reload.
-            this.setDead();
-        }
     }
 }

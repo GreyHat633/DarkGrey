@@ -187,6 +187,9 @@ public class ComponentBoneCannon
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List tooltipLines, boolean showAdvanced) {
         float baseDmg = projectileDamage;
+        NBTTagCompound nbt = stack.getTagCompound();
+        boolean isLoaded = nbt != null && nbt.getBoolean("DarkGreyBoneCannonLoaded");
+
         tooltipLines.add(EnumChatFormatting.GOLD + "基础伤害：" + (int) baseDmg);
         tooltipLines.add(EnumChatFormatting.AQUA + "炮弹命中产生范围爆炸，施加骨折");
         tooltipLines.add("");
@@ -194,7 +197,7 @@ public class ComponentBoneCannon
         tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：装填大炮");
         tooltipLines.add("");
         tooltipLines.add(EnumChatFormatting.GREEN + "装填大炮：");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  蓄力 " + (loadTicksRequired / 20.0f) + " 秒，消耗背包中的一个硬化骨髓完成装填");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  使用[硬化骨髓]进行装填 (" + (loadTicksRequired / 20.0f) + "秒)");
         tooltipLines.add(EnumChatFormatting.GRAY + "  手持大炮时会赋予使用者缓慢效果");
         tooltipLines.add("");
         tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "发射炮弹：");
@@ -202,5 +205,9 @@ public class ComponentBoneCannon
         tooltipLines.add(EnumChatFormatting.GRAY + "  爆炸伤害：" + (int) baseDmg);
         tooltipLines.add(EnumChatFormatting.GRAY + "  爆炸范围：半径 5 格");
         tooltipLines.add(EnumChatFormatting.GRAY + "  附加效果：对所有爆炸范围内的敌人施加一层【骨折】");
+        tooltipLines.add("");
+        tooltipLines.add(
+            EnumChatFormatting.WHITE + "当前弹药："
+                + (isLoaded ? (EnumChatFormatting.GREEN + "1 / 1 [已装填]") : (EnumChatFormatting.RED + "空")));
     }
 }

@@ -322,6 +322,10 @@ public class ClientProxy extends CommonProxy {
             com.greyhat.dark_grey.entity.EntityStarBullet.class,
             new com.greyhat.dark_grey.client.render.RenderStarBullet());
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+            com.greyhat.dark_grey.entity.EntityWolfsbaneBullet.class,
+            new com.greyhat.dark_grey.client.render.RenderWolfsbaneBullet(
+                cpw.mods.fml.common.registry.GameRegistry.findItem("dark_grey", "judgment_dice")));
+        cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
             com.greyhat.dark_grey.entity.EntityBoneFlask.class,
             new com.greyhat.dark_grey.client.render.RenderBoneFlask());
         cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
