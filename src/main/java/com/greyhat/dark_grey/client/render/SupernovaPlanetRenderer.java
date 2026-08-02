@@ -296,6 +296,14 @@ public class SupernovaPlanetRenderer {
 
         float ringRadius = sphereRadius * 2.5f; // Ring is much larger than the planet
         net.minecraft.client.renderer.Tessellator tessellator = net.minecraft.client.renderer.Tessellator.instance;
+        drawRingQuad(tessellator, ringRadius);
+        drawRingQuad(tessellator, ringRadius);
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glDepthMask(true);
+        GL11.glPopMatrix();
+    }
+
+    private void drawRingQuad(net.minecraft.client.renderer.Tessellator tessellator, float ringRadius) {
         tessellator.startDrawingQuads();
 
         // Draw flat quad on XZ plane
@@ -305,9 +313,5 @@ public class SupernovaPlanetRenderer {
         tessellator.addVertexWithUV(ringRadius, 0, -ringRadius, 1.0, 0.0);
 
         tessellator.draw();
-
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glDepthMask(true);
-        GL11.glPopMatrix();
     }
 }

@@ -3,17 +3,21 @@ package com.greyhat.dark_grey.combat;
 import java.util.UUID;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.world.World;
 
 public class BoneMeteorCastState {
 
     public final EntityLivingBase caster;
     public final UUID casterUuid;
+    public final World castStartWorld;
+    public final int castStartDimension;
     public final long castStartWorldTime;
 
     public long lastConsumeWorldTime;
 
     public final int consumeIntervalTicks;
     public final int meteorsPerConsume;
+    public final String materialItemId;
     public final int materialCost;
 
     public final double summonHeight;
@@ -35,18 +39,21 @@ public class BoneMeteorCastState {
     public final boolean requireMaterialInCreative;
 
     public BoneMeteorCastState(EntityLivingBase caster, long castStartWorldTime, int consumeIntervalTicks,
-        int meteorsPerConsume, int materialCost, double summonHeight, double summonRadius, float meteorFallSpeed,
-        float meteorGravity, int meteorLifetimeTicks, double impactBoxSize, float impactDamage, String fractureMarkId,
-        int fractureStacks, double castingMoveSpeedMultiplier, boolean consumeInCreative,
+        int meteorsPerConsume, String materialItemId, int materialCost, double summonHeight, double summonRadius,
+        float meteorFallSpeed, float meteorGravity, int meteorLifetimeTicks, double impactBoxSize, float impactDamage,
+        String fractureMarkId, int fractureStacks, double castingMoveSpeedMultiplier, boolean consumeInCreative,
         boolean requireMaterialInCreative) {
 
         this.caster = caster;
         this.casterUuid = caster.getUniqueID();
+        this.castStartWorld = caster.worldObj;
+        this.castStartDimension = caster.dimension;
         this.castStartWorldTime = castStartWorldTime;
         this.lastConsumeWorldTime = castStartWorldTime;
 
         this.consumeIntervalTicks = consumeIntervalTicks;
         this.meteorsPerConsume = meteorsPerConsume;
+        this.materialItemId = materialItemId;
         this.materialCost = materialCost;
 
         this.summonHeight = summonHeight;

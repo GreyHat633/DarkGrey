@@ -9,10 +9,14 @@ import net.minecraft.world.World;
 
 import com.greyhat.dark_grey.api.RPGDamageSources;
 
-public class EntityBeyondStarSatellite extends EntityThrowable {
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
+
+public class EntityBeyondStarSatellite extends EntityThrowable implements IEntityAdditionalSpawnData {
 
     private float customDamage;
     private EntityLivingBase homingTarget;
+    private int lifetimeTicks = 160;
 
     public EntityBeyondStarSatellite(World world) {
         super(world);
@@ -20,16 +24,22 @@ public class EntityBeyondStarSatellite extends EntityThrowable {
     }
 
     public EntityBeyondStarSatellite(World world, EntityLivingBase shooter, EntityLivingBase target, float damage) {
+        this(world, shooter, target, damage, 160);
+    }
+
+    public EntityBeyondStarSatellite(World world, EntityLivingBase shooter, EntityLivingBase target, float damage,
+        int lifetimeTicks) {
         super(world, shooter);
         this.homingTarget = target;
         this.customDamage = damage;
+        this.lifetimeTicks = Math.max(1, Math.min(12000, lifetimeTicks));
     }
 
     @Override
     public void onUpdate() {
         super.onUpdate();
 
-        if (this.ticksExisted > 160) {
+        if (this.ticksExisted > this.lifetimeTicks) {
             this.setDead();
             return;
         }
@@ -144,5 +154,15 @@ public class EntityBeyondStarSatellite extends EntityThrowable {
         if (!this.worldObj.isRemote) {
             this.setDead();
         }
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        buffer.writeInt(this.lifetimeTicks);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf buffer) {
+        this.lifetimeTicks = Math.max(1, Math.min(12000, buffer.readInt()));
     }
 }

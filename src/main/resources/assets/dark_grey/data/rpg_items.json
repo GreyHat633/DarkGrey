@@ -791,6 +791,36 @@
       "components": [],
       "maxStackSize": 64,
       "enchantments": ""
+    },
+    {
+      "id": "polarity",
+      "type": "剑",
+      "displayName": {
+        "zh_CN": "极性",
+        "en_US": "Polarity"
+      },
+      "texture": "dark_grey:polarity",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "极性",
+          "params": {
+            "polarityDurationTicks": 1200,
+            "magneticRange": 20,
+            "maxPairAcceleration": 0.2,
+            "maxNetMagneticAcceleration": 0.4,
+            "forceExponent": 2,
+            "collisionSpeedThreshold": 0.9,
+            "collisionTolerance": 0.2,
+            "collisionRearmExtraDistance": 0.75,
+            "pairExplosionDebounceTicks": 5,
+            "secondaryExplosionRadius": 8,
+            "explosionKnockbackStrength": 1
+          }
+        }
+      ],
+      "enchantments": ""
     }
   ]
 }

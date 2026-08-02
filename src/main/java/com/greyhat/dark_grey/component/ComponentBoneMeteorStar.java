@@ -46,10 +46,21 @@ public class ComponentBoneMeteorStar
 
     @Override
     public void configure(JsonObject params) {
-        if (params.has("materialItemId")) materialItemId = params.get("materialItemId")
-            .getAsString();
-        if (params.has("materialCost")) materialCost = params.get("materialCost")
-            .getAsInt();
+        if (params.has("materialItemId")) {
+            String configuredMaterial = params.get("materialItemId")
+                .getAsString()
+                .trim();
+            if (!configuredMaterial.isEmpty()) {
+                materialItemId = configuredMaterial.contains(":") ? configuredMaterial
+                    : "dark_grey:" + configuredMaterial;
+            }
+        }
+        if (params.has("materialCost")) materialCost = Math.max(
+            1,
+            Math.min(
+                64,
+                params.get("materialCost")
+                    .getAsInt()));
         if (params.has("consumeIntervalTicks")) consumeIntervalTicks = params.get("consumeIntervalTicks")
             .getAsInt();
         if (params.has("meteorsPerConsume")) meteorsPerConsume = params.get("meteorsPerConsume")
@@ -113,6 +124,7 @@ public class ComponentBoneMeteorStar
             world.getTotalWorldTime(),
             consumeIntervalTicks,
             meteorsPerConsume,
+            materialItemId,
             materialCost,
             summonHeight,
             summonRadius,
@@ -156,24 +168,6 @@ public class ComponentBoneMeteorStar
 
             caster.worldObj.spawnEntityInWorld(meteor);
         }
-    }
-
-    private boolean consumeMaterial(EntityPlayer player) {
-        IInventory inv = player.inventory;
-        for (int i = 0; i < inv.getSizeInventory(); i++) {
-            ItemStack stack = inv.getStackInSlot(i);
-            if (stack != null && stack.getItem() != null) {
-                if (Item.itemRegistry.getNameForObject(stack.getItem())
-                    .equals(materialItemId)) {
-                    stack.stackSize--;
-                    if (stack.stackSize <= 0) {
-                        inv.setInventorySlotContents(i, null);
-                    }
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Override

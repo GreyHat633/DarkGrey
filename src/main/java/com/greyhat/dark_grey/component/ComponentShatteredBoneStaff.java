@@ -118,7 +118,8 @@ public class ComponentShatteredBoneStaff
                 fractureStacksPerTrigger,
                 slownessAmplifier,
                 slownessRefreshTicks,
-                teleportCancelThresholdSq);
+                teleportCancelThresholdSq,
+                lockCasterPosition);
 
             ShatteredBoneStaffCastManager.INSTANCE.startCast(player, state);
         }

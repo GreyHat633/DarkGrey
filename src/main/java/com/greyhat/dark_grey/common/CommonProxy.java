@@ -109,11 +109,18 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.BeyondStarSatelliteSyncMessage.class,
             12,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.PolarityExplosionEffectHandler.class,
+            com.greyhat.dark_grey.network.PolarityExplosionEffectMessage.class,
+            14,
+            cpw.mods.fml.relauncher.Side.CLIENT);
     }
 
     public void scheduleConfigApply(String json) {}
 
     public void scheduleSolarFlareImpact(double motionX, double motionY, double motionZ) {}
+
+    public void scheduleBeyondStarSatelliteSync(com.greyhat.dark_grey.network.BeyondStarSatelliteSyncMessage message) {}
 
     public void scheduleMarkSync(com.greyhat.dark_grey.network.MarkSyncMessage message) {}
 

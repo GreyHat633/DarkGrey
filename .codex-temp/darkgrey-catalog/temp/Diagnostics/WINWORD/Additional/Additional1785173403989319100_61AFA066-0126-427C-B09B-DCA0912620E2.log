@@ -1,0 +1,49 @@
+Timestamp	Process	TID	Area	Category	EventID	Level	Message	Correlation
+07/27/2026 17:30:04.140	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":""}	
+07/27/2026 17:30:04.232	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{1}"}	
+07/27/2026 17:30:04.232	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{2}"}	
+07/27/2026 17:30:04.233	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{3}"}	
+07/27/2026 17:30:04.233	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{4}"}	
+07/27/2026 17:30:04.233	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{5}"}	
+07/27/2026 17:30:04.233	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{6}"}	
+07/27/2026 17:30:04.234	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{7}"}	
+07/27/2026 17:30:04.234	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{8}"}	
+07/27/2026 17:30:04.234	WINWORD (0x260C)	0x6DE8	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{9}"}	
+07/27/2026 17:30:04.240	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{10}"}	
+07/27/2026 17:30:04.244	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{11}"}	
+07/27/2026 17:30:04.245	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{12}"}	
+07/27/2026 17:30:04.247	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{13}"}	
+07/27/2026 17:30:04.247	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{14}"}	
+07/27/2026 17:30:04.247	WINWORD (0x260C)	0x6DE8	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{15}"}	
+07/27/2026 17:30:04.251	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{16}"}	
+07/27/2026 17:30:04.251	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{17}"}	
+07/27/2026 17:30:04.252	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{18}"}	
+07/27/2026 17:30:04.252	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{19}"}	
+07/27/2026 17:30:04.252	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{20}"}	
+07/27/2026 17:30:04.254	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{21}"}	
+07/27/2026 17:30:04.254	WINWORD (0x260C)	0x6DE8	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{22}"}	
+07/27/2026 17:30:04.254	WINWORD (0x260C)	0x6DE8	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{23}"}	
+07/27/2026 17:30:04.565	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Font	5b3p4	Medium	FShouldUpdateDefaultKerningLigatures: current kerning and ligature settings do not match old defaults {"hpsKern":2,"fStd":false,"fCntxt":false}	
+07/27/2026 17:30:08.882	WINWORD (0x260C)	0x6990	Microsoft Word	ODP Sandbox Activation	5d7xn	Monitorable	Task to create OsfControl for PreWarm WV2 {"PredictedDelayForPreWarmWV2":5}	
+07/27/2026 17:30:09.347	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Fast Coauth	49y8c	Medium	Missing a Prague MarkerType for a xchar with sprmCFSpec {"xchar":1}	
+07/27/2026 17:30:09.932	WINWORD (0x260C)	0x5E8	Microsoft Word	Document AutoCreate Locations	4i9yt	Medium	IsServiceValidForAutoCreate: Checking service properties {"ServiceName":"OneDrive - ??"}	
+07/27/2026 17:30:09.932	WINWORD (0x260C)	0x5E8	Microsoft Word	Document AutoCreate Locations	4i9yt	Medium	IsServiceValidForAutoCreate: Checking service properties {"ServiceName":"OneDrive - ??"}	
+07/27/2026 17:30:09.932	WINWORD (0x260C)	0x5E8	Microsoft Word	Document AutoCreate Locations	bve2p	Medium	Trying to get default document URL for service {"DocumentFolderUrl":"https://d.docs.live.net/9DAA831CEFE74789/??"}	
+07/27/2026 17:30:09.936	WINWORD (0x260C)	0x4A78	Microsoft Word	Document AutoCreate Locations	4i9yt	Medium	IsServiceValidForAutoCreate: Checking service properties {"ServiceName":"OneDrive - ??"}	
+07/27/2026 17:30:09.936	WINWORD (0x260C)	0x4A78	Microsoft Word	Document AutoCreate Locations	4i9yt	Medium	IsServiceValidForAutoCreate: Checking service properties {"ServiceName":"OneDrive - ??"}	
+07/27/2026 17:30:09.936	WINWORD (0x260C)	0x4A78	Microsoft Word	Document AutoCreate Locations	bve2p	Medium	Trying to get default document URL for service {"DocumentFolderUrl":"https://d.docs.live.net/9DAA831CEFE74789/??"}	
+07/27/2026 17:30:11.493	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjsw	Medium	GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.493	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjsr	Medium	GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.493	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjsl	Medium	GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.493	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjrt	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.493	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.765	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.765	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:11.871	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjr1	Medium	CreateDCPrinter {"prDriver":"null","prName":"Microsoft Print to PDF","Port":"null"}	
+07/27/2026 17:30:12.055	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:12.065	WINWORD (0x260C)	0x2194	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:12.067	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:12.076	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:12.604	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:12.618	WINWORD (0x260C)	0x4B40	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":"Microsoft Print to PDF"}	
+07/27/2026 17:30:15.916	WINWORD (0x260C)	0x2194	Microsoft Word	ODP Sandbox Activation	5d7xn	Monitorable	Task to cleanUp the OsfControl for PreWarm WV2 {"PredictedDelayForPreWarmWV2":300}	

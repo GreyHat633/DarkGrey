@@ -1,0 +1,27 @@
+Timestamp	Process	TID	Area	Category	EventID	Level	Message	Correlation
+07/27/2026 17:41:40.304	WINWORD (0x71D4)	0x5AB0	Microsoft Word	Word Print	4qjru	Medium	Prdev GetDefaultPrinter {"prName":""}	
+07/27/2026 17:41:40.385	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{1}"}	
+07/27/2026 17:41:40.386	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{2}"}	
+07/27/2026 17:41:40.386	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{3}"}	
+07/27/2026 17:41:40.386	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{4}"}	
+07/27/2026 17:41:40.386	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{5}"}	
+07/27/2026 17:41:40.387	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{6}"}	
+07/27/2026 17:41:40.387	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{7}"}	
+07/27/2026 17:41:40.387	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{8}"}	
+07/27/2026 17:41:40.387	WINWORD (0x71D4)	0x4704	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{9}"}	
+07/27/2026 17:41:40.393	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{10}"}	
+07/27/2026 17:41:40.397	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{11}"}	
+07/27/2026 17:41:40.397	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{12}"}	
+07/27/2026 17:41:40.399	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{13}"}	
+07/27/2026 17:41:40.399	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{14}"}	
+07/27/2026 17:41:40.399	WINWORD (0x71D4)	0x4704	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{15}"}	
+07/27/2026 17:41:40.403	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{16}"}	
+07/27/2026 17:41:40.404	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{17}"}	
+07/27/2026 17:41:40.404	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{18}"}	
+07/27/2026 17:41:40.404	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{19}"}	
+07/27/2026 17:41:40.404	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{20}"}	
+07/27/2026 17:41:40.406	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{21}"}	
+07/27/2026 17:41:40.406	WINWORD (0x71D4)	0x4704	Microsoft Word	Disco	4vzbo	Medium	SHAM file does not exist, so we will not open it {"Path":"O:{22}"}	
+07/27/2026 17:41:40.407	WINWORD (0x71D4)	0x4704	Microsoft Word	Syzygy	912b2	Medium	Destroying namespace. {"Path":"O:{23}"}	
+07/27/2026 17:41:40.697	WINWORD (0x71D4)	0x5AB0	Microsoft Word	Word Font	5b3p4	Medium	FShouldUpdateDefaultKerningLigatures: current kerning and ligature settings do not match old defaults {"hpsKern":2,"fStd":false,"fCntxt":false}	
+07/27/2026 17:41:43.341	WINWORD (0x71D4)	0x5CC0	Microsoft Word	ODP Sandbox Activation	5d7xn	Monitorable	Task to create OsfControl for PreWarm WV2 {"PredictedDelayForPreWarmWV2":5}	

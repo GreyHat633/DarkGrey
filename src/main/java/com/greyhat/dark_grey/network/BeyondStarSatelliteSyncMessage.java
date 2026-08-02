@@ -1,9 +1,6 @@
 package com.greyhat.dark_grey.network;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-
-import com.greyhat.dark_grey.api.BeyondStarSatelliteManager;
+import com.greyhat.dark_grey.DarkGrey;
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -35,13 +32,7 @@ public class BeyondStarSatelliteSyncMessage implements IMessage {
         @Override
         public IMessage onMessage(BeyondStarSatelliteSyncMessage message, MessageContext ctx) {
             if (ctx.side.isClient()) {
-                EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-                if (player != null) {
-                    BeyondStarSatelliteManager mgr = BeyondStarSatelliteManager.get(player);
-                    if (mgr != null) {
-                        mgr.setSatellites(message.satellites);
-                    }
-                }
+                DarkGrey.proxy.scheduleBeyondStarSatelliteSync(message);
             }
             return null;
         }

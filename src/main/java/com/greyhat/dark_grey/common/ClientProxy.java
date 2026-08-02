@@ -19,8 +19,11 @@ public class ClientProxy extends CommonProxy {
             .register(new com.greyhat.dark_grey.mark.client.render.MarkEntityOverlayRenderer());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS
             .register(com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS
-            .register(new com.greyhat.dark_grey.client.render.SupernovaPlanetRenderer());
+        com.greyhat.dark_grey.client.render.PolarityUIRenderer polarityRenderer = new com.greyhat.dark_grey.client.render.PolarityUIRenderer();
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(polarityRenderer);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(polarityRenderer);
         cpw.mods.fml.common.FMLCommonHandler.instance()
             .bus()
             .register(com.greyhat.dark_grey.client.event.ClientInputEventHandler.INSTANCE);
@@ -62,8 +65,7 @@ public class ClientProxy extends CommonProxy {
                     if (player == null) {
                         return;
                     }
-                    player.getEntityData()
-                        .setBoolean("SolarDashHasHit", true);
+                    com.greyhat.dark_grey.event.SolarDashTracker.markHit(player);
                     player.motionX = motionX;
                     player.motionY = motionY;
                     player.motionZ = motionZ;
@@ -97,6 +99,25 @@ public class ClientProxy extends CommonProxy {
                     message.changeReason,
                     message.displayedDelta,
                     message.immediateTriggered);
+            }
+        });
+    }
+
+    @Override
+    public void scheduleBeyondStarSatelliteSync(
+        final com.greyhat.dark_grey.network.BeyondStarSatelliteSyncMessage message) {
+        runOnClientThread(new Runnable() {
+
+            @Override
+            public void run() {
+                net.minecraft.entity.player.EntityPlayer player = net.minecraft.client.Minecraft
+                    .getMinecraft().thePlayer;
+                if (player == null) return;
+                com.greyhat.dark_grey.api.BeyondStarSatelliteManager manager = com.greyhat.dark_grey.api.BeyondStarSatelliteManager
+                    .get(player);
+                if (manager != null) {
+                    manager.setSatellites(Math.max(0, Math.min(8, message.satellites)));
+                }
             }
         });
     }
@@ -356,7 +377,8 @@ public class ClientProxy extends CommonProxy {
             .register(planetRenderer);
 
         // Register Shattered Bone Circle Renderer
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
             .register(com.greyhat.dark_grey.client.render.ShatteredBoneCircleRenderer.INSTANCE);
 
         // Register Gun HUD Renderer

@@ -19,6 +19,7 @@ import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
 import com.greyhat.dark_grey.entity.EntityPhantomStrike;
+import com.greyhat.dark_grey.event.SolarDashTracker;
 
 public class ComponentSolarFlare
     implements IRPGComponent, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IOnRightClick, IHasTooltip {
@@ -48,16 +49,14 @@ public class ComponentSolarFlare
 
     @Override
     public ItemStack onRightClick(ItemStack weaponStack, World world, EntityPlayer player) {
-        player.getEntityData()
-            .setBoolean("SolarDashHasHit", false);
+        SolarDashTracker.clear(player);
         return weaponStack;
     }
 
     @Override
     public void onUsingTick(ItemStack weaponStack, EntityPlayer player, int count) {
         // If we have already hit something, do not apply dash velocity, just let the player hold the item and rebound.
-        if (player.getEntityData()
-            .getBoolean("SolarDashHasHit")) {
+        if (SolarDashTracker.hasHit(player)) {
             return;
         }
 
@@ -105,8 +104,7 @@ public class ComponentSolarFlare
         // Only actual body contact may trigger the impact. A wider swept box is used
         // only to clamp this tick's travel so high dash speed cannot tunnel through
         // the target; it must never fire damage, recoil or sounds by itself.
-        if (actualHorizontalSpeed >= speedThreshold && !player.getEntityData()
-            .getBoolean("SolarDashHasHit")) {
+        if (actualHorizontalSpeed >= speedThreshold && !SolarDashTracker.hasHit(player)) {
             AxisAlignedBB contactBox = player.boundingBox.expand(1.0E-4, 0.01, 1.0E-4);
             EntityLivingBase target = findNearestDashTarget(world, player, contactBox, look);
 
@@ -142,8 +140,7 @@ public class ComponentSolarFlare
                     return;
                 }
 
-                player.getEntityData()
-                    .setBoolean("SolarDashHasHit", true);
+                SolarDashTracker.markHit(player);
 
                 // Recoil (bounce back)
                 player.motionX = -look.xCoord * 0.8;
@@ -201,8 +198,7 @@ public class ComponentSolarFlare
             && actualHorizontalSpeed >= speedThreshold
             && hasUnsteppableForwardObstacle(world, player, look)) {
             player.stepHeight = 0.5F;
-            player.getEntityData()
-                .setBoolean("SolarDashHasHit", true);
+            SolarDashTracker.markHit(player);
 
             player.motionX = -look.xCoord * 0.8;
             player.motionY = 0.4;
@@ -331,8 +327,7 @@ public class ComponentSolarFlare
     @Override
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int timeLeft) {
         player.stepHeight = 0.5F;
-        player.getEntityData()
-            .setBoolean("SolarDashHasHit", false);
+        SolarDashTracker.clear(player);
     }
 
 }

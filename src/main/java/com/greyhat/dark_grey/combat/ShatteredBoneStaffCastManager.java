@@ -2,6 +2,7 @@ package com.greyhat.dark_grey.combat;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -10,6 +11,9 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.world.WorldEvent;
 
 import com.greyhat.dark_grey.DarkGrey;
 import com.greyhat.dark_grey.api.CombatTargeting;
@@ -18,13 +22,15 @@ import com.greyhat.dark_grey.network.ShatteredBoneStaffCastEndMessage;
 import com.greyhat.dark_grey.network.ShatteredBoneStaffCastStartMessage;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class ShatteredBoneStaffCastManager {
 
     public static final ShatteredBoneStaffCastManager INSTANCE = new ShatteredBoneStaffCastManager();
 
-    private final Map<Integer, ShatteredBoneStaffCastState> activeCasts = new ConcurrentHashMap<>();
+    private final Map<UUID, ShatteredBoneStaffCastState> activeCasts = new ConcurrentHashMap<>();
 
     private ShatteredBoneStaffCastManager() {
         cpw.mods.fml.common.FMLCommonHandler.instance()
@@ -36,7 +42,7 @@ public class ShatteredBoneStaffCastManager {
     public void startCast(EntityLivingBase caster, ShatteredBoneStaffCastState state) {
         if (caster.worldObj.isRemote) return;
 
-        activeCasts.put(caster.getEntityId(), state);
+        activeCasts.put(caster.getUniqueID(), state);
 
         long currentTime = caster.worldObj.getTotalWorldTime();
         DarkGrey.NETWORK.sendToAllAround(
@@ -58,34 +64,28 @@ public class ShatteredBoneStaffCastManager {
 
     public void endCast(EntityLivingBase caster) {
         if (caster.worldObj.isRemote) return;
-        if (activeCasts.remove(caster.getEntityId()) != null) {
-            DarkGrey.NETWORK.sendToAllAround(
-                new ShatteredBoneStaffCastEndMessage(caster.getEntityId()),
-                new cpw.mods.fml.common.network.NetworkRegistry.TargetPoint(
-                    caster.dimension,
-                    caster.posX,
-                    caster.posY,
-                    caster.posZ,
-                    64.0));
-        }
+        cancelByUuid(caster.getUniqueID());
     }
 
     public boolean isCasting(EntityLivingBase caster) {
-        return activeCasts.containsKey(caster.getEntityId());
+        return activeCasts.containsKey(caster.getUniqueID());
     }
 
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
-        Iterator<Map.Entry<Integer, ShatteredBoneStaffCastState>> it = activeCasts.entrySet()
+        Iterator<Map.Entry<UUID, ShatteredBoneStaffCastState>> it = activeCasts.entrySet()
             .iterator();
         while (it.hasNext()) {
-            Map.Entry<Integer, ShatteredBoneStaffCastState> entry = it.next();
+            Map.Entry<UUID, ShatteredBoneStaffCastState> entry = it.next();
             ShatteredBoneStaffCastState state = entry.getValue();
 
             EntityLivingBase caster = state.caster;
-            if (caster.isDead || !caster.isEntityAlive()) {
+            if (caster.worldObj == null || caster.worldObj != state.castStartWorld
+                || caster.dimension != state.castStartDimension
+                || caster.isDead
+                || !caster.isEntityAlive()) {
                 endCastInternal(state);
                 it.remove();
                 continue;
@@ -99,37 +99,41 @@ public class ShatteredBoneStaffCastManager {
                 continue;
             }
 
-            // Lock X and Z to prevent horizontal movement completely
-            caster.setPosition(state.anchorX, caster.posY, state.anchorZ);
-            caster.motionX = 0;
-            caster.motionZ = 0;
+            if (state.lockCasterPosition) {
+                // Lock X and Z to prevent horizontal movement completely
+                caster.setPosition(state.anchorX, caster.posY, state.anchorZ);
+                caster.motionX = 0;
+                caster.motionZ = 0;
 
-            if (caster instanceof EntityPlayer) {
-                EntityPlayer player = (EntityPlayer) caster;
+                if (caster instanceof EntityPlayer) {
+                    EntityPlayer player = (EntityPlayer) caster;
 
-                // If they were flying initially, but now they aren't, they cancelled flight.
-                // Cancel the spell!
-                if (state.wasFlying && !player.capabilities.isFlying) {
-                    endCastInternal(state);
-                    it.remove();
-                    continue;
-                }
+                    // If they were flying initially, but now they aren't, they cancelled flight.
+                    // Cancel the spell!
+                    if (state.wasFlying && !player.capabilities.isFlying) {
+                        endCastInternal(state);
+                        it.remove();
+                        continue;
+                    }
 
-                if (player.capabilities.isFlying) {
-                    // Lock Y to prevent flying up/down via space/shift
-                    caster.setPosition(state.anchorX, state.anchorY, state.anchorZ);
+                    if (player.capabilities.isFlying) {
+                        // Lock Y to prevent flying up/down via space/shift
+                        caster.setPosition(state.anchorX, state.anchorY, state.anchorZ);
+                        caster.motionY = 0;
+                    } else {
+                        // Allow falling, but prevent upward motion
+                        if (caster.motionY > 0) caster.motionY = 0;
+                    }
+                } else if (caster.motionY > 0) {
                     caster.motionY = 0;
-                } else {
-                    // Allow falling, but prevent upward motion
-                    if (caster.motionY > 0) caster.motionY = 0;
                 }
-            } else {
-                if (caster.motionY > 0) caster.motionY = 0;
             }
 
-            // Potion effects for FOV and additional locking
-            caster.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 5, 7, true));
-            caster.addPotionEffect(new PotionEffect(Potion.jump.id, 5, 128, true));
+            // Potion effects are part of the positional lock and must not suppress movement when disabled.
+            if (state.lockCasterPosition) {
+                caster.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 5, 7, true));
+                caster.addPotionEffect(new PotionEffect(Potion.jump.id, 5, 128, true));
+            }
 
             state.currentTicks++;
             if (state.currentTicks >= state.maxTicks) {
@@ -202,10 +206,13 @@ public class ShatteredBoneStaffCastManager {
     }
 
     private void endCastInternal(ShatteredBoneStaffCastState state) {
+        if (state.caster instanceof EntityPlayer && state.caster.worldObj != null) {
+            ((EntityPlayer) state.caster).clearItemInUse();
+        }
         DarkGrey.NETWORK.sendToAllAround(
             new ShatteredBoneStaffCastEndMessage(state.caster.getEntityId()),
             new cpw.mods.fml.common.network.NetworkRegistry.TargetPoint(
-                state.caster.dimension,
+                state.castStartDimension,
                 state.anchorX,
                 state.anchorY,
                 state.anchorZ,
@@ -214,4 +221,58 @@ public class ShatteredBoneStaffCastManager {
 
     // Ensure manager initializes by loading class
     public static void init() {}
+
+    private void cancelByUuid(java.util.UUID casterUuid) {
+        Iterator<Map.Entry<UUID, ShatteredBoneStaffCastState>> it = activeCasts.entrySet()
+            .iterator();
+        while (it.hasNext()) {
+            ShatteredBoneStaffCastState state = it.next()
+                .getValue();
+            if (casterUuid.equals(state.casterUuid)) {
+                endCastInternal(state);
+                it.remove();
+            }
+        }
+    }
+
+    private void cancelWorld(WorldEvent.Unload event) {
+        Iterator<Map.Entry<UUID, ShatteredBoneStaffCastState>> it = activeCasts.entrySet()
+            .iterator();
+        while (it.hasNext()) {
+            ShatteredBoneStaffCastState state = it.next()
+                .getValue();
+            if (state.castStartWorld == event.world || state.caster.worldObj == event.world) {
+                endCastInternal(state);
+                it.remove();
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onLivingDeath(LivingDeathEvent event) {
+        if (!event.entityLiving.worldObj.isRemote) {
+            cancelByUuid(event.entityLiving.getUniqueID());
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerClone(PlayerEvent.Clone event) {
+        cancelByUuid(event.original.getUniqueID());
+        cancelByUuid(event.entityPlayer.getUniqueID());
+    }
+
+    @SubscribeEvent
+    public void onPlayerChangedDimension(PlayerChangedDimensionEvent event) {
+        cancelByUuid(event.player.getUniqueID());
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
+        cancelByUuid(event.player.getUniqueID());
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        cancelWorld(event);
+    }
 }

@@ -121,6 +121,8 @@ public class DarkGrey {
             "碎骨瓶",
             (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentBoneFlask::new);
         ComponentRegistry.register("粉碎之骨", (Supplier<IRPGComponent>) ComponentBoneCrusher::new);
+        ComponentRegistry
+            .register("极性", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentPolarity::new);
         com.greyhat.dark_grey.api.ComponentRegistry
             .register("狼毒M271", () -> new com.greyhat.dark_grey.component.ComponentWolfsbaneM271());
         ComponentRegistry.register(
@@ -137,6 +139,10 @@ public class DarkGrey {
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.PoisonMarkType());
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.FractureMarkType());
         com.greyhat.dark_grey.mark.MarkRegistry.register(new com.greyhat.dark_grey.mark.type.ShatteredBoneMarkType());
+        com.greyhat.dark_grey.mark.MarkRegistry
+            .register(new com.greyhat.dark_grey.mark.type.PositivePolarityMarkType());
+        com.greyhat.dark_grey.mark.MarkRegistry
+            .register(new com.greyhat.dark_grey.mark.type.NegativePolarityMarkType());
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 组件和印记已注册 ========");
         RPGItemLoader.loadItemsFromData();
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 物品已加载 ========");
@@ -303,6 +309,12 @@ public class DarkGrey {
             .bus()
             .register((Object) markTrackingHandler);
 
+        com.greyhat.dark_grey.combat.PolarityPhysicsManager polarityPhysicsManager = new com.greyhat.dark_grey.combat.PolarityPhysicsManager();
+        MinecraftForge.EVENT_BUS.register((Object) polarityPhysicsManager);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register((Object) polarityPhysicsManager);
+
         com.greyhat.dark_grey.event.RedSunBurnTracker redSunHandler = new com.greyhat.dark_grey.event.RedSunBurnTracker();
         MinecraftForge.EVENT_BUS.register((Object) redSunHandler);
         cpw.mods.fml.common.FMLCommonHandler.instance()
@@ -331,6 +343,7 @@ public class DarkGrey {
         MinecraftForge.EVENT_BUS.register(absoluteDeathEventHandler);
 
         com.greyhat.dark_grey.combat.ShatteredBoneStaffCastManager.init();
+        com.greyhat.dark_grey.event.SolarDashTracker.register();
         com.greyhat.dark_grey.api.BeyondStarSatelliteManager.register();
 
         DarkGrey.LOG.info("======== DarkGrey Mod: RPG 事件处理器已注册 ========");

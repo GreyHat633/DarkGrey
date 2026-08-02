@@ -70,6 +70,7 @@ public class BeyondStarSatelliteManager implements IExtendedEntityProperties {
     }
 
     public void setSatellites(int count) {
+        count = Math.max(0, Math.min(8, count));
         if (this.satellites != count) {
             this.satellites = count;
             updateSpeedModifier();

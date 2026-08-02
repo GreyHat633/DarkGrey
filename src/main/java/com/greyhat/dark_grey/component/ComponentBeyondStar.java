@@ -73,8 +73,12 @@ public class ComponentBeyondStar
             .getAsFloat();
         if (params.has("satelliteTurnRate")) satelliteTurnRate = params.get("satelliteTurnRate")
             .getAsFloat();
-        if (params.has("satelliteLifetimeTicks")) satelliteLifetimeTicks = params.get("satelliteLifetimeTicks")
-            .getAsInt();
+        if (params.has("satelliteLifetimeTicks")) satelliteLifetimeTicks = Math.max(
+            1,
+            Math.min(
+                12000,
+                params.get("satelliteLifetimeTicks")
+                    .getAsInt()));
     }
 
     @Override
@@ -90,7 +94,8 @@ public class ComponentBeyondStar
                             attacker.worldObj,
                             attacker,
                             target,
-                            actualDamage * satelliteDamageMultiplier);
+                            actualDamage * satelliteDamageMultiplier,
+                            satelliteLifetimeTicks);
                         double[] pos = BeyondStarOrbitMath
                             .getOrbitPosition(attacker, i, sats, attacker.ticksExisted, 0, true);
                         sat.setPosition(pos[0], pos[1], pos[2]);
