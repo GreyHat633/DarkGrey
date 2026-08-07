@@ -11,6 +11,7 @@ import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
 import com.greyhat.dark_grey.api.capability.IOnLeftClick;
 
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
@@ -46,6 +47,28 @@ public final class ServerLeftClickHandler {
         for (IRPGComponent component : container.getAllComponents()) {
             if (component instanceof IOnLeftClick) {
                 ((IOnLeftClick) component).onLeftClick(heldStack, event.player);
+            }
+        }
+    }
+
+    /**
+     * Cancel vanilla entity attack when holding a gun-type RPG item with ammo.
+     * This prevents melee-punching entities when the player has a loaded gun.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
+        if (event.entityPlayer.worldObj.isRemote) return;
+        ItemStack heldStack = event.entityPlayer.getCurrentEquippedItem();
+        if (heldStack == null || !(heldStack.getItem() instanceof IRPGItemContainer)) return;
+
+        IRPGItemContainer container = (IRPGItemContainer) heldStack.getItem();
+        for (IRPGComponent component : container.getAllComponents()) {
+            if (component instanceof IOnLeftClick) {
+                boolean handled = ((IOnLeftClick) component).onLeftClick(heldStack, event.entityPlayer);
+                if (handled) {
+                    event.setCanceled(true);
+                    return;
+                }
             }
         }
     }

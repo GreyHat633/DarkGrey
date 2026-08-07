@@ -13,7 +13,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
-import com.greyhat.dark_grey.api.CombatTargeting;
 import com.greyhat.dark_grey.api.IRPGComponent;
 import com.greyhat.dark_grey.api.IRPGItemContainer;
 import com.greyhat.dark_grey.api.MadokaVolleyDamageManager;
@@ -64,6 +63,9 @@ public class RPGCoreEventHandler {
     // + IOnHit (Armor attack components + Bow arrow components)
     // ─────────────────────────────────────────────────────────────────────────
 
+    private static final java.util.UUID BEYOND_STAR_SPEED_UUID = java.util.UUID
+        .fromString("c8b74f3e-8f55-4a56-8a7e-128a39dfa6d8");
+
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
         if (event.entity.worldObj.isRemote) {
@@ -77,53 +79,40 @@ public class RPGCoreEventHandler {
 
         // Scorched Mark Explosion Logic
         if (com.greyhat.dark_grey.mark.MarkManager.has(hurtEntity, com.greyhat.dark_grey.mark.type.ScorchMarkType.ID)) {
-            if (event.source.getEntity() instanceof EntityPlayer && !event.source.isMagicDamage()
-                && !event.source.isExplosion()) {
+            if (event.source.getEntity() instanceof EntityPlayer) {
                 EntityPlayer player = (EntityPlayer) event.source.getEntity();
-                com.greyhat.dark_grey.mark.MarkManager.remove(
-                    hurtEntity,
-                    com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
-                    com.greyhat.dark_grey.mark.api.MarkRemovalReason.CONSUMED);
 
-                float baseDmg = 1.0f;
-                if (player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage) != null) {
-                    baseDmg = (float) player
-                        .getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage)
-                        .getAttributeValue();
-                }
-                float explosionDmg = baseDmg * 1.25f;
-
-                hurtEntity.worldObj.playSoundEffect(
-                    hurtEntity.posX,
-                    hurtEntity.posY,
-                    hurtEntity.posZ,
-                    "random.explode",
-                    1.0F,
-                    (1.0F + (hurtEntity.worldObj.rand.nextFloat() - hurtEntity.worldObj.rand.nextFloat()) * 0.2F)
-                        * 0.7F);
-
-                if (hurtEntity.worldObj instanceof net.minecraft.world.WorldServer) {
-                    ((net.minecraft.world.WorldServer) hurtEntity.worldObj).func_147487_a(
-                        "largeexplode",
-                        hurtEntity.posX,
-                        hurtEntity.posY + hurtEntity.height / 2.0f,
-                        hurtEntity.posZ,
-                        5,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0);
+                boolean canIgnite = false;
+                if (com.greyhat.dark_grey.util.DirectAttackClassifier.isDirectAttack(event.source)) {
+                    ItemStack heldItem = player.getCurrentEquippedItem();
+                    if (heldItem != null && heldItem.getItem() instanceof com.greyhat.dark_grey.api.IRPGItemContainer) {
+                        for (com.greyhat.dark_grey.api.IRPGComponent comp : ((com.greyhat.dark_grey.api.IRPGItemContainer) heldItem
+                            .getItem()).getAllComponents()) {
+                            if (comp instanceof com.greyhat.dark_grey.api.capability.IScorchIgniter) {
+                                canIgnite = true;
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                net.minecraft.util.AxisAlignedBB aabb = hurtEntity.boundingBox.expand(3.0, 3.0, 3.0);
-                @SuppressWarnings("unchecked")
-                List<Entity> list = hurtEntity.worldObj.getEntitiesWithinAABBExcludingEntity(player, aabb);
-                for (Entity e : list) {
-                    if (e instanceof EntityLivingBase
-                        && CombatTargeting.canDamage(player, (EntityLivingBase) e, false)) {
-                        DamageSource explosionSource = DamageSource.causePlayerDamage(player)
-                            .setExplosion();
-                        e.attackEntityFrom(explosionSource, explosionDmg);
+                if (canIgnite) {
+                    float multiplier = 1.0f;
+                    ItemStack heldItem = player.getCurrentEquippedItem();
+                    if (heldItem != null && heldItem.getItem() instanceof com.greyhat.dark_grey.api.IRPGItemContainer) {
+                        for (com.greyhat.dark_grey.api.IRPGComponent comp : ((com.greyhat.dark_grey.api.IRPGItemContainer) heldItem
+                            .getItem()).getAllComponents()) {
+                            if (comp instanceof com.greyhat.dark_grey.api.capability.IScorchDetonateBonus) {
+                                multiplier *= (1.0f + ((com.greyhat.dark_grey.api.capability.IScorchDetonateBonus) comp)
+                                    .getScorchDetonateBonus());
+                            }
+                        }
+                    }
+                    com.greyhat.dark_grey.mark.api.IMarkType type = com.greyhat.dark_grey.mark.MarkRegistry
+                        .get(com.greyhat.dark_grey.mark.type.ScorchMarkType.ID);
+                    if (type instanceof com.greyhat.dark_grey.mark.type.ScorchMarkType) {
+                        ((com.greyhat.dark_grey.mark.type.ScorchMarkType) type)
+                            .detonate(hurtEntity, player, multiplier);
                     }
                 }
             }
@@ -305,6 +294,31 @@ public class RPGCoreEventHandler {
         }
 
         EntityPlayer player = event.player;
+
+        // Beyond Star Satellite Movement Speed Update
+        net.minecraft.entity.ai.attributes.IAttributeInstance speedAttr = player
+            .getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed);
+        if (speedAttr != null) {
+            net.minecraft.entity.ai.attributes.AttributeModifier mod = speedAttr.getModifier(BEYOND_STAR_SPEED_UUID);
+            int satellites = com.greyhat.dark_grey.api.BeyondStarSatelliteManager.getCount(player);
+            if (satellites > 0) {
+                double requiredAmount = satellites * 0.025;
+                if (mod == null || mod.getAmount() != requiredAmount) {
+                    if (mod != null) speedAttr.removeModifier(mod);
+                    speedAttr.applyModifier(
+                        new net.minecraft.entity.ai.attributes.AttributeModifier(
+                            BEYOND_STAR_SPEED_UUID,
+                            "Beyond Star Speed Bonus",
+                            requiredAmount,
+                            2).setSaved(false));
+                }
+            } else {
+                if (mod != null) {
+                    speedAttr.removeModifier(mod);
+                }
+            }
+        }
+
         fireServerHeldTick(player);
         Item[] previousItems = PREVIOUS_ARMOR_ITEMS.get(player);
 

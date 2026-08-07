@@ -114,6 +114,14 @@ public final class RPGDamageSources {
         return source;
     }
 
+    public static DamageSource causeScorchDetonationDamage(EntityPlayer player) {
+        return new ScorchDetonationDamageSource(player);
+    }
+
+    public static boolean isScorchDetonationDamage(DamageSource source) {
+        return source instanceof ScorchDetonationDamageSource;
+    }
+
     /**
      * Deals damage to the target without triggering Minecraft's invulnerability frames (i-frames).
      * This ensures that DOT effects (like Poison) do not block the player's normal melee attacks.
@@ -163,6 +171,14 @@ public final class RPGDamageSources {
             this.setDamageBypassesArmor();
             this.setDamageIsAbsolute();
             this.setDamageAllowedInCreativeMode();
+        }
+    }
+
+    private static final class ScorchDetonationDamageSource extends EntityDamageSource {
+
+        private ScorchDetonationDamageSource(EntityPlayer player) {
+            super("scorch_detonate", player);
+            this.setExplosion();
         }
     }
 }

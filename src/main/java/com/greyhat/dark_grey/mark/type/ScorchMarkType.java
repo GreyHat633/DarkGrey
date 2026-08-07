@@ -6,7 +6,6 @@ import net.minecraft.util.ResourceLocation;
 
 import com.greyhat.dark_grey.DarkGrey;
 import com.greyhat.dark_grey.api.RPGDamageSources;
-import com.greyhat.dark_grey.common.Config;
 import com.greyhat.dark_grey.mark.MarkInstance;
 import com.greyhat.dark_grey.mark.MarkManager;
 import com.greyhat.dark_grey.mark.api.AbstractMarkType;
@@ -30,7 +29,7 @@ public class ScorchMarkType extends AbstractMarkType {
             0xFFFF4400, // decay
             0xFFFF4400, // max
             90, // priority
-            false, // showStacks (max 1 stack, don't need to show)
+            true, // showStacks (now stacks up to 7)
             true, // showStableTimer
             false, // showPeriodicTimer
             false, // showDecayTimer
@@ -49,7 +48,7 @@ public class ScorchMarkType extends AbstractMarkType {
 
     @Override
     public int getMaxStacks() {
-        return 1;
+        return 7;
     }
 
     @Override
@@ -59,7 +58,7 @@ public class ScorchMarkType extends AbstractMarkType {
 
     @Override
     public int getDefaultStableDurationTicks() {
-        return Config.scorchDefaultStableDurationTicks;
+        return 30; // 1.5 seconds default
     }
 
     @Override
@@ -69,7 +68,7 @@ public class ScorchMarkType extends AbstractMarkType {
 
     @Override
     public int getDecayAmount() {
-        return 1;
+        return 7; // Instantly clear all max 7 stacks
     }
 
     @Override
@@ -136,26 +135,54 @@ public class ScorchMarkType extends AbstractMarkType {
         return duration > 0 ? duration : getDefaultStableDurationTicks();
     }
 
-    public void detonate(EntityLivingBase target, EntityLivingBase detonator, boolean preserveMark) {
+    public void detonate(EntityLivingBase target, EntityLivingBase detonator, float detonationMultiplier) {
         if (target == null || target.worldObj.isRemote) return;
 
-        MarkManager.consume(target, ID, preserveMark ? 0 : 1);
+        int stacks = MarkManager.getStacks(target, ID);
+        if (stacks <= 0) return;
 
-        DamageSource ds = RPGDamageSources.causeMarkDamage(ID, detonator);
-        if (com.greyhat.dark_grey.api.RPGDamageSources
-            .dealIndependentProjectileDamage(target, ds, Config.scorchSwitchDamage)) {
-            target.worldObj.playSoundEffect(target.posX, target.posY, target.posZ, "random.fizz", 1.0F, 1.0F);
-            if (target.worldObj instanceof net.minecraft.world.WorldServer) {
-                ((net.minecraft.world.WorldServer) target.worldObj).func_147487_a(
-                    "lava",
-                    target.posX,
-                    target.posY + target.height / 2.0,
-                    target.posZ,
-                    15,
-                    0.5,
-                    0.5,
-                    0.5,
-                    0.1);
+        float baseDmg = 20.0f + 10.0f * stacks;
+        float explosionDmg = baseDmg * detonationMultiplier;
+
+        target.worldObj.playSoundEffect(
+            target.posX,
+            target.posY,
+            target.posZ,
+            "random.explode",
+            1.0F,
+            (1.0F + (target.worldObj.rand.nextFloat() - target.worldObj.rand.nextFloat()) * 0.2F) * 0.7F);
+
+        if (target.worldObj instanceof net.minecraft.world.WorldServer) {
+            ((net.minecraft.world.WorldServer) target.worldObj).func_147487_a(
+                "largeexplode",
+                target.posX,
+                target.posY + target.height / 2.0,
+                target.posZ,
+                5,
+                0.0,
+                0.0,
+                0.0,
+                0.0);
+        }
+
+        net.minecraft.util.AxisAlignedBB aabb = target.boundingBox.expand(3.0, 3.0, 3.0);
+        @SuppressWarnings("unchecked")
+        java.util.List<net.minecraft.entity.Entity> list = target.worldObj
+            .getEntitiesWithinAABBExcludingEntity(detonator, aabb);
+        for (net.minecraft.entity.Entity e : list) {
+            if (e instanceof EntityLivingBase
+                && com.greyhat.dark_grey.api.CombatTargeting.canDamage(detonator, (EntityLivingBase) e, false)) {
+
+                DamageSource explosionSource;
+                if (detonator instanceof net.minecraft.entity.player.EntityPlayer) {
+                    explosionSource = RPGDamageSources
+                        .causeScorchDetonationDamage((net.minecraft.entity.player.EntityPlayer) detonator);
+                } else {
+                    explosionSource = RPGDamageSources.causeMarkDamage(ID, detonator)
+                        .setExplosion();
+                }
+
+                e.attackEntityFrom(explosionSource, explosionDmg);
             }
         }
     }

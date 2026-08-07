@@ -84,6 +84,7 @@ public class DarkGrey {
     public void preInit(final FMLPreInitializationEvent event) {
         DarkGrey.proxy.preInit(event);
         DarkGrey.proxy.registerNetworkHandlers();
+        com.greyhat.dark_grey.combat.AutomaticFireManager.register();
         RPGItemDataManager.getInstance()
             .initialize(event.getModConfigurationDirectory());
         GameRegistry.registerItem(DarkGrey.tabIcon = new ItemTabIcon(), "tab_icon");
@@ -123,6 +124,12 @@ public class DarkGrey {
         ComponentRegistry.register("粉碎之骨", (Supplier<IRPGComponent>) ComponentBoneCrusher::new);
         ComponentRegistry
             .register("极性", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentPolarity::new);
+        ComponentRegistry.register(
+            "赫利俄斯爆破枪",
+            (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentHeliosBlastGun::new);
+        ComponentRegistry.register(
+            "熔渣喷发器",
+            (java.util.function.Supplier<com.greyhat.dark_grey.api.IRPGComponent>) com.greyhat.dark_grey.component.ComponentSlagEruptor::new);
         com.greyhat.dark_grey.api.ComponentRegistry
             .register("狼毒M271", () -> new com.greyhat.dark_grey.component.ComponentWolfsbaneM271());
         ComponentRegistry.register(
@@ -267,6 +274,22 @@ public class DarkGrey {
             (Object) DarkGrey.instance,
             64,
             4,
+            true);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntityHeliosBurningField.class,
+            "helios_burning_field",
+            17,
+            (Object) DarkGrey.instance,
+            64,
+            10,
+            false);
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(
+            (Class) com.greyhat.dark_grey.entity.EntitySunflameBullet.class,
+            "sunflame_bullet",
+            18,
+            (Object) DarkGrey.instance,
+            64,
+            10,
             true);
         DarkGrey.LOG.info("======== DarkGrey Mod: 实体已注册 ========");
     }

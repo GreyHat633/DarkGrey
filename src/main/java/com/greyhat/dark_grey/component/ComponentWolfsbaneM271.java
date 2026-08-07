@@ -126,7 +126,7 @@ public class ComponentWolfsbaneM271
                     player.stopUsingItem();
 
                     if (player instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) player).updateHeldItem();
+                        ((EntityPlayerMP) player).inventoryContainer.detectAndSendChanges();
                     }
                 }
             } else {
@@ -254,8 +254,9 @@ public class ComponentWolfsbaneM271
 
         tooltipLines.add(EnumChatFormatting.GOLD + "伤害：" + (int) baseDamage);
         tooltipLines.add(EnumChatFormatting.AQUA + "弹匣：" + magazineCapacity);
+        tooltipLines.add(EnumChatFormatting.AQUA + "弹药：审判骰");
         tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：使用[审判骰]进行装填 (" + (loadTicksRequired / 20.0f) + "秒)");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：装填 (" + (loadTicksRequired / 20.0f) + "秒)");
         tooltipLines.add(EnumChatFormatting.YELLOW + "左键：发射");
         tooltipLines.add("");
         tooltipLines.add(EnumChatFormatting.GREEN + "俄罗斯轮盘：");

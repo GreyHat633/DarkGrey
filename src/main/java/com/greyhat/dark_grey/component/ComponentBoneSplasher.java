@@ -156,7 +156,7 @@ public class ComponentBoneSplasher
                     player.worldObj.playSoundAtEntity(player, "random.click", 1.0F, 1.2F);
                     player.stopUsingItem();
                     if (player instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) player).updateHeldItem();
+                        ((EntityPlayerMP) player).inventoryContainer.detectAndSendChanges();
                     }
                 }
             } else {
@@ -179,17 +179,14 @@ public class ComponentBoneSplasher
         GunMagazineHelper.clampAmmo(weaponStack, this.magazineCapacity);
 
         if (GunMagazineHelper.getLoadedAmmo(weaponStack) <= 0) {
-            if (!world.isRemote) {
-                world.playSoundAtEntity(player, "random.click", 1.0F, 1.5F); // empty click
-            }
-            return true; // Cancel default melee
+            return false;
         }
 
         if (!world.isRemote) {
             // Consume 1 ammo
             GunMagazineHelper.consumeAmmo(weaponStack, 1);
             if (player instanceof EntityPlayerMP) {
-                ((EntityPlayerMP) player).updateHeldItem();
+                ((EntityPlayerMP) player).inventoryContainer.detectAndSendChanges();
             }
 
             // Fire logic
@@ -334,31 +331,28 @@ public class ComponentBoneSplasher
 
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List tooltipLines, boolean showAdvanced) {
-        tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "碎骨喷溅者");
+        tooltipLines.add(EnumChatFormatting.GOLD + "伤害：" + (int) minDamage + "-" + (int) maxDamage);
+        tooltipLines.add(EnumChatFormatting.AQUA + "弹匣：" + magazineCapacity);
+        tooltipLines.add(EnumChatFormatting.AQUA + "弹药：硬化骨髓");
+        tooltipLines.add("");
+        tooltipLines
+            .add(EnumChatFormatting.YELLOW + "长按右键：装填 (" + String.format("%.1f", this.reloadTicks / 20.0f) + "秒)");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "左键：发射散弹");
+        tooltipLines.add("");
+        tooltipLines.add(EnumChatFormatting.GREEN + "碎骨倾泻：");
         tooltipLines.add(
             EnumChatFormatting.GRAY + "  向正前方 "
                 + (int) this.fanAngleDegrees
-                + "度 的扇形区域倾泻碎骨，最远可达 "
+                + "度的扇形区域倾泻碎骨，最远可达 "
                 + (int) this.range
-                + " 格。");
-        tooltipLines.add(
-            EnumChatFormatting.GRAY + "  极近距离可造成最高 "
-                + (int) this.maxDamage
-                + " 点伤害，随距离衰减至最低 "
-                + (int) this.minDamage
-                + " 点。");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  火力覆盖下每一个被命中的敌人，都将被施加 " + this.fractureStacks + " 层【骨折】印记。");
-        tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.GREEN + "使用指南");
-        tooltipLines.add(EnumChatFormatting.YELLOW + "  [左键] 轰击：发射碎骨霰弹。");
-        tooltipLines.add(
-            EnumChatFormatting.YELLOW + "  [长按右键] 供弹：使用[硬化骨髓]进行装填 ("
-                + String.format("%.1f", this.reloadTicks / 20.0f)
-                + " 秒)");
+                + " 格");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  被命中的敌人将被施加 " + this.fractureStacks + " 层【骨折】印记");
         tooltipLines.add("");
 
         int loaded = GunMagazineHelper.getLoadedAmmo(stack);
-        EnumChatFormatting color = loaded > 0 ? EnumChatFormatting.GREEN : EnumChatFormatting.RED;
-        tooltipLines.add(EnumChatFormatting.WHITE + "当前弹药：" + color + loaded + " / " + this.magazineCapacity);
+        tooltipLines.add(
+            EnumChatFormatting.WHITE + "当前弹药："
+                + (loaded > 0 ? (EnumChatFormatting.GREEN + String.valueOf(loaded) + " / " + this.magazineCapacity)
+                    : (EnumChatFormatting.RED + "空")));
     }
 }

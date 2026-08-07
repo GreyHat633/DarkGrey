@@ -67,8 +67,17 @@ public class EntityBeyondStarSatellite extends EntityThrowable implements IEntit
                         boolean originalIsAirBorne = this.homingTarget.isAirBorne;
                         boolean originalVelocityChanged = this.homingTarget.velocityChanged;
                         try {
-                            RPGDamageSources
-                                .dealIndependentProjectileDamage(this.homingTarget, source, this.customDamage);
+                            if (RPGDamageSources
+                                .dealIndependentProjectileDamage(this.homingTarget, source, this.customDamage)) {
+                                com.greyhat.dark_grey.mark.MarkManager.apply(
+                                    this.homingTarget,
+                                    com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
+                                    new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder().source(shooter)
+                                        .requestedStacks(1)
+                                        .stableDurationTicks(30)
+                                        .worldTime(this.worldObj.getTotalWorldTime())
+                                        .build());
+                            }
                         } finally {
                             this.homingTarget.motionX = originalMotionX;
                             this.homingTarget.motionY = originalMotionY;

@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -18,13 +17,16 @@ import com.greyhat.dark_grey.api.capability.IHasTooltip;
 import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
+import com.greyhat.dark_grey.api.capability.IScorchDetonateBonus;
 import com.greyhat.dark_grey.entity.EntityPhantomStrike;
 import com.greyhat.dark_grey.event.SolarDashTracker;
 
-public class ComponentSolarFlare
-    implements IRPGComponent, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IOnRightClick, IHasTooltip {
+public class ComponentSolarFlare implements IRPGComponent, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IOnRightClick,
+    IHasTooltip, IScorchDetonateBonus {
 
     private static final double CONTACT_OVERLAP = 0.002D;
+
+    private float scorchDetonateBonus = 1.0f;
 
     @Override
     public String getComponentId() {
@@ -32,19 +34,21 @@ public class ComponentSolarFlare
     }
 
     @Override
-    public void configure(JsonObject params) {}
+    public void configure(JsonObject params) {
+        if (params.has("scorchDetonateBonus")) {
+            scorchDetonateBonus = params.get("scorchDetonateBonus")
+                .getAsFloat();
+        }
+    }
 
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean advanced) {
-        tooltipLines.add("§6[主动技能: 耀斑冲锋]");
-        tooltipLines.add("§7长按右键进行冲锋突进，跨越地形障碍");
-        tooltipLines.add("§7撞击敌人时自动触发残影贯穿，造成额外 §c600% §7伤害");
-        tooltipLines.add("§7并为目标施加持续10秒的 [灼痕印记]");
-        tooltipLines.add("§8(撞击墙壁会中断冲锋)");
+        tooltipLines.add("§6基础伤害：" + (int) 150);
         tooltipLines.add("");
-        tooltipLines.add("§e[连击: 耀斑引爆]");
-        tooltipLines.add("§7普通攻击命中带有印记的敌人时，将引爆印记");
-        tooltipLines.add("§7造成周围范围性的毁灭伤害，并引燃目标");
+        tooltipLines.add("§a[冲锋技能] (长按右键2秒)");
+        tooltipLines.add("§7向视线方向快速冲刺，推开路径上的敌人并造成伤害");
+        tooltipLines.add("§7撞击敌人时自动触发残影贯穿，造成额外 §c600% §7伤害");
+        tooltipLines.add("§8(撞击墙壁会中断冲锋)");
     }
 
     @Override
@@ -124,11 +128,7 @@ public class ComponentSolarFlare
                     .normalize();
 
                 // Get raw damage
-                float rawDamage = 1.0F;
-                if (player.getEntityAttribute(SharedMonsterAttributes.attackDamage) != null) {
-                    rawDamage = (float) player.getEntityAttribute(SharedMonsterAttributes.attackDamage)
-                        .getAttributeValue();
-                }
+                float rawDamage = 150.0F;
 
                 // Deal 600% damage
                 float totalDamage = rawDamage * 6.0F;
@@ -138,6 +138,12 @@ public class ComponentSolarFlare
                     // A protection rule or invulnerability rejected the hit.
                     // Keep moving and do not fabricate recoil, sounds or marks.
                     return;
+                }
+                com.greyhat.dark_grey.mark.api.IMarkType type = com.greyhat.dark_grey.mark.MarkRegistry
+                    .get(com.greyhat.dark_grey.mark.type.ScorchMarkType.ID);
+                if (type instanceof com.greyhat.dark_grey.mark.type.ScorchMarkType) {
+                    ((com.greyhat.dark_grey.mark.type.ScorchMarkType) type)
+                        .detonate(target, player, 1.0f + getScorchDetonateBonus());
                 }
 
                 SolarDashTracker.markHit(player);
@@ -163,15 +169,6 @@ public class ComponentSolarFlare
                             player.motionZ),
                         (net.minecraft.entity.player.EntityPlayerMP) player);
                 }
-
-                // Apply Scorched Mark only after the hit was accepted.
-                com.greyhat.dark_grey.mark.MarkManager.apply(
-                    target,
-                    com.greyhat.dark_grey.mark.type.ScorchMarkType.ID,
-                    new com.greyhat.dark_grey.mark.api.MarkApplyContext.Builder().source(player)
-                        .requestedStacks(1)
-                        .worldTime(world.getTotalWorldTime())
-                        .build());
 
                 // Knockback target
                 target.addVelocity(look.xCoord * 1.5, 0.5, look.zCoord * 1.5);
@@ -328,6 +325,11 @@ public class ComponentSolarFlare
     public void onPlayerStoppedUsing(ItemStack stack, World world, EntityPlayer player, int timeLeft) {
         player.stepHeight = 0.5F;
         SolarDashTracker.clear(player);
+    }
+
+    @Override
+    public float getScorchDetonateBonus() {
+        return scorchDetonateBonus;
     }
 
 }

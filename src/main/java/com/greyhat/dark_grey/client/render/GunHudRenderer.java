@@ -69,6 +69,18 @@ public class GunHudRenderer {
                 capacity = wolfsbane.getMagazineCapacity();
                 hasMagazine = true;
                 break;
+            } else if (comp instanceof com.greyhat.dark_grey.component.ComponentSlagEruptor) {
+                com.greyhat.dark_grey.component.ComponentSlagEruptor eruptor = (com.greyhat.dark_grey.component.ComponentSlagEruptor) comp;
+                reloadTicks = eruptor.getLoadTicksRequired();
+                capacity = eruptor.getMagazineCapacity();
+                hasMagazine = true;
+                break;
+            } else if (comp instanceof com.greyhat.dark_grey.component.ComponentHeliosBlastGun) {
+                com.greyhat.dark_grey.component.ComponentHeliosBlastGun helios = (com.greyhat.dark_grey.component.ComponentHeliosBlastGun) comp;
+                reloadTicks = helios.getReloadTicks();
+                capacity = helios.getMagazineCapacity();
+                hasMagazine = true;
+                break;
             }
         }
 

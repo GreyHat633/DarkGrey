@@ -821,6 +821,80 @@
         }
       ],
       "enchantments": ""
+    },
+    {
+      "id": "sunflame_round",
+      "type": "材料",
+      "displayName": {
+        "zh_CN": "阳炎弹",
+        "en_US": "Sunflame Round"
+      },
+      "texture": "dark_grey:sunflame_round",
+      "durability": 0,
+      "damage": 0,
+      "components": [],
+      "maxStackSize": 64,
+      "enchantments": ""
+    },
+    {
+      "id": "slag_eruptor",
+      "type": "铳",
+      "displayName": {
+        "zh_CN": "熔渣喷发器",
+        "en_US": "Slag Eruptor"
+      },
+      "texture": "dark_grey:slag_eruptor",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "熔渣喷发器",
+          "params": {
+            "loadTicksRequired": 40,
+            "baseDamage": 50.0,
+            "magazineCapacity": 30
+          }
+        }
+      ],
+      "maxStackSize": 1,
+      "enchantments": ""
+    },
+    {
+      "id": "helios_blast_gun",
+      "type": "铳",
+      "displayName": {
+        "zh_CN": "赫利俄斯爆破枪",
+        "en_US": "Helios Blast Gun"
+      },
+      "texture": "dark_grey:helios_blast_gun",
+      "durability": 0,
+      "damage": 0,
+      "components": [
+        {
+          "name": "赫利俄斯爆破枪",
+          "params": {
+            "reloadTicks": 60,
+            "ammoItemId": "sunflame_round",
+            "magazineCapacity": 6,
+            "requiredAmmoToFire": 6,
+            "ammoConsumedPerShot": 6,
+            "fanAngleDegrees": 90.0,
+            "range": 12.0,
+            "maxDamage": 1200.0,
+            "minDamage": 100.0,
+            "fullDamageDistance": 1.0,
+            "recoilTargetDistance": 3.0,
+            "recoilVelocity": 1.35,
+            "fieldDurationTicks": 120,
+            "fieldIntervalTicks": 10,
+            "fieldDamage": 60.0,
+            "fieldScorchApplyChance": 0.4,
+            "fieldScorchStacks": 1,
+            "fieldScorchStableDurationTicks": 30
+          }
+        }
+      ],
+      "enchantments": ""
     }
   ]
 }

@@ -18,6 +18,7 @@ import com.greyhat.dark_grey.api.capability.IOnHit;
 import com.greyhat.dark_grey.api.capability.IOnPlayerStoppedUsing;
 import com.greyhat.dark_grey.api.capability.IOnRightClick;
 import com.greyhat.dark_grey.api.capability.IOnWeaponUsingTick;
+import com.greyhat.dark_grey.api.capability.IScorchDetonateBonus;
 import com.greyhat.dark_grey.entity.EntityBeyondStarSatellite;
 import com.greyhat.dark_grey.mark.MarkManager;
 import com.greyhat.dark_grey.mark.MarkRegistry;
@@ -25,17 +26,17 @@ import com.greyhat.dark_grey.mark.api.IMarkType;
 import com.greyhat.dark_grey.mark.api.MarkApplyContext;
 import com.greyhat.dark_grey.mark.type.ScorchMarkType;
 
-public class ComponentBeyondStar
-    implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick, IOnPlayerStoppedUsing, IHasTooltip {
+public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick, IOnWeaponUsingTick,
+    IOnPlayerStoppedUsing, IHasTooltip, IScorchDetonateBonus, com.greyhat.dark_grey.api.capability.IScorchIgniter {
 
     private static final String LEGACY_COOLDOWN_END_TICK_KEY = "DarkGreyBeyondStarCooldownEnd";
     private static final String COOLDOWN_END_MILLIS_KEY = "DarkGreyBeyondStarCooldownEndMillis";
 
-    private int chargeTicks = 60;
+    private int chargeTicks = 40;
     private double detonationRadius = 10.0;
     private double verticalHalfHeight = 5.0;
-    private int detonationCount = 2;
-    private int cooldownTicks = 160;
+    private int detonationCount = 2; // unused for now, but kept
+    private int cooldownTicks = 80;
     private int satellitesPerTarget = 2;
     private int maxSatellites = 8;
     private float satelliteDamageMultiplier = 0.25F;
@@ -43,6 +44,7 @@ public class ComponentBeyondStar
     private float satelliteProjectileSpeed = 1.6F;
     private float satelliteTurnRate = 0.40F;
     private int satelliteLifetimeTicks = 160;
+    private float scorchDetonateBonus = 0.5f;
 
     @Override
     public String getComponentId() {
@@ -59,7 +61,7 @@ public class ComponentBeyondStar
             .getAsDouble();
         if (params.has("detonationCount")) detonationCount = params.get("detonationCount")
             .getAsInt();
-        if (params.has("cooldownTicks")) cooldownTicks = params.get("cooldownTicks")
+        if (params.has("detonationCount")) detonationCount = params.get("detonationCount")
             .getAsInt();
         if (params.has("satellitesPerTarget")) satellitesPerTarget = params.get("satellitesPerTarget")
             .getAsInt();
@@ -79,6 +81,8 @@ public class ComponentBeyondStar
                 12000,
                 params.get("satelliteLifetimeTicks")
                     .getAsInt()));
+        if (params.has("scorchDetonateBonus")) scorchDetonateBonus = params.get("scorchDetonateBonus")
+            .getAsFloat();
     }
 
     @Override
@@ -106,14 +110,24 @@ public class ComponentBeyondStar
             }
 
             if (actualDamage > 0) {
-                MarkManager.apply(
-                    target,
-                    ScorchMarkType.ID,
-                    new MarkApplyContext.Builder().source(attacker)
-                        .requestedStacks(1)
-                        .stableDurationTicks(200) // Default 10s
-                        .worldTime(target.worldObj.getTotalWorldTime())
-                        .build());
+                net.minecraft.nbt.NBTTagCompound nbt = weaponStack.getTagCompound();
+                if (nbt == null) {
+                    nbt = new net.minecraft.nbt.NBTTagCompound();
+                    weaponStack.setTagCompound(nbt);
+                }
+                int hitCount = nbt.getInteger("BeyondStarHitCount") + 1;
+                nbt.setInteger("BeyondStarHitCount", hitCount);
+
+                if (hitCount % 2 == 0) {
+                    MarkManager.apply(
+                        target,
+                        ScorchMarkType.ID,
+                        new MarkApplyContext.Builder().source(attacker)
+                            .requestedStacks(1)
+                            .stableDurationTicks(30) // Default 1.5s
+                            .worldTime(target.worldObj.getTotalWorldTime())
+                            .build());
+                }
             }
         }
     }
@@ -142,7 +156,7 @@ public class ComponentBeyondStar
                 double secs = remainingCooldownMillis / 1000.0D;
                 player.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        EnumChatFormatting.RED + String.format("技能冷却中：%.1f 秒", secs)));
+                        net.minecraft.util.EnumChatFormatting.RED + String.format("技能冷却中：%.1f 秒", secs)));
                 return itemStack;
             }
         }
@@ -153,6 +167,12 @@ public class ComponentBeyondStar
     @Override
     public void onUsingTick(ItemStack weaponStack, EntityPlayer player, int count) {
         int duration = 72000 - count;
+
+        // Cooldown check to prevent bypassing by re-clicking fast
+        if (!player.worldObj.isRemote && getRemainingCooldownMillis(player) > 0L) {
+            player.stopUsingItem();
+            return;
+        }
 
         if (player.worldObj.isRemote) { // removed count % 2 == 0 to double the tick rate
             List<EntityLivingBase> targets = player.worldObj.getEntitiesWithinAABB(
@@ -283,28 +303,27 @@ public class ComponentBeyondStar
                 if (type instanceof ScorchMarkType) {
                     ScorchMarkType scorch = (ScorchMarkType) type;
                     for (EntityLivingBase target : targets) {
-                        if (target != player && MarkManager.has(target, ScorchMarkType.ID)) {
-                            totalDetonated++;
-                            for (int i = 0; i < detonationCount; i++) {
-                                scorch.detonate(target, player, true);
-                            }
-                            // Refresh duration as per plan
-                            MarkManager
-                                .consume(target, ScorchMarkType.ID, MarkManager.getStacks(target, ScorchMarkType.ID));
+                        if (target != player) {
+                            // Apply scorch
                             MarkManager.apply(
                                 target,
                                 ScorchMarkType.ID,
                                 new MarkApplyContext.Builder().source(player)
                                     .requestedStacks(1)
-                                    .stableDurationTicks(200)
+                                    .stableDurationTicks(30) // Default 1.5s
                                     .worldTime(player.worldObj.getTotalWorldTime())
                                     .build());
+
+                            totalDetonated++;
+
+                            // Detonate (Ignite)
+                            scorch.detonate(target, player, 1.0f + getScorchDetonateBonus());
                         }
                     }
                 }
 
                 if (totalDetonated > 0) {
-                    int satsToAdd = totalDetonated * satellitesPerTarget;
+                    int satsToAdd = totalDetonated; // exactly the number of targets
                     BeyondStarSatelliteManager.addSatellites(player, satsToAdd);
                 }
 
@@ -323,30 +342,37 @@ public class ComponentBeyondStar
     @Override
     public void addTooltipLines(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
         tooltip.add(EnumChatFormatting.GOLD + "基础伤害：" + (int) 75);
-        tooltip.add(EnumChatFormatting.AQUA + "所有攻击自动附带【灼痕】印记");
+        tooltip.add(EnumChatFormatting.AQUA + "每 2 次普通攻击，自动附带 1 层【灼痕】印记");
+        this.addIgniterTooltip(tooltip);
         tooltip.add("");
 
-        tooltip.add(EnumChatFormatting.GREEN + "引爆技能（长按右键3秒）：");
-        tooltip.add(EnumChatFormatting.GRAY + "  引爆半径 10 内所有目标的【灼痕】 2 次");
-        tooltip.add(EnumChatFormatting.GRAY + "  引爆后自动重新施加【灼痕】");
+        tooltip.add(EnumChatFormatting.GREEN + "主动引爆技能（长按右键2秒）：");
+        tooltip.add(EnumChatFormatting.GRAY + "  对周围半径 10 内所有目标施加 1 层【灼痕】");
+        tooltip.add(EnumChatFormatting.GRAY + "  并强制【引燃】他们");
+        tooltip.add(EnumChatFormatting.GRAY + "  根据命中的目标数量，获得同等数量的爆炸环绕卫星");
 
         long remainingCooldownMillis = getRemainingCooldownMillis(player);
         if (remainingCooldownMillis > 0L) {
             double secs = remainingCooldownMillis / 1000.0D;
             tooltip.add(EnumChatFormatting.RED + String.format("  冷却时间：%.1f 秒", secs));
         } else {
-            tooltip.add(EnumChatFormatting.DARK_GRAY + "  冷却时间：8 秒");
+            tooltip.add(EnumChatFormatting.DARK_GRAY + "  冷却时间：4 秒");
         }
 
         tooltip.add("");
         tooltip.add(EnumChatFormatting.LIGHT_PURPLE + "爆炸环绕卫星：");
-        tooltip.add(EnumChatFormatting.GRAY + "  每次引爆时，每命中一个目标生成 2 颗卫星");
         tooltip.add(EnumChatFormatting.GRAY + "  每颗卫星伤害为武器攻击力的 25%");
-        tooltip.add(EnumChatFormatting.GRAY + "  卫星存在期间，提升 20% 移动速度");
+        tooltip.add(EnumChatFormatting.GRAY + "  卫星存在期间，提升 2.5% 移动速度（最大叠加8次/20%）");
         tooltip.add(EnumChatFormatting.DARK_GRAY + "  最多存在 8 颗卫星");
 
         tooltip.add("");
         tooltip.add(EnumChatFormatting.YELLOW + "左键攻击：");
         tooltip.add(EnumChatFormatting.GRAY + "  将所有卫星一起发射出去追踪目标！");
+        tooltip.add(EnumChatFormatting.GRAY + "  卫星命中时会为目标施加 1 层【灼痕】，但不会引爆");
+    }
+
+    @Override
+    public float getScorchDetonateBonus() {
+        return scorchDetonateBonus;
     }
 }

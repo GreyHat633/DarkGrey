@@ -12,6 +12,8 @@ public class ClientInputEventHandler {
 
     public static final ClientInputEventHandler INSTANCE = new ClientInputEventHandler();
 
+    private boolean wasAttackKeyDown = false;
+
     private ClientInputEventHandler() {}
 
     @SubscribeEvent
@@ -28,6 +30,30 @@ public class ClientInputEventHandler {
                         clientPlayer.movementInput.sneak = false;
                     }
                 }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && event.side == Side.CLIENT) {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+            if (mc.thePlayer != null && mc.currentScreen == null) {
+                boolean isKeyDown = mc.gameSettings.keyBindAttack.getIsKeyPressed();
+                if (isKeyDown && !wasAttackKeyDown) {
+                    net.minecraft.item.ItemStack held = mc.thePlayer.getCurrentEquippedItem();
+                    if (held != null && held.getItem() instanceof com.greyhat.dark_grey.api.IRPGItemContainer) {
+                        if ("slag_eruptor"
+                            .equals(((com.greyhat.dark_grey.api.IRPGItemContainer) held.getItem()).getRpgItemId())) {
+                            com.greyhat.dark_grey.DarkGrey.NETWORK
+                                .sendToServer(new com.greyhat.dark_grey.network.MessageStartAutomaticFire());
+                        }
+                    }
+                } else if (!isKeyDown && wasAttackKeyDown) {
+                    com.greyhat.dark_grey.DarkGrey.NETWORK
+                        .sendToServer(new com.greyhat.dark_grey.network.MessageStopAutomaticFire());
+                }
+                wasAttackKeyDown = isKeyDown;
             }
         }
     }

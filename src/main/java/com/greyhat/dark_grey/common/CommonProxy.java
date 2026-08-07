@@ -114,6 +114,16 @@ public class CommonProxy {
             com.greyhat.dark_grey.network.PolarityExplosionEffectMessage.class,
             14,
             cpw.mods.fml.relauncher.Side.CLIENT);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MessageStartAutomaticFireHandler.class,
+            com.greyhat.dark_grey.network.MessageStartAutomaticFire.class,
+            15,
+            cpw.mods.fml.relauncher.Side.SERVER);
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MessageStopAutomaticFireHandler.class,
+            com.greyhat.dark_grey.network.MessageStopAutomaticFire.class,
+            16,
+            cpw.mods.fml.relauncher.Side.SERVER);
     }
 
     public void scheduleConfigApply(String json) {}

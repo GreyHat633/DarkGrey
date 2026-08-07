@@ -170,7 +170,7 @@ public class ComponentBoneCannon
                     player.stopUsingItem();
 
                     if (player instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) player).updateHeldItem(); // Sync NBT visually
+                        ((EntityPlayerMP) player).inventoryContainer.detectAndSendChanges();
                     }
                 }
             } else {
@@ -190,24 +190,20 @@ public class ComponentBoneCannon
         NBTTagCompound nbt = stack.getTagCompound();
         boolean isLoaded = nbt != null && nbt.getBoolean("DarkGreyBoneCannonLoaded");
 
-        tooltipLines.add(EnumChatFormatting.GOLD + "基础伤害：" + (int) baseDmg);
-        tooltipLines.add(EnumChatFormatting.AQUA + "炮弹命中产生范围爆炸，施加骨折");
+        tooltipLines.add(EnumChatFormatting.GOLD + "伤害：" + (int) baseDmg);
+        tooltipLines.add(EnumChatFormatting.AQUA + "弹匣：1");
+        tooltipLines.add(EnumChatFormatting.AQUA + "弹药：硬化骨髓");
         tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.YELLOW + "左键：发射硬化骨髓");
-        tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：装填大炮");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "长按右键：装填 (" + (loadTicksRequired / 20.0f) + "秒)");
+        tooltipLines.add(EnumChatFormatting.YELLOW + "左键：发射");
         tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.GREEN + "装填大炮：");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  使用[硬化骨髓]进行装填 (" + (loadTicksRequired / 20.0f) + "秒)");
+        tooltipLines.add(EnumChatFormatting.GREEN + "骸骨大炮：");
         tooltipLines.add(EnumChatFormatting.GRAY + "  手持大炮时会赋予使用者缓慢效果");
-        tooltipLines.add("");
-        tooltipLines.add(EnumChatFormatting.LIGHT_PURPLE + "发射炮弹：");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  发射装填完毕的骨髓，造成直线打击");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  爆炸伤害：" + (int) baseDmg);
-        tooltipLines.add(EnumChatFormatting.GRAY + "  爆炸范围：半径 5 格");
-        tooltipLines.add(EnumChatFormatting.GRAY + "  附加效果：对所有爆炸范围内的敌人施加一层【骨折】");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  发射炮弹命中产生半径5格的范围爆炸");
+        tooltipLines.add(EnumChatFormatting.GRAY + "  对所有爆炸范围内的敌人施加一层【骨折】");
         tooltipLines.add("");
         tooltipLines.add(
             EnumChatFormatting.WHITE + "当前弹药："
-                + (isLoaded ? (EnumChatFormatting.GREEN + "1 / 1 [已装填]") : (EnumChatFormatting.RED + "空")));
+                + (isLoaded ? (EnumChatFormatting.GREEN + "1 / 1") : (EnumChatFormatting.RED + "空")));
     }
 }

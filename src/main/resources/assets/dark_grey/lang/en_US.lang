@@ -80,3 +80,5 @@ message.shattered_bone_staff.no_material=Missing casting material: Hardened Bone
 message.shattered_bone_staff.cast_cancelled=Shattered Bone Staff casting interrupted
 item.bone_cannon.name=Bone Cannon
 item.dark_grey_bone_cannon.name=Bone Cannon
+
+item.dark_grey:helios_blast_gun.name=Helios Blast Gun
