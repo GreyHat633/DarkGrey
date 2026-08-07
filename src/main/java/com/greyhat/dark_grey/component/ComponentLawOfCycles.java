@@ -169,7 +169,15 @@ public class ComponentLawOfCycles implements IOnBowShoot, IHasTooltip, IOnBowUsi
                 if (level == 3 && world.rand.nextBoolean()) {
                     particleType = "fireworksSpark";
                 }
-                world.spawnParticle(particleType, spawnX + offsetX, spawnY + offsetY, spawnZ + offsetZ, 0.0, 0.05, 0.0);
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                    world,
+                    particleType,
+                    spawnX + offsetX,
+                    spawnY + offsetY,
+                    spawnZ + offsetZ,
+                    0.0,
+                    0.05,
+                    0.0);
             }
         }
     }

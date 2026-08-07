@@ -317,7 +317,8 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             double offsetY = (world.rand.nextDouble() - 0.5);
             double offsetZ = (world.rand.nextDouble() - 0.5);
             // Dark purple
-            world.spawnParticle(
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                world,
                 "mobSpell",
                 x + offsetX,
                 y + offsetY,
@@ -325,9 +326,10 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
                 0.5 + world.rand.nextDouble() * 0.4,
                 0.0,
                 0.7 + world.rand.nextDouble() * 0.3);
-            world.spawnParticle("witchMagic", x + offsetX, y + offsetY, z + offsetZ, 0, 0, 0);
+            com.greyhat.dark_grey.DarkGrey.proxy
+                .spawnParticle(world, "witchMagic", x + offsetX, y + offsetY, z + offsetZ, 0, 0, 0);
         }
-        world.spawnParticle("largeexplode", x, y, z, 0, 0, 0);
+        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "largeexplode", x, y, z, 0, 0, 0);
     }
 
     private void spawnRingParticles(World world, EntityPlayer player, int radius) {
@@ -338,8 +340,8 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
             double pz = player.posZ + Math.sin(angle) * radius;
             // Outer ring
             double py = player.posY - 0.8D;
-            world.spawnParticle("mobSpell", px, py, pz, 0.6, 0.0, 0.9);
-            world.spawnParticle("portal", px, py + 0.3, pz, 0, -1, 0);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "mobSpell", px, py, pz, 0.6, 0.0, 0.9);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "portal", px, py + 0.3, pz, 0, -1, 0);
 
             // Inner aura
             if (world.rand.nextFloat() < 0.5f) {
@@ -347,8 +349,8 @@ public class ComponentErebus implements IRPGComponent, IOnRightClick, IHasToolti
                 double px2 = player.posX + Math.cos(angle) * r2;
                 double pz2 = player.posZ + Math.sin(angle) * r2;
                 double py2 = player.posY - 0.5 + world.rand.nextDouble() * 0.4;
-                world.spawnParticle("mobSpell", px2, py2, pz2, 0.2, 0.0, 0.4);
-                world.spawnParticle("witchMagic", px2, py2, pz2, 0, 0, 0);
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "mobSpell", px2, py2, pz2, 0.2, 0.0, 0.4);
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "witchMagic", px2, py2, pz2, 0, 0, 0);
             }
         }
     }

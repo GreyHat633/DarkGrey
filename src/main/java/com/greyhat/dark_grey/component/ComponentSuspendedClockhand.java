@@ -100,12 +100,28 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                     double angle1 = (charge * 0.3) + (i * Math.PI * 2 / 6);
                     double px1 = player.posX + Math.cos(angle1) * 1.5;
                     double pz1 = player.posZ + Math.sin(angle1) * 1.5;
-                    player.worldObj.spawnParticle("portal", px1, midY + Math.sin(charge * 0.15) * 0.8, pz1, 0, 0, 0);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        player.worldObj,
+                        "portal",
+                        px1,
+                        midY + Math.sin(charge * 0.15) * 0.8,
+                        pz1,
+                        0,
+                        0,
+                        0);
 
                     double angle2 = -(charge * 0.3) + (i * Math.PI * 2 / 6);
                     double px2 = player.posX + Math.cos(angle2) * 2.0;
                     double pz2 = player.posZ + Math.sin(angle2) * 2.0;
-                    player.worldObj.spawnParticle("portal", px2, midY + Math.cos(charge * 0.15) * 0.5, pz2, 0, 0, 0);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        player.worldObj,
+                        "portal",
+                        px2,
+                        midY + Math.cos(charge * 0.15) * 0.5,
+                        pz2,
+                        0,
+                        0,
+                        0);
                 }
 
                 // 蓄力结束后的白色粒子 (附魔台符文)，仅在蓄力满后出现，数量翻1.5倍
@@ -114,7 +130,8 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                         double rx = player.posX + (player.worldObj.rand.nextDouble() - 0.5) * 4.0;
                         double ry = midY + (player.worldObj.rand.nextDouble() - 0.5) * 4.0;
                         double rz = player.posZ + (player.worldObj.rand.nextDouble() - 0.5) * 4.0;
-                        player.worldObj.spawnParticle("enchantmenttable", rx, ry, rz, 0, 0.1, 0);
+                        com.greyhat.dark_grey.DarkGrey.proxy
+                            .spawnParticle(player.worldObj, "enchantmenttable", rx, ry, rz, 0, 0.1, 0);
                     }
                 }
             }
@@ -171,7 +188,8 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                     double d0 = world.rand.nextGaussian() * 0.1D;
                     double d1 = world.rand.nextGaussian() * 0.1D;
                     double d2 = world.rand.nextGaussian() * 0.1D;
-                    world.spawnParticle(
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        world,
                         "hugeexplosion",
                         player.posX + (world.rand.nextFloat() * 2.0F - 1.0F) * 4.0F,
                         midY + (world.rand.nextFloat() * 2.0F - 1.0F) * 2.0F,
@@ -184,7 +202,8 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                     double d0 = world.rand.nextGaussian() * 0.5D;
                     double d1 = world.rand.nextGaussian() * 0.5D;
                     double d2 = world.rand.nextGaussian() * 0.5D;
-                    world.spawnParticle(
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        world,
                         "flame",
                         player.posX + (world.rand.nextFloat() * 2.0F - 1.0F) * 3.0F,
                         midY + (world.rand.nextFloat() * 2.0F - 1.0F) * 3.0F,
@@ -192,7 +211,8 @@ public class ComponentSuspendedClockhand implements IRPGComponent, IOnHeldTick, 
                         d0,
                         d1,
                         d2);
-                    world.spawnParticle(
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        world,
                         "largeexplode",
                         player.posX + (world.rand.nextFloat() * 2.0F - 1.0F) * 3.0F,
                         midY + (world.rand.nextFloat() * 2.0F - 1.0F) * 2.0F,

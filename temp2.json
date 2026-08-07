@@ -1,0 +1,27 @@
+ "璧埄淇勬柉鐖嗙牬鏋?,
+          "params": {
+            "reloadTicks": 60,
+            "ammoItemId": "sunflame_round",
+            "magazineCapacity": 6,
+            "requiredAmmoToFire": 6,
+            "ammoConsumedPerShot": 6,
+            "fanAngleDegrees": 90.0,
+            "range": 12.0,
+            "maxDamage": 1200.0,
+            "minDamage": 100.0,
+            "fullDamageDistance": 1.0,
+            "recoilTargetDistance": 3.0,
+            "recoilVelocity": 1.35,
+            "fieldDurationTicks": 120,
+            "fieldIntervalTicks": 10,
+            "fieldDamage": 60.0,
+            "fieldScorchApplyChance": 0.4,
+            "fieldScorchStacks": 1,
+            "fieldScorchStableDurationTicks": 30
+          }
+        }
+      ],
+      "enchantments": ""
+    }
+  ]
+}

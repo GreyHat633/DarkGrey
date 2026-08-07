@@ -92,7 +92,7 @@ public class ComponentSlagEruptor implements IRPGComponent, IOnRightClick, IOnWe
             double px = player.posX + (player.worldObj.rand.nextDouble() - 0.5);
             double py = player.posY + player.worldObj.rand.nextDouble() * 2.0;
             double pz = player.posZ + (player.worldObj.rand.nextDouble() - 0.5);
-            player.worldObj.spawnParticle("flame", px, py, pz, 0.0, 0.05, 0.0);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(player.worldObj, "flame", px, py, pz, 0.0, 0.05, 0.0);
         }
     }
 

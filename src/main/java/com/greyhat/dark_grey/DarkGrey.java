@@ -105,8 +105,6 @@ public class DarkGrey {
             .register("炬火残光", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentTorchAfterglow::new);
         ComponentRegistry.register("耀斑", (Supplier<IRPGComponent>) ComponentSolarFlare::new);
         ComponentRegistry
-            .register("陨星", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentMeteor::new);
-        ComponentRegistry
             .register("倒悬", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentSuspendedClockhand::new);
         ComponentRegistry
             .register("伊塔尼斯", (Supplier<IRPGComponent>) com.greyhat.dark_grey.component.ComponentItanis::new);

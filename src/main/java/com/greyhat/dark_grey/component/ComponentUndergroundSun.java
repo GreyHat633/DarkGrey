@@ -193,7 +193,8 @@ public class ComponentUndergroundSun
                 double r = 1.0;
                 double px = player.posX + Math.cos(angle) * r;
                 double pz = player.posZ + Math.sin(angle) * r;
-                world.spawnParticle("flame", px, player.boundingBox.minY + player.height * 0.7, pz, 0, 0.05, 0);
+                com.greyhat.dark_grey.DarkGrey.proxy
+                    .spawnParticle(world, "flame", px, player.boundingBox.minY + player.height * 0.7, pz, 0, 0.05, 0);
             }
             if (world.getTotalWorldTime() % 10 == 0) {
                 world.playSound(player.posX, player.posY, player.posZ, "random.fizz", 0.4F, 0.8F + progress, false);

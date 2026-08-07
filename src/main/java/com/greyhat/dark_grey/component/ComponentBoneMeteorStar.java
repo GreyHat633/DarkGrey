@@ -180,7 +180,8 @@ public class ComponentBoneMeteorStar
                 double py = player.boundingBox.minY + player.worldObj.rand.nextDouble() * 2.0;
                 double pz = player.posZ + Math.sin(angle) * r;
 
-                player.worldObj.spawnParticle(
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                    player.worldObj,
                     "portal",
                     px,
                     py,
@@ -189,7 +190,8 @@ public class ComponentBoneMeteorStar
                     (player.boundingBox.minY + 1.0 - py) * 0.1,
                     (player.posZ - pz) * 0.1);
                 if (player.worldObj.rand.nextBoolean()) {
-                    player.worldObj.spawnParticle("enchantmenttable", px, py, pz, 0, 0.05, 0);
+                    com.greyhat.dark_grey.DarkGrey.proxy
+                        .spawnParticle(player.worldObj, "enchantmenttable", px, py, pz, 0, 0.05, 0);
                 }
             }
         }

@@ -203,7 +203,8 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
                         // Vortex particles (flat plane) moving inwards with separate random offsets
                         double dxSmoke = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
                         double dzSmoke = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
-                        player.worldObj.spawnParticle(
+                        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                            player.worldObj,
                             "largesmoke",
                             tx + dxSmoke,
                             vortexY,
@@ -214,7 +215,8 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
 
                         double dxFlame = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
                         double dzFlame = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
-                        player.worldObj.spawnParticle(
+                        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                            player.worldObj,
                             "flame",
                             tx + dxFlame,
                             vortexY,
@@ -225,9 +227,11 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
 
                         // Red/Black ambient spark dust
                         if (player.worldObj.rand.nextBoolean()) {
-                            player.worldObj.spawnParticle("reddust", tx, vortexY, tz, 1.0D, 0.0D, 0.0D); // Red
+                            com.greyhat.dark_grey.DarkGrey.proxy
+                                .spawnParticle(player.worldObj, "reddust", tx, vortexY, tz, 1.0D, 0.0D, 0.0D); // Red
                         } else {
-                            player.worldObj.spawnParticle("reddust", tx, vortexY, tz, 0.001D, 0.001D, 0.001D); // Black
+                            com.greyhat.dark_grey.DarkGrey.proxy
+                                .spawnParticle(player.worldObj, "reddust", tx, vortexY, tz, 0.001D, 0.001D, 0.001D); // Black
                         }
 
                         // Physical particles starting from the enemy's body and moving towards player's waist
@@ -236,7 +240,8 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
 
                         double dxSmokeBody = (player.worldObj.rand.nextDouble() - 0.5) * 0.3;
                         double dzSmokeBody = (player.worldObj.rand.nextDouble() - 0.5) * 0.3;
-                        player.worldObj.spawnParticle(
+                        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                            player.worldObj,
                             "largesmoke",
                             tx + dxSmokeBody,
                             bodyY,
@@ -247,7 +252,8 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
 
                         double dxFlameBody = (player.worldObj.rand.nextDouble() - 0.5) * 0.3;
                         double dzFlameBody = (player.worldObj.rand.nextDouble() - 0.5) * 0.3;
-                        player.worldObj.spawnParticle(
+                        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                            player.worldObj,
                             "flame",
                             tx + dxFlameBody,
                             bodyY,
@@ -275,18 +281,34 @@ public class ComponentBeyondStar implements IRPGComponent, IOnHit, IOnRightClick
 
                     double dxSmoke = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
                     double dzSmoke = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
-                    player.worldObj
-                        .spawnParticle("largesmoke", x + dxSmoke, y, z + dzSmoke, vx * 0.15, vy * 0.15, vz * 0.15);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        player.worldObj,
+                        "largesmoke",
+                        x + dxSmoke,
+                        y,
+                        z + dzSmoke,
+                        vx * 0.15,
+                        vy * 0.15,
+                        vz * 0.15);
 
                     double dxFlame = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
                     double dzFlame = (player.worldObj.rand.nextDouble() - 0.5) * 0.5;
-                    player.worldObj
-                        .spawnParticle("flame", x + dxFlame, y, z + dzFlame, vx * 0.15, vy * 0.15, vz * 0.15);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                        player.worldObj,
+                        "flame",
+                        x + dxFlame,
+                        y,
+                        z + dzFlame,
+                        vx * 0.15,
+                        vy * 0.15,
+                        vz * 0.15);
 
                     if (player.worldObj.rand.nextBoolean()) {
-                        player.worldObj.spawnParticle("reddust", x, y, z, 1.0D, 0.0D, 0.0D); // Red
+                        com.greyhat.dark_grey.DarkGrey.proxy
+                            .spawnParticle(player.worldObj, "reddust", x, y, z, 1.0D, 0.0D, 0.0D); // Red
                     } else {
-                        player.worldObj.spawnParticle("reddust", x, y, z, 0.001D, 0.001D, 0.001D); // Black
+                        com.greyhat.dark_grey.DarkGrey.proxy
+                            .spawnParticle(player.worldObj, "reddust", x, y, z, 0.001D, 0.001D, 0.001D); // Black
                     }
                 }
             }

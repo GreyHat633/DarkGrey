@@ -98,9 +98,9 @@ public class ComponentSolarFlare implements IRPGComponent, IOnWeaponUsingTick, I
                 // True waist/chest level in bounding box coordinates: 0.8 to 1.3
                 double py = player.boundingBox.minY + 0.8 + (world.rand.nextDouble() * 0.5);
                 double pz = player.posZ + (look.zCoord * forwardOffset) + (world.rand.nextDouble() - 0.5) * 1.5;
-                world.spawnParticle("flame", px, py, pz, 0.0, 0.05, 0.0);
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "flame", px, py, pz, 0.0, 0.05, 0.0);
                 if (world.rand.nextInt(3) == 0) {
-                    world.spawnParticle("lava", px, py, pz, 0.0, 0.0, 0.0);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "lava", px, py, pz, 0.0, 0.0, 0.0);
                 }
             }
         }

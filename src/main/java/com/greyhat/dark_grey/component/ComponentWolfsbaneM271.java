@@ -142,7 +142,7 @@ public class ComponentWolfsbaneM271
             double px = player.posX + (player.worldObj.rand.nextDouble() - 0.5);
             double py = player.posY + player.worldObj.rand.nextDouble() * 2.0;
             double pz = player.posZ + (player.worldObj.rand.nextDouble() - 0.5);
-            player.worldObj.spawnParticle("reddust", px, py, pz, 1.0, 0.0, 0.0);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(player.worldObj, "reddust", px, py, pz, 1.0, 0.0, 0.0);
         }
     }
 

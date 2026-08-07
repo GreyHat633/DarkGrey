@@ -134,7 +134,7 @@ public class ComponentAuraTorrent
                     double angle = world.rand.nextDouble() * Math.PI * 2.0;
                     double px = player.posX + Math.cos(angle) * currentRadius;
                     double pz = player.posZ + Math.sin(angle) * currentRadius;
-                    world.spawnParticle("largesmoke", px, cy, pz, 0, 0, 0);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "largesmoke", px, cy, pz, 0, 0, 0);
                 }
 
                 // Inner area: random potion particles
@@ -153,9 +153,18 @@ public class ComponentAuraTorrent
                     double bColor = world.rand.nextDouble();
 
                     if (spell.equals("mobSpell") || spell.equals("mobSpellAmbient")) {
-                        world.spawnParticle(spell, px, cy + world.rand.nextDouble() * 1.5, pz, rColor, gColor, bColor);
+                        com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                            world,
+                            spell,
+                            px,
+                            cy + world.rand.nextDouble() * 1.5,
+                            pz,
+                            rColor,
+                            gColor,
+                            bColor);
                     } else {
-                        world.spawnParticle("witchMagic", px, cy + world.rand.nextDouble() * 1.5, pz, 0, 0, 0);
+                        com.greyhat.dark_grey.DarkGrey.proxy
+                            .spawnParticle(world, "witchMagic", px, cy + world.rand.nextDouble() * 1.5, pz, 0, 0, 0);
                     }
                 }
             }
@@ -222,7 +231,8 @@ public class ComponentAuraTorrent
                 double r = 0.5 + world.rand.nextDouble() * 0.5;
                 double px = player.posX + Math.cos(angle) * r;
                 double pz = player.posZ + Math.sin(angle) * r;
-                world.spawnParticle("mobSpell", px, player.boundingBox.minY + 1.0, pz, 0.2, 0.0, 0.8);
+                com.greyhat.dark_grey.DarkGrey.proxy
+                    .spawnParticle(world, "mobSpell", px, player.boundingBox.minY + 1.0, pz, 0.2, 0.0, 0.8);
             }
         }
     }

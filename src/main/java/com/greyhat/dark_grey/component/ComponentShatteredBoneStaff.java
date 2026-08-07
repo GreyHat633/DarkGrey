@@ -91,10 +91,11 @@ public class ComponentShatteredBoneStaff
                 double px = player.posX + (player.worldObj.rand.nextDouble() - 0.5) * 2.0;
                 double py = player.posY - player.yOffset + player.worldObj.rand.nextDouble() * 2.0;
                 double pz = player.posZ + (player.worldObj.rand.nextDouble() - 0.5) * 2.0;
-                
+
                 // Use bone particles or magic particles
                 String particleName = player.worldObj.rand.nextBoolean() ? "iconcrack_352" : "witchMagic";
-                player.worldObj.spawnParticle(particleName, px, py, pz, 0, 0.1, 0);
+                com.greyhat.dark_grey.DarkGrey.proxy
+                    .spawnParticle(player.worldObj, particleName, px, py, pz, 0, 0.1, 0);
             }
             return;
         }

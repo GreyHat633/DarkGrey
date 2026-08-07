@@ -8,8 +8,6 @@ public class ClientProxy extends CommonProxy {
     public void init(cpw.mods.fml.common.event.FMLInitializationEvent event) {
         super.init(event);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS
-            .register(new com.greyhat.dark_grey.client.render.MeteorRenderHandler());
 
         com.greyhat.dark_grey.mark.client.ClientMarkCache cache = new com.greyhat.dark_grey.mark.client.ClientMarkCache();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cache);
@@ -33,6 +31,14 @@ public class ClientProxy extends CommonProxy {
             .register(new com.greyhat.dark_grey.mark.client.render.MarkTargetPanelRenderer());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS
             .register(new com.greyhat.dark_grey.mark.client.render.MarkSelfHudRenderer());
+    }
+
+    @Override
+    public void spawnParticle(net.minecraft.world.World world, String particleName, double x, double y, double z,
+        double velX, double velY, double velZ) {
+        if (world != null) {
+            world.spawnParticle(particleName, x, y, z, velX, velY, velZ);
+        }
     }
 
     @cpw.mods.fml.common.eventhandler.SubscribeEvent

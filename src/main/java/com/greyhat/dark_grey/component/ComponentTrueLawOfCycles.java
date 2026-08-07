@@ -155,7 +155,7 @@ public class ComponentTrueLawOfCycles
                 + up.yCoord * Math.sin(angle) * currentScale;
             final double pz = cz + right.zCoord * Math.cos(angle) * currentScale
                 + up.zCoord * Math.sin(angle) * currentScale;
-            world.spawnParticle("fireworksSpark", px, py, pz, 0.0, 0.0, 0.0);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "fireworksSpark", px, py, pz, 0.0, 0.0, 0.0);
         }
         int innerPoints = (int) (30.0 * progress * com.greyhat.dark_grey.common.Config.particleDensity);
         for (int j = 0; j < innerPoints; ++j) {
@@ -170,7 +170,7 @@ public class ComponentTrueLawOfCycles
                 + up2.yCoord * Math.sin(angle2) * (currentScale * 0.3);
             final double pz2 = cz + right2.zCoord * Math.cos(angle2) * (currentScale * 0.3)
                 + up2.zCoord * Math.sin(angle2) * (currentScale * 0.3);
-            world.spawnParticle("magicCrit", px2, py2, pz2, 0.0, 0.0, 0.0);
+            com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "magicCrit", px2, py2, pz2, 0.0, 0.0, 0.0);
         }
         if (progress > 0.5) {
             final double subProgress = (progress - 0.5) * 2.0;
@@ -186,7 +186,7 @@ public class ComponentTrueLawOfCycles
                     final double px3 = cx + right3.xCoord * Math.cos(rad) * d + up3.xCoord * Math.sin(rad) * d;
                     final double py3 = cy + right3.yCoord * Math.cos(rad) * d + up3.yCoord * Math.sin(rad) * d;
                     final double pz3 = cz + right3.zCoord * Math.cos(rad) * d + up3.zCoord * Math.sin(rad) * d;
-                    world.spawnParticle("reddust", px3, py3, pz3, 1.0, 0.6, 0.8);
+                    com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(world, "reddust", px3, py3, pz3, 1.0, 0.6, 0.8);
                 }
                 final double nx = cx + right3.xCoord * Math.cos(rad) * (currentScale * 0.7)
                     + up3.xCoord * Math.sin(rad) * (currentScale * 0.7);
@@ -203,14 +203,16 @@ public class ComponentTrueLawOfCycles
                         + up3.yCoord * Math.sin(angle3) * 0.5;
                     final double pz4 = nz + right3.zCoord * Math.cos(angle3) * 0.5
                         + up3.zCoord * Math.sin(angle3) * 0.5;
-                    world.spawnParticle("fireworksSpark", px4, py4, pz4, 0.0, 0.0, 0.0);
+                    com.greyhat.dark_grey.DarkGrey.proxy
+                        .spawnParticle(world, "fireworksSpark", px4, py4, pz4, 0.0, 0.0, 0.0);
                 }
             }
         }
         if (charge == this.requiredCharge) {
             int fullChargeParticles = (int) (100 * com.greyhat.dark_grey.common.Config.particleDensity);
             for (int j = 0; j < fullChargeParticles; ++j) {
-                world.spawnParticle(
+                com.greyhat.dark_grey.DarkGrey.proxy.spawnParticle(
+                    world,
                     "enchantmenttable",
                     cx + (world.rand.nextDouble() - 0.5) * 4.0,
                     cy + (world.rand.nextDouble() - 0.5) * 4.0,
