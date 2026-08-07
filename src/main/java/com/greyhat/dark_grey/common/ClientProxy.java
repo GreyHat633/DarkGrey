@@ -8,6 +8,8 @@ public class ClientProxy extends CommonProxy {
     public void init(cpw.mods.fml.common.event.FMLInitializationEvent event) {
         super.init(event);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+            .register(new com.greyhat.dark_grey.client.render.MeteorRenderHandler());
 
         com.greyhat.dark_grey.mark.client.ClientMarkCache cache = new com.greyhat.dark_grey.mark.client.ClientMarkCache();
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cache);

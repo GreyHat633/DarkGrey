@@ -529,7 +529,7 @@
           "params": {
             "chargeTicks": 60,
             "maxCastTicks": 160,
-            "circleRadius": 4.0,
+            "circleRadius": 10.0,
             "verticalHalfHeight": 2.5,
             "pulseIntervalTicks": 10,
             "fractureMarkId": "fracture",

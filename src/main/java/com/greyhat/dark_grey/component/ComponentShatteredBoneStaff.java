@@ -82,10 +82,24 @@ public class ComponentShatteredBoneStaff
 
     @Override
     public void onUsingTick(ItemStack stack, EntityPlayer player, int count) {
-        if (player.worldObj.isRemote) return;
-
         int itemInUseDuration = stack.getMaxItemUseDuration() - count;
 
+        if (player.worldObj.isRemote) {
+            // Client side: spawn charging particles
+            if (itemInUseDuration < chargeTicks) {
+                // Spawn particles gathering towards the player to indicate charging
+                double px = player.posX + (player.worldObj.rand.nextDouble() - 0.5) * 2.0;
+                double py = player.posY - player.yOffset + player.worldObj.rand.nextDouble() * 2.0;
+                double pz = player.posZ + (player.worldObj.rand.nextDouble() - 0.5) * 2.0;
+                
+                // Use bone particles or magic particles
+                String particleName = player.worldObj.rand.nextBoolean() ? "iconcrack_352" : "witchMagic";
+                player.worldObj.spawnParticle(particleName, px, py, pz, 0, 0.1, 0);
+            }
+            return;
+        }
+
+        // Server side logic below
         // Start cast at chargeTicks
         if (itemInUseDuration == chargeTicks) {
             boolean isCreative = (player instanceof EntityPlayer)

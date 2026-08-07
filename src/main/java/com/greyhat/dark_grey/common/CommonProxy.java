@@ -19,6 +19,11 @@ public class CommonProxy {
         DarkGrey.LOG.info(Config.greeting);
         DarkGrey.LOG.info("DarkGrey mod loaded, version " + Tags.VERSION);
         MinecraftForge.EVENT_BUS.register((Object) new BoneCrusherCombatHandler());
+        com.greyhat.dark_grey.event.MeteorFlightTracker tracker = new com.greyhat.dark_grey.event.MeteorFlightTracker();
+        MinecraftForge.EVENT_BUS.register((Object) tracker);
+        cpw.mods.fml.common.FMLCommonHandler.instance()
+            .bus()
+            .register(tracker);
     }
 
     public void init(FMLInitializationEvent event) {}
@@ -44,6 +49,11 @@ public class CommonProxy {
     public void registerGunRenderer(Item item, String id, String texture) {}
 
     public void registerNetworkHandlers() {
+        DarkGrey.NETWORK.registerMessage(
+            com.greyhat.dark_grey.network.MeteorExplosionMessage.class,
+            com.greyhat.dark_grey.network.MeteorExplosionMessage.class,
+            15,
+            cpw.mods.fml.relauncher.Side.CLIENT);
         DarkGrey.NETWORK.registerMessage(
             com.greyhat.dark_grey.network.ConfigSyncHandler.class,
             com.greyhat.dark_grey.network.ConfigSyncMessage.class,
